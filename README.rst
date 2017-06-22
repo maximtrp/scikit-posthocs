@@ -25,7 +25,6 @@ You can install the package with:
 Example
 -------
 
-.. code-block:: python
   >>> import posthocs as ph
   >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
   >>> ph.posthoc_conover(x, p_adjust = 'holm')
