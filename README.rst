@@ -25,12 +25,13 @@ You can install the package with:
 Example
 -------
 
-``>>> import posthocs as ph
->>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
->>> ph.posthoc_conover(x, p_adjust = 'holm')
-array([[ 0.        ,  0.00119517,  0.00278329],
-       [ 0.00119517,  0.        ,  0.18672227],
-       [ 0.00278329,  0.18672227,  0.        ]])``
+.. code-block:: python
+  >>> import posthocs as ph
+  >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
+  >>> ph.posthoc_conover(x, p_adjust = 'holm')
+  array([[ 0.        ,  0.00119517,  0.00278329],
+         [ 0.00119517,  0.        ,  0.18672227],
+         [ 0.00278329,  0.18672227,  0.        ]])``
 
 Credits
 -------
