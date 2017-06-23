@@ -7,10 +7,7 @@ from pandas.core.frame import DataFrame
 
 def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
 
-    '''
-    posthoc_conover(x, val_col = None, group_col = None, p_adjust = None)
-
-        Pairwise Test for Multiple Comparisons of Mean Rank Sums (Conover's Test).
+    '''Pairwise Test for Multiple Comparisons of Mean Rank Sums (Conover's Test).
 
         Parameters
         ----------
@@ -70,7 +67,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
     if isinstance(x, DataFrame):
         x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
-        x_lens = x.groupby(by=group_col).count().values.ravel()
+        x_lens = x.groupby(by=group_col)[val_col].count().values
         x_flat = x[val_col].values
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
         x_grouped = np.array([x_flat[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
@@ -87,7 +84,6 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
 
     if any(x_lens == 0):
         raise("All groups must contain data")
-
 
     x_ranks = ss.rankdata(x_flat)
     x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
@@ -125,10 +121,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
 
 def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
 
-    '''
-    posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None)
-
-        Pairwise Test for Multiple Comparisons of Mean Rank Sums (Dunn's Test).
+    '''Pairwise Test for Multiple Comparisons of Mean Rank Sums (Dunn's Test).
 
         Parameters
         ----------
@@ -199,7 +192,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
     if isinstance(x, DataFrame):
         x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
-        x_lens = x.groupby(by=group_col).count().values.ravel()
+        x_lens = x.groupby(by=group_col)[val_col].count().values
         x_flat = x[val_col].values
 
     else:
@@ -244,10 +237,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
 
 def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust = None):
 
-    '''
-    posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust = None)
-
-        Pairwise Test for Multiple Comparisons of Mean Rank Sums (Nemenyi's Test).
+    '''Pairwise Test for Multiple Comparisons of Mean Rank Sums (Nemenyi's Test).
 
         Parameters
         ----------
@@ -314,18 +304,18 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
 
     def get_ties(x):
         x_sorted = np.array(np.sort(x))
-        tie_sum = 0
+        tie_sum = 0.
         for a in x_sorted:
             n_ties = len(x_sorted[x_sorted == a])
             if n_ties > 1:
                 tie_sum += n_ties ** 3 - n_ties
-        c = np.min(1, 1. - tie_sum / (x_len_overall ** 3 - x_len_overall))
+        c = np.min([1., 1. - tie_sum / (x_len_overall ** 3 - x_len_overall)])
         return c
 
     if isinstance(x, DataFrame):
         x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
-        x_lens = x.groupby(by=group_col).count().values.ravel()
+        x_lens = x.groupby(by=group_col)[val_col].count().values
         x_flat = x[val_col].values
 
     else:
@@ -376,3 +366,108 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         return DataFrame(vs, index=groups_unique, columns=groups_unique)
     else:
         return vs
+
+
+def posthoc_ttest(x, val_col = None, group_col = None, equal_var = True, p_adjust = None):
+
+    '''Pairwise T test for Multiple Comparisons of Independent Groups.
+
+        Parameters
+        ----------
+        x : array_like or pandas DataFrame object
+            An array, any object exposing the array interface or a pandas
+            DataFrame. Array must be two-dimensional. Second dimension may
+            vary, i.e. groups may have different lengths.
+
+        val_col : str, optional
+            Must be specified if x is a pandas DataFrame object.
+            The name of a column that contains values.
+
+        group_col : str, optional
+            Must be specified if x is a pandas DataFrame object.
+            The name of a column that contains group names.
+
+        equal_var : bool, optional
+            If True (default), perform a standard independent test
+            that assumes equal population variances [1]_.
+            If False, perform Welch's t-test, which does not assume equal
+            population variance [2]_.
+
+        p_adjust : str, optional
+            Method for adjusting p values.
+            See statsmodels.sandbox.stats.multicomp for details.
+            Available methods are:
+                'bonferroni' : one-step correction
+                'sidak' : one-step correction
+                'holm-sidak' : step-down method using Sidak adjustments
+                'holm' : step-down method using Bonferroni adjustments
+                'simes-hochberg' : step-up method  (independent)
+                'hommel' : closed method based on Simes tests (non-negative)
+                'fdr_bh' : Benjamini/Hochberg  (non-negative)
+                'fdr_by' : Benjamini/Yekutieli (negative)
+                'fdr_tsbh' : two stage fdr correction (non-negative)
+                'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        Returns
+        -------
+        Numpy array if x is an array-like object else pandas DataFrame of p values.
+
+        Notes
+        -----
+        A tie correction are employed according to Conover (1979).
+
+        References
+        ----------
+
+        .. [1] http://en.wikipedia.org/wiki/T-test#Independent_two-sample_t-test
+        .. [2] http://en.wikipedia.org/wiki/Welch%27s_t_test
+
+        Examples
+        --------
+
+        >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
+        >>> ph.posthoc_ttest(x, p_adjust = 'holm')
+        array([[ 0.        ,  0.04600899,  0.31269089],
+               [ 0.04600899,  0.        ,  0.6327077 ],
+               [ 0.31269089,  0.6327077 ,  0.        ]])
+
+    '''
+
+    if isinstance(x, DataFrame):
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        x_lens = x.groupby(by=group_col)[val_col].count().values
+        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
+        x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
+
+    else:
+        x = np.array(x)
+        x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
+        x_lens = np.asarray([len(a) for a in x_grouped])
+        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
+
+    if any(x_lens == 0):
+        raise("All groups must contain data")
+
+    x_len = len(x_grouped)
+    vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    combs = it.combinations(range(x_len), 2)
+
+    for i,j in combs:
+        vs[i, j] = ss.ttest_ind(x_grouped[i], x_grouped[j], equal_var=equal_var)[1]
+
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+    vs[tri_lower] = vs[tri_upper].T
+
+    if isinstance(x, DataFrame):
+        groups_unique = x[group_col].unique()
+        return DataFrame(vs, index=groups_unique, columns=groups_unique)
+    else:
+        return vs
+
+x = [[1,2,3,5,1], [12,31,54], [10,12,6,74,11]]
+posthoc_nemenyi(x, p_adjust='holm')
