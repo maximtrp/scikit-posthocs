@@ -52,7 +52,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
         --------
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> posthoc_conover(x, p_adjust = 'holm')
+        >>> ph.posthoc_conover(x, p_adjust = 'holm')
         array([[ 0.        ,  0.00119517,  0.00278329],
                [ 0.00119517,  0.        ,  0.18672227],
                [ 0.00278329,  0.18672227,  0.        ]])
@@ -68,30 +68,33 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
         return p_value
 
     if isinstance(x, DataFrame):
-        x.sort_values(by=[group_col, val_col], inplace=True)
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
         x_lens = x.groupby(by=group_col).count().values.ravel()
         x_flat = x[val_col].values
+        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
+        x_grouped = np.array([x_flat[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
 
     else:
         x = np.array(x)
-        x = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
-        x_flat = np.concatenate(x)
-        x_len = len(x)
-        x_lens = np.asarray([len(a) for a in x])
+        x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
+        x_flat = np.concatenate(x_grouped)
+        x_len = len(x_grouped)
+        x_lens = np.asarray([len(a) for a in x_grouped])
+        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
 
     x_len_overall = len(x_flat)
 
     if any(x_lens == 0):
         raise("All groups must contain data")
 
-    x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
+
     x_ranks = ss.rankdata(x_flat)
     x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
     x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
     x_ties = ss.tiecorrect(x_ranks)
 
-    H = ss.kruskal(*x)[0]
+    H = ss.kruskal(*x_grouped)[0]
 
     if x_ties == 1:
         S2 = x_len_overall * (x_len_overall + 1) / 12.
@@ -112,7 +115,11 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
     vs[tri_lower] = vs[tri_upper].T
 
-    return vs
+    if isinstance(x, DataFrame):
+        groups_unique = x[group_col].unique()
+        return DataFrame(vs, index=groups_unique, columns=groups_unique)
+    else:
+        return vs
 
 
 
@@ -164,7 +171,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
         --------
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> posthoc_dunn(x, p_adjust = 'holm')
+        >>> ph.posthoc_dunn(x, p_adjust = 'holm')
         array([[ 0.          0.01764845  0.04131415]
                [ 0.01764845  0.          0.45319956]
                [ 0.04131415  0.45319956  0.        ]])
@@ -190,7 +197,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
         return c
 
     if isinstance(x, DataFrame):
-        x.sort_values(by=[group_col, val_col], inplace=True)
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
         x_lens = x.groupby(by=group_col).count().values.ravel()
         x_flat = x[val_col].values
@@ -228,7 +235,11 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
 
     vs[tri_lower] = vs[tri_upper].T
 
-    return vs
+    if isinstance(x, DataFrame):
+        groups_unique = x[group_col].unique()
+        return DataFrame(vs, index=groups_unique, columns=groups_unique)
+    else:
+        return vs
 
 
 def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust = None):
@@ -281,7 +292,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         --------
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> posthoc_nemenyi(x, p_adjust = 'holm')
+        >>> ph.posthoc_nemenyi(x, p_adjust = 'holm')
         array([[ 0.          0.06618715  0.13541729]
                [ 0.06618715  0.          0.75361555]
                [ 0.13541729  0.75361555  0.        ]])
@@ -312,7 +323,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         return c
 
     if isinstance(x, DataFrame):
-        x.sort_values(by=[group_col, val_col], inplace=True)
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
         x_lens = x.groupby(by=group_col).count().values.ravel()
         x_flat = x[val_col].values
@@ -333,7 +344,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
     x_ranks = ss.rankdata(x_flat)
     x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
     x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
-    x_ties = ss.tiecorrect(x_ranks)
+    x_ties = get_ties(x_ranks)
 
     vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
     combs = it.combinations(range(x_len), 2)
@@ -360,4 +371,8 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
 
     vs[tri_lower] = vs[tri_upper].T
 
-    return vs
+    if isinstance(x, DataFrame):
+        groups_unique = x[group_col].unique()
+        return DataFrame(vs, index=groups_unique, columns=groups_unique)
+    else:
+        return vs
