@@ -38,7 +38,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
 
         Returns
         -------
-        Numpy array of p values that may be converted to a pandas DataFrame object.
+        Numpy array if x is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
@@ -156,7 +156,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
 
         Returns
         -------
-        Numpy array of p values that may be converted to a pandas DataFrame object.
+        Numpy array if x is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
@@ -278,7 +278,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
 
         Returns
         -------
-        Numpy array of p values that may be converted to a pandas DataFrame object.
+        Numpy array if x is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
