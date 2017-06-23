@@ -2,7 +2,13 @@
 Post-hoc tests
 ==============
 
-This Python package provides statistical post-hoc tests for pairwise multiple comparisons. Currently, three non-parametric post-hoc tests are ported from R's `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package: Conover's, Dunn's, and Nemenyi's tests.
+This Python package provides statistical post-hoc tests for pairwise multiple comparisons.
+
+Features
+--------
+Currently, three non-parametric post-hoc tests are ported from R's `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package: Conover's, Dunn's, and Nemenyi's tests.
+
+Additionally, pairwise T tests are implemented.
 
 Dependencies
 ------------
