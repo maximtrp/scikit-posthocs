@@ -368,7 +368,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         return vs
 
 
-def posthoc_ttest(x, val_col = None, group_col = None, equal_var = True, p_adjust = None):
+def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None):
 
     '''Pairwise T test for Multiple Comparisons of Independent Groups.
 
@@ -393,6 +393,12 @@ def posthoc_ttest(x, val_col = None, group_col = None, equal_var = True, p_adjus
             If False, perform Welch's t-test, which does not assume equal
             population variance [2]_.
 
+        pool_sd : bool, optional
+            Calculate a common SD for all groups and use that for all
+            comparisons (this can be useful if some groups are small).
+            This method does not actually call scipy ttest_ind() function,
+            so extra arguments are ignored. Default is False.
+
         p_adjust : str, optional
             Method for adjusting p values.
             See statsmodels.sandbox.stats.multicomp for details.
@@ -411,10 +417,6 @@ def posthoc_ttest(x, val_col = None, group_col = None, equal_var = True, p_adjus
         Returns
         -------
         Numpy array if x is an array-like object else pandas DataFrame of p values.
-
-        Notes
-        -----
-        A tie correction are employed according to Conover (1979).
 
         References
         ----------
@@ -454,10 +456,26 @@ def posthoc_ttest(x, val_col = None, group_col = None, equal_var = True, p_adjus
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
+    def compare_pooled(i, j):
+        diff = x_means[i] - x_means[j]
+        se_diff = pooled_sd * np.sqrt(1 / x_lens[i] + 1 / x_lens[j])
+        t_value = diff / se_diff
+        return 2 * ss.t.cdf(-np.abs(t_value), x_totaldegf)
+
     combs = it.combinations(range(x_len), 2)
 
-    for i,j in combs:
-        vs[i, j] = ss.ttest_ind(x_grouped[i], x_grouped[j], equal_var=equal_var)[1]
+    if pool_sd:
+        x_means = np.asarray([np.mean(xi) for xi in x_grouped])
+        x_sd = np.asarray([np.std(xi, ddof=1) for xi in x_grouped])
+        x_degf = x_lens - 1
+        x_totaldegf = np.sum(x_degf)
+        pooled_sd = np.sqrt(np.sum(x_sd ** 2 * x_degf) / x_totaldegf)
+
+        for i, j in combs:
+            vs[i, j] = compare_pooled(i, j)
+    else:
+        for i,j in combs:
+            vs[i, j] = ss.ttest_ind(x_grouped[i], x_grouped[j], equal_var=equal_var)[1]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
@@ -468,6 +486,3 @@ def posthoc_ttest(x, val_col = None, group_col = None, equal_var = True, p_adjus
         return DataFrame(vs, index=groups_unique, columns=groups_unique)
     else:
         return vs
-
-x = [[1,2,3,5,1], [12,31,54], [10,12,6,74,11]]
-posthoc_nemenyi(x, p_adjust='holm')
