@@ -8,14 +8,18 @@ Features
 --------
 Currently, three non-parametric post-hoc tests are ported from R's `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package: Conover's, Dunn's, and Nemenyi's tests.
 
-Additionally, pairwise T tests are implemented.
+Additionally, three other tests available in SciPy and Statsmodels are made pairwise: T test, Mann-Whitney U test, and TukeyHSD test.
+
+Also, some plotting functionality is introduced (i.e. significance plots).
 
 Dependencies
 ------------
 
 - `NumPy and SciPy packages <https://www.scipy.org/>`_
 - `Statsmodels <http://statsmodels.sourceforge.net/>`_
-- `Pandas <http://pandas.pydata.org>`_
+- `Pandas <http://pandas.pydata.org/>`_
+- `Matplotlib <https://matplotlib.org/>`
+- `Seaborn <https://seaborn.pydata.org/>`
 
 Compatibility
 -------------
