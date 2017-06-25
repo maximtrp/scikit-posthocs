@@ -641,7 +641,3 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
         return DataFrame(vs, index=groups_unique, columns=groups_unique)
     else:
         return vs
-
-
-x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
-posthoc_mannwhitney(x, use_continuity = True, p_adjust = None)
