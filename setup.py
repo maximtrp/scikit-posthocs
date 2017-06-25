@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='posthocs',
-      version='0.0.17',
+      version='0.1.0',
       description='Statistical post-hoc analysis algorithms',
       url='http://github.com/maximtrp/posthocs',
       author='Maksim Terpilowski',
@@ -9,9 +9,10 @@ setup(name='posthocs',
       license='GPLv3+',
       packages=['posthocs'],
       keywords='statistics posthoc',
-      install_requires=['numpy', 'scipy', 'statsmodels', 'pandas'],
+      install_requires=['numpy', 'scipy', 'statsmodels',
+                        'pandas', 'seaborn', 'matplotlib'],
 	  classifiers=[
-		'Development Status :: 2 - Pre-Alpha',
+		'Development Status :: 3 - Alpha',
 
 		'Intended Audience :: Education',
 		'Intended Audience :: Information Technology',

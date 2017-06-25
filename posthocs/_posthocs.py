@@ -1,9 +1,9 @@
 import numpy as np
 import scipy.stats as ss
 import itertools as it
-from statsmodels.sandbox.stats.multicomp import multipletests
+from statsmodels.sandbox.stats.multicomp import multipletests, pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
-from pandas.core.frame import DataFrame
+from pandas import DataFrame
 
 def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
 
@@ -486,3 +486,62 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
         return DataFrame(vs, index=groups_unique, columns=groups_unique)
     else:
         return vs
+
+
+def posthoc_tukey_hsd(x, g, alpha = 0.05):
+
+    '''Pairwise comparisons with TukeyHSD confidence intervals. This is a
+    convenience function to make statsmodels pairwise_tukeyhsd method more
+    applicable for further use.
+
+        Parameters
+        ----------
+        x : array_like or pandas Series object, 1d
+            An array, any object exposing the array interface, containing
+            the response variable. NaN values will cause an error. Please
+            handle manually.
+
+        g : array_like or pandas Series object, 1d
+            An array, any object exposing the array interface, containing
+            the groups' names. Can be string or integers.
+
+        alpha : float, optional
+            Significance level for the test. Default is 0.05.
+
+        Returns
+        -------
+        Numpy array where 0 is False (not significant), 1 is True (significant),
+        and -1 is for diagonal elements.
+
+        Examples
+        --------
+
+        >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
+        >>> g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
+        >>> ph.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
+        array([[-1,  1,  0],
+               [ 1, -1,  1],
+               [ 0,  1, -1]])
+
+    '''
+
+    result = pairwise_tukeyhsd(x, g, alpha=0.05)
+    groups = np.array(r.groupsunique, dtype=np.str)
+    groups_len = len(groups)
+
+    vs = np.arange(groups_len, dtype=np.int)[:,None].T.repeat(groups_len, axis=0)
+
+    for a in result.summary()[1:]:
+        a0 = str(a[0])
+        a1 = str(a[1])
+        a0i = np.where(groups == a0)[0][0]
+        a1i = np.where(groups == a1)[0][0]
+        vs[a0i, a1i] = 1 if str(a[5]) == 'True' else 0
+
+    vs = np.triu(vs)
+    vs[(np.arange(groups_len), np.arange(groups_len))] = -1
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[tri_lower] = vs.T[tri_lower]
+    vs[vs > 1] = 0
+
+    return vs
