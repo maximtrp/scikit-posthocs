@@ -18,8 +18,8 @@ Dependencies
 - `NumPy and SciPy packages <https://www.scipy.org/>`_
 - `Statsmodels <http://statsmodels.sourceforge.net/>`_
 - `Pandas <http://pandas.pydata.org/>`_
-- `Matplotlib <https://matplotlib.org/>`
-- `Seaborn <https://seaborn.pydata.org/>`
+- `Matplotlib <https://matplotlib.org/>`_
+- `Seaborn <https://seaborn.pydata.org/>`_
 
 Compatibility
 -------------
