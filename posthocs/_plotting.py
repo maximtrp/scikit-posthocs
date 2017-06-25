@@ -65,6 +65,9 @@ def sign_plot(x, g = None, cmap = None, **kwargs):
             List consisting of three elements, that will be exported to
             ListedColormap method of matplotlib.
 
+        kwargs : other keyword arguments
+            All other keyword arguments are passed to seaborn heatmap method.
+
         Returns
         -------
         Numpy array where 0 is False (not significant), 1 is True (significant),
