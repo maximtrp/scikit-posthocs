@@ -1,7 +1,8 @@
 import numpy as np
 import scipy.stats as ss
 import itertools as it
-from statsmodels.sandbox.stats.multicomp import multipletests, pairwise_tukeyhsd
+from statsmodels.sandbox.stats.multicomp import multipletests
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame
 
@@ -545,3 +546,102 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
     vs[vs > 1] = 0
 
     return vs
+
+def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = True, alternative = 'two-sided', p_adjust = None):
+
+    '''Pairwise comparisons with Mann-Whitney rank test. This is also known
+    as pairwise two-sample Wilcoxon test.
+
+        Parameters
+        ----------
+        x : array_like or pandas DataFrame object
+            An array, any object exposing the array interface or a pandas
+            DataFrame. Array must be two-dimensional. Second dimension may
+            vary, i.e. groups may have different lengths.
+
+        val_col : str, optional
+            Must be specified if x is a pandas DataFrame object.
+            The name of a column that contains values.
+
+        group_col : str, optional
+            Must be specified if x is a pandas DataFrame object.
+            The name of a column that contains group names.
+
+        use_continuity : bool, optional
+            Whether a continuity correction (1/2.) should be taken into account.
+            Default is True.
+
+        alternative : {'two-sided', 'less', or ‘greater’}, optional
+            Whether to get the p-value for the one-sided hypothesis
+            ('less' or 'greater') or for the two-sided hypothesis ('two-sided').
+            Defaults to 'two-sided'.
+
+        p_adjust : str, optional
+            Method for adjusting p values.
+            See statsmodels.sandbox.stats.multicomp for details.
+            Available methods are:
+                'bonferroni' : one-step correction
+                'sidak' : one-step correction
+                'holm-sidak' : step-down method using Sidak adjustments
+                'holm' : step-down method using Bonferroni adjustments
+                'simes-hochberg' : step-up method  (independent)
+                'hommel' : closed method based on Simes tests (non-negative)
+                'fdr_bh' : Benjamini/Hochberg  (non-negative)
+                'fdr_by' : Benjamini/Yekutieli (negative)
+                'fdr_tsbh' : two stage fdr correction (non-negative)
+                'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        Returns
+        -------
+        Numpy array if x is an array-like object else pandas DataFrame of p values.
+
+        Examples
+        --------
+
+        >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
+        >>> ph.posthoc_mannwhitney(x, p_adjust = 'holm')
+        array([[-1,  1,  0],
+               [ 1, -1,  1],
+               [ 0,  1, -1]])
+
+    '''
+
+    if isinstance(x, DataFrame):
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        x_lens = x.groupby(by=group_col)[val_col].count().values
+        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
+        x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
+
+    else:
+        x = np.array(x)
+        x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
+        x_lens = np.asarray([len(a) for a in x_grouped])
+        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
+
+    if any(x_lens == 0):
+        raise("All groups must contain data")
+
+    x_len = len(x_grouped)
+    vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    combs = it.combinations(range(x_len), 2)
+
+    for i,j in combs:
+        vs[i, j] = ss.mannwhitneyu(x_grouped[i], x_grouped[j], use_continuity=use_continuity, alternative=alternative)[1]
+
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+    vs[tri_lower] = vs[tri_upper].T
+
+    if isinstance(x, DataFrame):
+        groups_unique = x[group_col].unique()
+        return DataFrame(vs, index=groups_unique, columns=groups_unique)
+    else:
+        return vs
+
+
+x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
+posthoc_mannwhitney(x, use_continuity = True, p_adjust = None)
