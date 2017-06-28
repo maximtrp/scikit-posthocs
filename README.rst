@@ -10,7 +10,7 @@ Currently, three non-parametric post-hoc tests are ported from R's `PMCMR <https
 
 Additionally, three other tests available in SciPy and Statsmodels are made pairwise: T test, Mann-Whitney U test, and TukeyHSD test.
 
-Also, some plotting functionality is introduced (i.e. significance plots).
+Also, some plotting functionality is introduced (e.g. significance plots).
 
 Dependencies
 ------------

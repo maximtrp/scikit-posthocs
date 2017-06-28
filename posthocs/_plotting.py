@@ -90,3 +90,10 @@ def sign_plot(x, g = None, cmap = None, **kwargs):
 
     df = DataFrame(x, index=g, columns=g, dtype=np.int)
     return heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), **kwargs)
+
+def outliers_iqr(x):
+
+    '''
+    '''
+
+    
