@@ -527,7 +527,7 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
     '''
 
     result = pairwise_tukeyhsd(x, g, alpha=0.05)
-    groups = np.array(r.groupsunique, dtype=np.str)
+    groups = np.array(result.groupsunique, dtype=np.str)
     groups_len = len(groups)
 
     vs = np.arange(groups_len, dtype=np.int)[:,None].T.repeat(groups_len, axis=0)
