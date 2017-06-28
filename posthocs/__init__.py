@@ -3,3 +3,6 @@ from posthocs._posthocs \
 
 from posthocs._plotting \
     import sign_array, sign_plot
+
+from posthocs._helpers \
+    import outliers_iqr
