@@ -39,10 +39,11 @@ def sign_array(a, alpha = 0.05):
     '''
 
     a = np.array(a)
-    a[a > alpha] = 0
-    a[a <= alpha] = 1
-    a[np.diag_indices(a.shape[0])] = -1
-    return a
+    a_ = np.copy(a)
+    a_[a > alpha] = 0
+    a_[a <= alpha] = 1
+    a_[np.diag_indices(a_.shape[0])] = -1
+    return a_
 
 
 def sign_plot(x, g = None, cmap = None, **kwargs):
