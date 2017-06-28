@@ -540,10 +540,9 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
         vs[a0i, a1i] = 1 if str(a[5]) == 'True' else 0
 
     vs = np.triu(vs)
-    vs[(np.arange(groups_len), np.arange(groups_len))] = -1
+    vs[np.diag_indices(groups_len)] = -1
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[tri_lower] = vs.T[tri_lower]
-    vs[vs > 1] = 0
 
     return vs
 

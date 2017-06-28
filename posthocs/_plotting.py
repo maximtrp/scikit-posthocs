@@ -49,7 +49,7 @@ def sign_plot(x, g = None, cmap = None, **kwargs):
 
     '''Significance plot
 
-        Plots a significance array as a heatmap using seaborn method.
+        Plots a significance array as a heatmap using seaborn.
 
         Parameters
         ----------
