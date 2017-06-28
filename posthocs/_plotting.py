@@ -13,7 +13,7 @@ def sign_array(a, alpha = 0.05):
 
         Parameters
         ----------
-        x : array_like or Numpy array
+        x : array_like or ndarray
             An array, any object exposing the array interface, containing
             p values.
 
@@ -53,7 +53,7 @@ def sign_plot(x, g = None, cmap = None, **kwargs):
 
         Parameters
         ----------
-        x : array_like or Numpy array
+        x : array_like or ndarray
             An array, any object exposing the array interface, containing
             p values.
 
@@ -70,7 +70,7 @@ def sign_plot(x, g = None, cmap = None, **kwargs):
 
         Returns
         -------
-        Numpy array where 0 is False (not significant), 1 is True (significant),
+        Numpy ndarray where 0 is False (not significant), 1 is True (significant),
         and -1 is for diagonal elements.
 
         Examples
@@ -90,10 +90,3 @@ def sign_plot(x, g = None, cmap = None, **kwargs):
 
     df = DataFrame(x, index=g, columns=g, dtype=np.int)
     return heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), **kwargs)
-
-def outliers_iqr(x):
-
-    '''
-    '''
-
-    

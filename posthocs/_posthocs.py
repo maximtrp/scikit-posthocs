@@ -36,7 +36,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
 
         Returns
         -------
-        Numpy array if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
@@ -150,7 +150,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
 
         Returns
         -------
-        Numpy array if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
@@ -269,7 +269,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
 
         Returns
         -------
-        Numpy array if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
@@ -417,7 +417,7 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
 
         Returns
         -------
-        Numpy array if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
 
         References
         ----------
@@ -511,7 +511,7 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
         Returns
         -------
-        Numpy array where 0 is False (not significant), 1 is True (significant),
+        Numpy ndarray where 0 is False (not significant), 1 is True (significant),
         and -1 is for diagonal elements.
 
         Examples
@@ -592,7 +592,7 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
 
         Returns
         -------
-        Numpy array if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
 
         Examples
         --------
