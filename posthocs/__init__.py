@@ -5,4 +5,4 @@ from posthocs._plotting \
     import sign_array, sign_plot
 
 from posthocs._helpers \
-    import outliers_iqr, outliers_grubbs
+    import outliers_iqr, outliers_grubbs, outliers_tietjen
