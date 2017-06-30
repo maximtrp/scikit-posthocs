@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='posthocs',
-      version='0.1.3',
+      version='0.1.4',
       description='Statistical post-hoc analysis algorithms',
       url='http://github.com/maximtrp/posthocs',
       author='Maksim Terpilowski',
