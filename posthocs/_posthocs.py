@@ -99,8 +99,8 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
         S2 = (1. / (x_len_overall - 1)) * (np.sum(x_ranks ** 2) - (x_len_overall * (((x_len_overall + 1)**2) / 4.)))
 
     vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
-    tri_upper = np.triu_indices(vs.shape[0])
-    tri_lower = np.tril_indices(vs.shape[0])
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
     combs = it.combinations(range(x_len), 2)
@@ -340,8 +340,8 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
     vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
     combs = it.combinations(range(x_len), 2)
 
-    tri_upper = np.triu_indices(vs.shape[0])
-    tri_lower = np.tril_indices(vs.shape[0])
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
     if dist == 'chi':
@@ -453,8 +453,8 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
 
     x_len = len(x_grouped)
     vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
-    tri_upper = np.triu_indices(vs.shape[0])
-    tri_lower = np.tril_indices(vs.shape[0])
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
     def compare_pooled(i, j):
@@ -622,8 +622,8 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
 
     x_len = len(x_grouped)
     vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
-    tri_upper = np.triu_indices(vs.shape[0])
-    tri_lower = np.tril_indices(vs.shape[0])
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
     combs = it.combinations(range(x_len), 2)
@@ -640,6 +640,3 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
         return DataFrame(vs, index=groups_unique, columns=groups_unique)
     else:
         return vs
-
-x = [[1,1,2,3],[20,31,41,10],[100,13,1,4],[5,2,6,2],[0,1,5,2],[10,40,501,10]]
-posthoc_conover(x)
