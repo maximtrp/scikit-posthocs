@@ -1,14 +1,14 @@
 from setuptools import setup
 
 setup(name='posthocs',
-      version='0.1.5',
+      version='0.1.6',
       description='Statistical post-hoc analysis algorithms',
       url='http://github.com/maximtrp/posthocs',
       author='Maksim Terpilowski',
       author_email='maximtrp@gmail.com',
       license='GPLv3+',
       packages=['posthocs'],
-      keywords='statistics posthoc',
+      keywords='statistics posthoc anova',
       install_requires=['numpy', 'scipy', 'statsmodels',
                         'pandas', 'seaborn', 'matplotlib'],
 	  classifiers=[

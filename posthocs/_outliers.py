@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import t
 
 def outliers_iqr(x, ret = 'filtered', coef = 1.5):
 
@@ -183,3 +184,129 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
             return np.delete(x, ind)
         else:
             return x
+
+def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
+
+    '''The generalized (Extreme Studentized Deviate) ESD test is used
+    to detect one or more outliers in a univariate data set that follows
+    an approximately normal distribution [1]_.
+
+        Parameters
+        ----------
+        x : array_like or ndarray, 1d
+            An array, any object exposing the array interface, containing
+            data to test for outliers.
+
+        iters : int, optional
+            Number of potential outliers to test for. Test is two-tailed, i.e.
+            maximum and minimum values are checked for potential outliers.
+
+        report : bool, optional
+            Specifies whether to return a summary table of the test.
+            Available options are:
+                True : return a summary table
+                False : returns the array with outliers removed. (default)
+
+        alpha : float, optional
+            Significance level for a hypothesis test. Default is 0.05.
+
+        Returns
+        -------
+        Numpy array if hypo is False or a bool value of a hypothesis test result.
+
+        Notes
+        -----
+        .. [1] Rosner, Bernard (May 1983), Percentage Points for a Generalized
+        ESD Many-Outlier Procedure,Technometrics, 25(2), pp. 165-172.
+
+        Examples
+        --------
+
+        >>> x = np.array([-0.25, 0.68, 0.94, 1.15, 1.2, 1.26, 1.26, 1.34, 1.38, 1.43, 1.49, 1.49, 1.55, 1.56, 1.58, 1.65, 1.69, 1.7, 1.76, 1.77, 1.81, 1.91, 1.94, 1.96, 1.99, 2.06, 2.09, 2.1, 2.14, 2.15, 2.23, 2.24, 2.26, 2.35, 2.37, 2.4, 2.47, 2.54, 2.62, 2.64, 2.9, 2.92, 2.92, 2.93, 3.21, 3.26, 3.3, 3.59, 3.68, 4.3, 4.64, 5.34, 5.42, 6.01])
+
+        >>> ph.outliers_gesd(x, 5)
+        array([-0.25,  0.68,  0.94,  1.15,  1.2 ,  1.26,  1.26,  1.34,  1.38,
+                1.43,  1.49,  1.49,  1.55,  1.56,  1.58,  1.65,  1.69,  1.7 ,
+                1.76,  1.77,  1.81,  1.91,  1.94,  1.96,  1.99,  2.06,  2.09,
+                2.1 ,  2.14,  2.15,  2.23,  2.24,  2.26,  2.35,  2.37,  2.4 ,
+                2.47,  2.54,  2.62,  2.64,  2.9 ,  2.92,  2.92,  2.93,  3.21,
+                3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
+
+        >>> ph.outliers_gesd(x, outliers = 5, report = True)
+        H0: no outliers in the data
+        Ha: up to 5 outliers in the data
+        Significance level:  α = 0.05
+        Reject H0 if Ri > Critical Value (λi)
+
+        Summary Table for Two-Tailed Test
+        ---------------------------------------
+              Exact           Test     Critical
+          Number of      Statistic    Value, λi
+        Outliers, i      Value, Ri          5 %
+        ---------------------------------------
+                  1          3.119        3.159
+                  2          2.943        3.151
+                  3          3.179        3.144 *
+                  4           2.81        3.136
+                  5          2.816        3.128
+    '''
+
+    Rs, ls = np.zeros(outliers, dtype = np.float), np.zeros(outliers, dtype = np.float)
+    ms = []
+
+    data = np.array(data)
+    data_proc = np.copy(data)
+    n = data_proc.size
+    mean = np.mean(data_proc)
+
+    for i in np.arange(outliers):
+
+        abs_d = np.abs(data_proc - np.mean(data_proc))
+
+        # R-value calculation
+        R = np.max(abs_d) / np.std(data_proc, ddof=1)
+        Rs[i] = R
+
+        # Masked values
+        lms = ms[-1] if len(ms) > 0 else []
+        ms.append(lms + [np.argmax(abs_d)])
+
+        # Lambdas calculation
+        p = 1 - alpha / (2 * (n - i))
+        df = n - i - 2
+        t_ppf = t.ppf(p, df)
+        lambd = ((n - i - 1) * t_ppf) / np.sqrt((n - i - 2 + t_ppf**2) * (n - i))
+        ls[i] = lambd
+
+        # Remove the observation that maximizes |xi − xmean|
+        data_proc = np.delete(data_proc, np.argmax(abs_d))
+
+    if report:
+
+        report = ["H0: no outliers in the data",
+                  "Ha: up to " + str(outliers) + " outliers in the data",
+                  "Significance level:  α = " + str(alpha),
+                  "Reject H0 if Ri > Critical Value (λi)", "",
+                  "Summary Table for Two-Tailed Test",
+                  "---------------------------------------",
+                  "      Exact           Test     Critical",
+                  "  Number of      Statistic    Value, λi",
+                  "Outliers, i      Value, Ri          5 %",
+                  "---------------------------------------"]
+
+        for i, (r, l) in enumerate(zip(Rs, ls)):
+            report.append('{: >11s}'.format(str(i+1)) + \
+                          '{: >15s}'.format(str(np.round(r, 3))) + \
+                          '{: >13s}'.format(str(np.round(l, 3))) + (" *" if r > l else ""))
+
+        print("\n".join(report))
+
+    else:
+        # Remove masked values
+        # for which the test statistic is greater
+        # than the critical value and return the result
+
+        if any(Rs > ls):
+            data = np.delete(data, ms[np.max(np.where(Rs > ls))])
+
+        return data
