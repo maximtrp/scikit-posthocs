@@ -6,11 +6,12 @@ This Python package provides statistical post-hoc tests for pairwise multiple co
 
 Features
 --------
-Currently, three non-parametric post-hoc tests are ported from R's `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package: Conover's, Dunn's, and Nemenyi's tests.
 
-Additionally, three other tests available in SciPy and Statsmodels are made pairwise: T test, Mann-Whitney U test, and TukeyHSD test.
+- Parametric and non-parametric pairwise post-hoc tests: Conover's, Dunn's, Nemenyi's tests (ported from R's `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package), T test, Mann-Whitney U test, and TukeyHSD test. All tests are capable of p adjustments for multiple pairwise comparisons.
 
-Also, some plotting functionality is introduced (e.g. significance plots).
+- Plotting functionality (e.g. significance plots).
+
+- Outlier detection algorithms: simple test based on interquartile range (IQR), Grubbs test, Tietjen-Moore test, and generalized extreme Studentized deviate test (ESD test). 
 
 Dependencies
 ------------
