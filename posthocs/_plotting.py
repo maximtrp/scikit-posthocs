@@ -46,7 +46,7 @@ def sign_array(a, alpha = 0.05):
     return a_
 
 
-def sign_table(a):
+def sign_table(a, lower = True, upper = True):
 
     '''Significance table
 
@@ -58,6 +58,12 @@ def sign_table(a):
         x : array_like, or ndarray, or pandas DataFrame
             An array, any object exposing the array interface, containing
             p values.
+
+        lower : bool, optional
+            Defines whether to return the lower triangle.
+
+        upper : bool, optional
+            Defines whether to return the upper triangle.
 
         Returns
         -------
@@ -75,22 +81,33 @@ def sign_table(a):
                ['**', 'NS', '—']], dtype=object)
 
     '''
-
     if not isinstance(a, DataFrame):
-        a = np.array(a, dtype=np.object)
-    else:
-        a = a.astype(object)
+        a = np.array(a, dtype = np.float)
 
     ns = a > 0.05
     three = (a < 0.001) & (a >= 0)
     two = (a < 0.01) & (a >= 0.001)
     one = (a < 0.05) & (a >= 0.01)
 
-    a[np.diag_indices(a.shape[0])] = '—'
+    a = a.astype(object)
     a[ns] = 'NS'
     a[three] = '***'
     a[two] = '**'
     a[one] = '*'
+
+    if not isinstance(a, DataFrame):
+        a[np.diag_indices(a.shape[0])] = '—'
+        if not lower:
+            a[np.tril_indices(a.shape[0], -1)] = ''
+        if not upper:
+            a[np.triu_indices(a.shape[0], 1)] = ''
+    else:
+        a.values[np.diag_indices(a.shape[0])] = '—'
+        if not lower:
+            a.values[np.tril_indices(a.shape[0], -1)] = ''
+        if not upper:
+            a.values[np.triu_indices(a.shape[0], 1)] = ''
+
     return a
 
 
@@ -139,3 +156,8 @@ def sign_plot(x, g = None, cmap = None, **kwargs):
 
     df = DataFrame(x, index=g, columns=g, dtype=np.int)
     return heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), **kwargs)
+
+x = np.array([[-1.        ,  0.00119517,  0.00278329],
+                  [ 0.00119517, -1.        ,  0.18672227],
+                  [ 0.00278329,  0.18672227, -1.        ]])
+sign_table(x, upper = False)
