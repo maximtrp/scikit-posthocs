@@ -46,7 +46,7 @@ def sign_array(a, alpha = 0.05):
     return a_
 
 
-def sign_table(x):
+def sign_table(a):
 
     '''Significance table
 
@@ -70,18 +70,25 @@ def sign_table(x):
                           [ 0.00119517, -1.        ,  0.18672227],
                           [ 0.00278329,  0.18672227, -1.        ]])
         >>> ph.sign_table(x)
-        array([[-1,  1,  1],
-               [ 1, -1,  0],
-               [ 1,  0, -1]])
+        array([['—', '**', '**'],
+               ['**', '—', 'NS'],
+               ['**', 'NS', '—']], dtype=object)
 
     '''
 
-    a = np.array(a, dtype=np.object)
+    if not isinstance(a, DataFrame):
+        a = np.array(a, dtype=np.object)
+
+    ns = a > 0.05
+    three = (a < 0.001) & (a >= 0)
+    two = (a < 0.01) & (a >= 0.001)
+    one = (a < 0.05) & (a >= 0.01)
+
     a[np.diag_indices(a.shape[0])] = '—'
-    a[a > 0.05] = 'NS'
-    a[(a < 0.001) & (a >= 0)] = '***'
-    a[(a < 0.01) & (a >= 0.001)] = '**'
-    a[(a < 0.05) & (a >= 0.01)] = '*'
+    a[ns] = 'NS'
+    a[three] = '***'
+    a[two] = '**'
+    a[one] = '*'
     return a
 
 
