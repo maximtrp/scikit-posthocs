@@ -46,6 +46,45 @@ def sign_array(a, alpha = 0.05):
     return a_
 
 
+def sign_table(x):
+
+    '''Significance table
+
+        Returns table that can be used in a publication. P values are replaced
+        with asterisks: * — p < 0.05, ** — p < 0.01, *** — p < 0.001.
+
+        Parameters
+        ----------
+        x : array_like, or ndarray, or pandas DataFrame
+            An array, any object exposing the array interface, containing
+            p values.
+
+        Returns
+        -------
+        Numpy array or pandas DataFrame with asterisks masked p values.
+
+        Examples
+        --------
+
+        >>> x = np.array([[-1.        ,  0.00119517,  0.00278329],
+                          [ 0.00119517, -1.        ,  0.18672227],
+                          [ 0.00278329,  0.18672227, -1.        ]])
+        >>> ph.sign_table(x)
+        array([[-1,  1,  1],
+               [ 1, -1,  0],
+               [ 1,  0, -1]])
+
+    '''
+
+    a = np.array(a, dtype=np.object)
+    a[np.diag_indices(a.shape[0])] = '—'
+    a[a > 0.05] = 'NS'
+    a[(a < 0.001) & (a >= 0)] = '***'
+    a[(a < 0.01) & (a >= 0.001)] = '**'
+    a[(a < 0.05) & (a >= 0.01)] = '*'
+    return a
+
+
 def sign_plot(x, g = None, cmap = None, **kwargs):
 
     '''Significance plot
