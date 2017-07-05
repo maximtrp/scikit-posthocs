@@ -51,9 +51,9 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
         >>> ph.posthoc_conover(x, p_adjust = 'holm')
-        array([[ 0.        ,  0.00119517,  0.00278329],
-               [ 0.00119517,  0.        ,  0.18672227],
-               [ 0.00278329,  0.18672227,  0.        ]])
+        array([[-1.        ,  0.00119517,  0.00278329],
+               [ 0.00119517, -1.        ,  0.18672227],
+               [ 0.00278329,  0.18672227, -1.        ]])
 
     '''
 
@@ -111,6 +111,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
     vs[tri_lower] = vs.T[tri_lower]
+    vs[np.diag_indices(vs.shape[0])] = -1
 
     if isinstance(x, DataFrame):
         groups_unique = x[group_col].unique()
@@ -166,9 +167,9 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
         >>> ph.posthoc_dunn(x, p_adjust = 'holm')
-        array([[ 0.          0.01764845  0.04131415]
-               [ 0.01764845  0.          0.45319956]
-               [ 0.04131415  0.45319956  0.        ]])
+        array([[-1.          0.01764845  0.04131415]
+               [ 0.01764845 -1.          0.45319956]
+               [ 0.04131415  0.45319956 -1.        ]])
 
     '''
 
@@ -228,6 +229,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
+    vs[np.diag_indices(vs.shape[0])] = -1
 
     if isinstance(x, DataFrame):
         groups_unique = x[group_col].unique()
@@ -284,9 +286,9 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
         >>> ph.posthoc_nemenyi(x, p_adjust = 'holm')
-        array([[ 0.          0.06618715  0.13541729]
-               [ 0.06618715  0.          0.75361555]
-               [ 0.13541729  0.75361555  0.        ]])
+        array([[-1.        ,  0.06618715,  0.13541729]
+               [ 0.06618715, -1.        ,  0.75361555]
+               [ 0.13541729,  0.75361555, -1.        ]])
 
     '''
 
@@ -361,6 +363,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
             vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
+    vs[np.diag_indices(vs.shape[0])] = -1
 
     if isinstance(x, DataFrame):
         groups_unique = x[group_col].unique()
@@ -430,9 +433,9 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
         >>> ph.posthoc_ttest(x, p_adjust = 'holm')
-        array([[ 0.        ,  0.04600899,  0.31269089],
-               [ 0.04600899,  0.        ,  0.6327077 ],
-               [ 0.31269089,  0.6327077 ,  0.        ]])
+        array([[-1.        ,  0.04600899,  0.31269089],
+               [ 0.04600899, -1.        ,  0.6327077 ],
+               [ 0.31269089,  0.6327077 , -1.        ]])
 
     '''
 
@@ -480,7 +483,9 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+
     vs[tri_lower] = vs.T[tri_lower]
+    vs[np.diag_indices(vs.shape[0])] = -1
 
     if isinstance(x, DataFrame):
         groups_unique = x[group_col].unique()
@@ -544,6 +549,7 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[tri_lower] = vs.T[tri_lower]
 
+
     return vs
 
 def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = True, alternative = 'two-sided', p_adjust = None):
@@ -599,9 +605,9 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
 
         >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
         >>> ph.posthoc_mannwhitney(x, p_adjust = 'holm')
-        array([[-1,  1,  0],
-               [ 1, -1,  1],
-               [ 0,  1, -1]])
+        array([[-1.       ,  0.0357757,  0.114961 ],
+               [ 0.0357757, -1.       ,  0.0357757],
+               [ 0.114961 ,  0.0357757, -1.       ]])
 
     '''
 
@@ -634,6 +640,7 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
     vs[tri_lower] = vs.T[tri_lower]
+    vs[np.diag_indices(vs.shape[0])] = -1
 
     if isinstance(x, DataFrame):
         groups_unique = x[group_col].unique()

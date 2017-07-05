@@ -78,6 +78,8 @@ def sign_table(a):
 
     if not isinstance(a, DataFrame):
         a = np.array(a, dtype=np.object)
+    else:
+        a = a.astype(object)
 
     ns = a > 0.05
     three = (a < 0.001) & (a >= 0)
