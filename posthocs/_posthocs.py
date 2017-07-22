@@ -6,7 +6,7 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame
 
-def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
+def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort = True):
 
     '''Pairwise Test for Multiple Comparisons of Mean Rank Sums (Conover's Test).
 
@@ -33,6 +33,10 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
                 'fdr_by' : Benjamini/Yekutieli (negative)
                 'fdr_tsbh' : two stage fdr correction (non-negative)
                 'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        sort : bool, optional
+            Specifies whether to sort DataFrame by group_col or not. Recommended
+            unless you sort your data manually.
 
         Returns
         -------
@@ -66,7 +70,8 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
         return p_value
 
     if isinstance(x, DataFrame):
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        if sort:
+            x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_flat = x[val_col].values
@@ -121,7 +126,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
 
 
 
-def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
+def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = True):
 
     '''Pairwise Test for Multiple Comparisons of Mean Rank Sums (Dunn's Test).
 
@@ -148,6 +153,10 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
                 'fdr_by' : Benjamini/Yekutieli (negative)
                 'fdr_tsbh' : two stage fdr correction (non-negative)
                 'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        sort : bool, optional
+            Specifies whether to sort DataFrame by group_col or not. Recommended
+            unless you sort your data manually.
 
         Returns
         -------
@@ -192,7 +201,8 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
         return c
 
     if isinstance(x, DataFrame):
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        if sort:
+            x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_flat = x[val_col].values
@@ -238,7 +248,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
         return vs
 
 
-def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust = None):
+def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust = None, sort = True):
 
     '''Pairwise Test for Multiple Comparisons of Mean Rank Sums (Nemenyi's Test).
 
@@ -268,6 +278,10 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
                 'fdr_by' : Benjamini/Yekutieli (negative)
                 'fdr_tsbh' : two stage fdr correction (non-negative)
                 'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        sort : bool, optional
+            Specifies whether to sort DataFrame by group_col or not. Recommended
+            unless you sort your data manually.
 
         Returns
         -------
@@ -316,7 +330,8 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         return c
 
     if isinstance(x, DataFrame):
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        if sort:
+            x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_flat = x[val_col].values
@@ -372,7 +387,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         return vs
 
 
-def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None):
+def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None, sort = True):
 
     '''Pairwise T test for Multiple Comparisons of Independent Groups.
 
@@ -418,6 +433,10 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
                 'fdr_tsbh' : two stage fdr correction (non-negative)
                 'fdr_tsbky' : two stage fdr correction (non-negative)
 
+        sort : bool, optional
+            Specifies whether to sort DataFrame by group_col or not. Recommended
+            unless you sort your data manually.
+
         Returns
         -------
         Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
@@ -440,7 +459,8 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
     '''
 
     if isinstance(x, DataFrame):
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        if sort:
+            x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
         x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
@@ -552,7 +572,7 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
     return vs
 
-def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = True, alternative = 'two-sided', p_adjust = None):
+def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = True, alternative = 'two-sided', p_adjust = None, sort = True):
 
     '''Pairwise comparisons with Mann-Whitney rank test. This is also known
     as pairwise two-sample Wilcoxon test.
@@ -596,6 +616,10 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
                 'fdr_tsbh' : two stage fdr correction (non-negative)
                 'fdr_tsbky' : two stage fdr correction (non-negative)
 
+        sort : bool, optional
+            Specifies whether to sort DataFrame by group_col or not. Recommended
+            unless you sort your data manually.
+
         Returns
         -------
         Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
@@ -612,7 +636,8 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
     '''
 
     if isinstance(x, DataFrame):
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        if sort:
+            x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
         x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
