@@ -84,7 +84,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None):
     x_len_overall = len(x_flat)
 
     if any(x_lens == 0):
-        raise("All groups must contain data")
+        raise ValueError("All groups must contain data")
 
     x_ranks = ss.rankdata(x_flat)
     x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
@@ -207,7 +207,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None):
     x_len_overall = len(x_flat)
 
     if any(x_lens == 0):
-        raise("All groups must contain data")
+        raise ValueError("All groups must contain data")
 
     x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
     x_ranks = ss.rankdata(x_flat)
@@ -331,7 +331,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
     x_len_overall = len(x_flat)
 
     if any(x_lens == 0):
-        raise("All groups must contain data")
+        raise ValueError("All groups must contain data")
 
     x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
     x_ranks = ss.rankdata(x_flat)
@@ -452,7 +452,7 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
 
     if any(x_lens == 0):
-        raise("All groups must contain data")
+        raise ValueError("All groups must contain data")
 
     x_len = len(x_grouped)
     vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
@@ -624,7 +624,7 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
 
     if any(x_lens == 0):
-        raise("All groups must contain data")
+        raise ValueError("All groups must contain data")
 
     x_len = len(x_grouped)
     vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
