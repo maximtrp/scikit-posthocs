@@ -156,8 +156,3 @@ def sign_plot(x, g = None, cmap = None, **kwargs):
 
     df = DataFrame(x, index=g, columns=g, dtype=np.int)
     return heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), **kwargs)
-
-x = np.array([[-1.        ,  0.00119517,  0.00278329],
-                  [ 0.00119517, -1.        ,  0.18672227],
-                  [ 0.00278329,  0.18672227, -1.        ]])
-sign_table(x, upper = False)

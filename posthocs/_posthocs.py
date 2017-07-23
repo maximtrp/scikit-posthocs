@@ -4,7 +4,7 @@ import itertools as it
 from statsmodels.sandbox.stats.multicomp import multipletests
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
-from pandas import DataFrame
+from pandas import DataFrame, Categorical
 
 def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort = True):
 
@@ -70,8 +70,10 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
         return p_value
 
     if isinstance(x, DataFrame):
-        if sort:
-            x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        if not sort:
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_flat = x[val_col].values
@@ -94,7 +96,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
     x_ranks = ss.rankdata(x_flat)
     x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
     x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
-    x_ties = ss.tiecorrect(x_ranks)
+    x_ties = ss.tiecorrect(x_ranks)#get_ties(x_ranks) #
 
     H = ss.kruskal(*x_grouped)[0]
 
@@ -201,8 +203,10 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
         return c
 
     if isinstance(x, DataFrame):
-        if sort:
-            x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        if not sort:
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_flat = x[val_col].values
@@ -330,8 +334,10 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         return c
 
     if isinstance(x, DataFrame):
-        if sort:
-            x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        if not sort:
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_flat = x[val_col].values
@@ -459,8 +465,10 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
     '''
 
     if isinstance(x, DataFrame):
-        if sort:
-            x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        if not sort:
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
         x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
@@ -636,8 +644,10 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
     '''
 
     if isinstance(x, DataFrame):
-        if sort:
-            x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        if not sort:
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
         x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
