@@ -195,8 +195,10 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
     def get_ties(x):
         x_sorted = np.array(np.sort(x))
         tie_sum = 0
-        for a in x_sorted:
-            n_ties = len(x_sorted[x_sorted == a])
+        pos = 0
+        while pos < x_len_overall:
+            n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
+            pos = pos + n_ties
             if n_ties > 1:
                 tie_sum += n_ties ** 3 - n_ties
         c = tie_sum / (12 * (x_len_overall - 1))
