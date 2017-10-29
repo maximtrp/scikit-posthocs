@@ -152,7 +152,8 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
             Refer to matplotlib.figure.Figure.add_axes for more information.
 
         kwargs : other keyword arguments
-            All keyword arguments except `cbar` are passed to seaborn heatmap method.
+            Keyword arguments to be passed to seaborn heatmap method. These
+            keyword args cannot be used: cbar, vmin, vmax, center.
 
         Returns
         -------
