@@ -210,7 +210,7 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
 
         g = heatmap(df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1, cbar=False, **kwargs)
 
-        cbar_ax = g.figure.add_axes(cbar_ax_bbox or [0.85, 0.35, 0.025, 0.3])
+        cbar_ax = g.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
         cbar = ColorbarBase(cbar_ax, cmap=ListedColormap(cmap[1:]), boundaries=[0,1,2,3,4])
         cbar.set_ticks(np.linspace(0.5, 3.5, 4))
         cbar.set_ticklabels(['NS', 'p < 0.001', 'p < 0.01', 'p < 0.05'])
