@@ -118,7 +118,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
     vs[tri_lower] = vs.T[tri_lower]
-    vs[np.diag_indices(vs.shape[0])] = -1
+    np.fill_diagonal(vs, -1)
 
     if isinstance(x, DataFrame):
         groups_unique = x[group_col].unique()
@@ -245,7 +245,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    vs[np.diag_indices(vs.shape[0])] = -1
+    np.fill_diagonal(vs, -1)
 
     if isinstance(x, DataFrame):
         groups_unique = x[group_col].unique()
@@ -261,16 +261,21 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         Parameters
         ----------
         x : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas DataFrame. Array must be two-dimensional. Second dimension may vary, i.e. groups may have different lengths.
+            An array, any object exposing the array interface or a pandas
+            DataFrame. Array must be two-dimensional. Second dimension may vary,
+            i.e. groups may have different lengths.
 
         val_col : str, optional
-            Must be specified if x is a pandas DataFrame object. The name of a column that contains values.
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains values.
 
         group_col : str, optional
-            Must be specified if x is a pandas DataFrame object. The name of a column that contains group names.
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains group names.
 
         dist : str, optional
-            Method for determining the p value. The default distribution is "chi" (chi-squared), else "tukey" (studentized range).
+            Method for determining the p value. The default distribution is "chi"
+            (chi-squared), else "tukey" (studentized range).
 
         p_adjust : str, optional
             Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
@@ -388,7 +393,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
             vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    vs[np.diag_indices(vs.shape[0])] = -1
+    np.fill_diagonal(vs, -1)
 
     if isinstance(x, DataFrame):
         groups_unique = x[group_col].unique()
@@ -517,7 +522,7 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    vs[np.diag_indices(vs.shape[0])] = -1
+    np.fill_diagonal(vs, -1)
 
     if isinstance(x, DataFrame):
         groups_unique = x[group_col].unique()
@@ -577,7 +582,7 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
         vs[a0i, a1i] = 1 if str(a[5]) == 'True' else 0
 
     vs = np.triu(vs)
-    vs[np.diag_indices(groups_len)] = -1
+    np.fill_diagonal(vs, -1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[tri_lower] = vs.T[tri_lower]
 
@@ -679,7 +684,7 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
     vs[tri_lower] = vs.T[tri_lower]
-    vs[np.diag_indices(vs.shape[0])] = -1
+    np.fill_diagonal(vs, -1)
 
     if isinstance(x, DataFrame):
         groups_unique = x[group_col].unique()
