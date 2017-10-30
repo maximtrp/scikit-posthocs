@@ -1,8 +1,10 @@
 from setuptools import setup
+from os.path import join, dirname
 
 setup(name='posthocs',
-      version='0.2.8',
+      version='0.2.9',
       description='Statistical post-hoc analysis algorithms',
+      long_description=open(join(dirname(__file__), 'README.rst')).read(),
       url='http://github.com/maximtrp/posthocs',
       author='Maksim Terpilowski',
       author_email='maximtrp@gmail.com',
@@ -12,7 +14,7 @@ setup(name='posthocs',
       install_requires=['numpy', 'scipy', 'statsmodels',
                         'pandas', 'seaborn', 'matplotlib'],
 	  classifiers=[
-		'Development Status :: 3 - Alpha',
+		'Development Status :: 4 - Beta',
 
 		'Intended Audience :: Education',
 		'Intended Audience :: Information Technology',
