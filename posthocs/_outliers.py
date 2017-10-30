@@ -274,8 +274,8 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
         # Lambdas calculation
         p = 1 - alpha / (2 * (n - i))
         df = n - i - 2
-        t_ppf = t.ppf(p, df)
-        lambd = ((n - i - 1) * t_ppf) / np.sqrt((n - i - 2 + t_ppf**2) * (n - i))
+        t_ppr = t.ppf(p, df)
+        lambd = ((n - i - 1) * t_ppr) / np.sqrt((n - i - 2 + t_ppr**2) * (n - i))
         ls[i] = lambd
 
         # Remove the observation that maximizes |xi − xmean|
@@ -310,3 +310,4 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
             data = np.delete(data, ms[np.max(np.where(Rs > ls))])
 
         return data
+    
