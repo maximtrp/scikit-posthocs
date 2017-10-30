@@ -168,8 +168,10 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
                           [ 1,  0, -1]])
         >>> ph.sign_plot(x, flat = True)
     '''
-
-    del kwargs['cbar'], kwargs['vmin'], kwargs['vmax'], kwargs['center']
+    try:
+        del kwargs['cbar'], kwargs['vmin'], kwargs['vmax'], kwargs['center']
+    except:
+        pass
 
     if isinstance(x, DataFrame):
         df = x.copy()
