@@ -327,9 +327,11 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
 
     def get_ties(x):
         x_sorted = np.array(np.sort(x))
-        tie_sum = 0.
-        for a in x_sorted:
-            n_ties = len(x_sorted[x_sorted == a])
+        tie_sum = 0
+        pos = 0
+        while pos < x_len_overall:
+            n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
+            pos = pos + n_ties
             if n_ties > 1:
                 tie_sum += n_ties ** 3 - n_ties
         c = np.min([1., 1. - tie_sum / (x_len_overall ** 3 - x_len_overall)])
