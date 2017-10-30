@@ -6,9 +6,9 @@ from pandas import DataFrame
 
 def sign_array(a, alpha = 0.05):
 
-    '''Significance matrix
+    '''Significance array
 
-        Converts an array with p values to a significance matrix where
+        Converts an array with p values to a significance array where
         0 is False (not significant), 1 is True (significant),
         and -1 is for diagonal elements.
 
