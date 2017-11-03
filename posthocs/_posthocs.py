@@ -78,7 +78,11 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
             pos = pos + n_ties
             if n_ties > 1:
                 tie_sum += n_ties ** 3. - n_ties
+<<<<<<< HEAD
         c = np.min([1., 1 - tie_sum / (x_len_overall ** 3. - x_len_overall)])
+=======
+        c = np.min(1., 1 - tie_sum / (x_len_overall ** 3. - x_len_overall))
+>>>>>>> 942de98bbd8a41a00e0be5733c8d8cbaf35c1c16
         return c
 
     if isinstance(x, DataFrame):
