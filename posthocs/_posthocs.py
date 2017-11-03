@@ -69,6 +69,18 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
         p_value = 2. * (1. - ss.t.cdf(np.abs(t_value), df = x_len_overall - x_len))
         return p_value
 
+    def get_ties(x):
+        x_sorted = np.array(np.sort(x))
+        tie_sum = 0
+        pos = 0
+        while pos < x_len_overall:
+            n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
+            pos = pos + n_ties
+            if n_ties > 1:
+                tie_sum += n_ties ** 3. - n_ties
+        c = np.min([1., 1 - tie_sum / (x_len_overall ** 3. - x_len_overall)])
+        return c
+
     if isinstance(x, DataFrame):
         if not sort:
             x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
@@ -96,7 +108,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
     x_ranks = ss.rankdata(x_flat)
     x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
     x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
-    x_ties = ss.tiecorrect(x_ranks)#get_ties(x_ranks) #
+    x_ties = get_ties(x_ranks) #ss.tiecorrect(x_ranks)
 
     H = ss.kruskal(*x_grouped)[0]
 
