@@ -2,7 +2,7 @@ from setuptools import setup
 from os.path import join, dirname
 
 setup(name='posthocs',
-      version='0.3.0',
+      version='0.3.1',
       description='Statistical post-hoc analysis algorithms',
       long_description=open(join(dirname(__file__), 'README.rst')).read(),
       url='http://github.com/maximtrp/posthocs',
