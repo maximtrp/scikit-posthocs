@@ -85,7 +85,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
             pos = pos + n_ties
             if n_ties > 1:
                 tie_sum += n_ties ** 3. - n_ties
-        c = np.min([1., 1 - tie_sum / (x_len_overall ** 3. - x_len_overall)])
+        c = np.min([1., 1. - tie_sum / (x_len_overall ** 3. - x_len_overall)])
         return c
 
     if isinstance(x, DataFrame):
@@ -120,9 +120,9 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
     H = ss.kruskal(*x_grouped)[0]
 
     if x_ties == 1:
-        S2 = x_len_overall * (x_len_overall + 1) / 12.
+        S2 = x_len_overall * (x_len_overall + 1.) / 12.
     else:
-        S2 = (1. / (x_len_overall - 1)) * (np.sum(x_ranks ** 2) - (x_len_overall * (((x_len_overall + 1)**2) / 4.)))
+        S2 = (1. / (x_len_overall - 1.)) * (np.sum(x_ranks ** 2.) - (x_len_overall * (((x_len_overall + 1.)**2.) / 4.)))
 
     vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
     tri_upper = np.triu_indices(vs.shape[0], 1)

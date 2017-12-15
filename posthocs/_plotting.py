@@ -178,9 +178,9 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
     else:
         x = np.array(x)
         g = g or np.arange(x.shape[0])
-        df = DataFrame(x, index=g, columns=g, dtype=np.int)
+        df = DataFrame(x, index=g, columns=g)
 
-    dtype = x.values.dtype
+    dtype = df.values.dtype
 
     if not np.issubdtype(dtype, np.int) and flat:
         raise ValueError("X should be a sign_array or DataFrame of integer values")
@@ -193,7 +193,6 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
     elif not cmap and not flat:
         # format: diagonal, non-significant, p<0.001, p<0.01, p<0.05
         cmap = ['1', '#ef3b2c',  '#005a32',  '#238b45', '#a1d99b']
-
 
     if flat:
         return heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, **kwargs)
