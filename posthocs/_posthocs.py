@@ -8,21 +8,28 @@ from pandas import DataFrame, Categorical
 
 def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort = True):
 
-    '''Pairwise Test for Multiple Comparisons of Mean Rank Sums (Conover's Test).
+    '''Post-hoc pairwise test for multiple comparisons of mean rank sums
+    (Conover's test). May be used after Kruskal-Wallis one-way analysis of
+    variance by ranks to do pairwise comparisons.
 
         Parameters
         ----------
         x : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas DataFrame. Array must be two-dimensional. Second dimension may vary, i.e. groups may have different lengths.
+            An array, any object exposing the array interface or a pandas DataFrame.
+            Array must be two-dimensional. Second dimension may vary,
+            i.e. groups may have different lengths.
 
         val_col : str, optional
-            Must be specified if x is a pandas DataFrame object. The name of a column that contains values.
+            Must be specified if x is a pandas DataFrame object.
+            The name of a column that contains values.
 
         group_col : str, optional
-            Must be specified if x is a pandas DataFrame object. The name of a column that contains group names.
+            Must be specified if x is a pandas DataFrame object.
+            The name of a column that contains group names.
 
         p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
+            for details. Available methods are:
                 'bonferroni' : one-step correction
                 'sidak' : one-step correction
                 'holm-sidak' : step-down method using Sidak adjustments
@@ -142,21 +149,28 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
 
 def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = True):
 
-    '''Pairwise Test for Multiple Comparisons of Mean Rank Sums (Dunn's Test).
+    '''Post-hoc pairwise test for multiple comparisons of mean rank sums
+    (Dunn's test). May be used after Kruskal-Wallis one-way analysis of
+    variance by ranks to do pairwise comparisons.
 
         Parameters
         ----------
         x : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas DataFrame. Array must be two-dimensional. Second dimension may vary, i.e. groups may have different lengths.
+            An array, any object exposing the array interface or a pandas DataFrame.
+            Array must be two-dimensional. Second dimension may vary,
+            i.e. groups may have different lengths.
 
         val_col : str, optional
-            Must be specified if x is a pandas DataFrame object. The name of a column that contains values.
+            Must be specified if x is a pandas DataFrame object.
+            The name of a column that contains values.
 
         group_col : str, optional
-            Must be specified if x is a pandas DataFrame object. The name of a column that contains group names.
+            Must be specified if x is a pandas DataFrame object.
+            The name of a column that contains group names.
 
         p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
+            for details. Available methods are:
                 'bonferroni' : one-step correction
                 'sidak' : one-step correction
                 'holm-sidak' : step-down method using Sidak adjustments
@@ -268,7 +282,9 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
 
 def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust = None, sort = True):
 
-    '''Pairwise Test for Multiple Comparisons of Mean Rank Sums (Nemenyi's Test).
+    '''Post-hoc pairwise test for multiple comparisons of mean rank sums
+    (Nemenyi's test). May be used after Kruskal-Wallis one-way analysis of
+    variance by ranks to do pairwise comparisons.
 
         Parameters
         ----------
@@ -414,9 +430,141 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         return vs
 
 
+def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
+
+    '''Pairwise post-hoc test for multiple comparisons of rank sums according to
+    Durbin and Conover for a two-way balanced incomplete block design (BIBD).
+
+        Parameters
+        ----------
+        x : array_like or pandas DataFrame object
+            An array, any object exposing the array interface or a pandas
+            DataFrame. Array must be two-dimensional. Second dimension may vary,
+            i.e. groups may have different lengths.
+
+        y_col : str, optional
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains y data.
+
+        block_col : str, optional
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains block names.
+
+        group_col : str, optional
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains group names.
+
+        melted : bool, optional
+            Specifies if data are given as melted columns "y", "blocks", and
+            "groups".
+
+        sort : bool, optional
+            If True, sort data by block and group columns.
+
+        p_adjust : str, optional
+            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+                'bonferroni' : one-step correction
+                'sidak' : one-step correction
+                'holm-sidak' : step-down method using Sidak adjustments
+                'holm' : step-down method using Bonferroni adjustments
+                'simes-hochberg' : step-up method  (independent)
+                'hommel' : closed method based on Simes tests (non-negative)
+                'fdr_bh' : Benjamini/Hochberg  (non-negative)
+                'fdr_by' : Benjamini/Yekutieli (negative)
+                'fdr_tsbh' : two stage fdr correction (non-negative)
+                'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        Returns
+        -------
+        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+
+        Notes
+        -----
+
+
+        References
+        ----------
+        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
+              Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
+        W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition, Wiley.
+
+        Examples
+        --------
+        >>> x = np.array([[10,53,13,27], [59,36,87,23], [76,45,23,12]])
+        >>> ph.posthoc_durbin(x)
+
+    '''
+
+    def compare_stats(i, j):
+        dif = np.abs(Rj[i] - Rj[j])
+        tval = dif / denom
+        pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = df))
+        return pval
+
+    if isinstance(x, DataFrame):
+        if not all([block_col, group_col, y_col]):
+            raise ValueError('block_col, group_col, y_col should be explicitly specified if using pandas.DataFrame')
+
+        if not melted:
+            x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+        if not sort:
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+            x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
+
+        x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
+
+    else:
+        group_col = group_col if group_col else 'groups'
+        block_col = block_col if block_col else 'blocks'
+        y_col = y_col if y_col else 'y'
+
+        x = np.array(x)
+        x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=np.arange(x.shape[1])+1)
+        x.columns.name = group_col
+        x.index.name = block_col
+        x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+    t = x[group_col].unique().size
+    b = x[block_col].unique().size
+    r = b
+    k = t
+    x['y_ranked'] = x.groupby(block_col)[y_col].rank()
+    Rj = x.groupby(group_col)['y_ranked'].sum()
+    A = (x['y_ranked'] ** 2).sum()
+    C = (b * k * (k + 1) ** 2) / 4.
+    D = (Rj ** 2).sum() - r * C
+    T1 = (t - 1) / (A - C) * D
+    denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1) * (1 - T1 / (b * (k -1))))
+    df = b * k - b - t + 1
+
+    vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
+    combs = it.combinations(range(t), 2)
+
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    for i, j in combs:
+        vs[i, j] = compare_stats(i, j)
+
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+
+    vs[tri_lower] = vs.T[tri_lower]
+    np.fill_diagonal(vs, -1)
+
+    if isinstance(x, DataFrame):
+        groups_unique = x[group_col].unique()
+        return DataFrame(vs, index=groups_unique, columns=groups_unique)
+    else:
+        return vs
+
+
 def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None, sort = True):
 
-    '''Pairwise T test for Multiple Comparisons of Independent Groups.
+    '''Pairwise T test for multiple comparisons of independent groups. May be
+    used after ordinary ANOVA to do pairwise comparisons.
 
         Parameters
         ----------
@@ -546,7 +694,7 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
 def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
     '''Pairwise comparisons with TukeyHSD confidence intervals. This is a
-    convenience function to make statsmodels pairwise_tukeyhsd method more
+    convenience function to make statsmodels pairwise_tukeyhsd() method more
     applicable for further use.
 
         Parameters
