@@ -642,7 +642,6 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         x = np.array(x)
         x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=[val_col, group_col])
         x.columns.name = group_col
-        x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
     n = x[val_col].size
     k = x[group_col].unique().size
@@ -655,7 +654,7 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
     sts = (1 / s2) * sum(aj ** 2 / nj)
     param = k - 1
     A = aj / nj
-    t =
+    t = x[group_col].unique()
 
     vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
     combs = it.combinations(range(t), 2)
