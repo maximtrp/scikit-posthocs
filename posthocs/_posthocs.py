@@ -514,12 +514,15 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
         group_col = group_col if group_col else 'groups'
         block_col = block_col if block_col else 'blocks'
         y_col = y_col if y_col else 'y'
-
         x = np.array(x)
-        x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=np.arange(x.shape[1])+1)
-        x.columns.name = group_col
-        x.index.name = block_col
-        x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+        if not melted:
+            x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=np.arange(x.shape[1])+1)
+            x.columns.name = group_col
+            x.index.name = block_col
+            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+        else:
+            x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=[y_col, block_col, group_col])
 
     t = x[group_col].unique().size
     b = x[block_col].unique().size
@@ -651,7 +654,7 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
     aj = x.groupby(group_col)[val_col].sum()
     nj = x.groupby(group_col)[val_col].count()
     s2 = (1 / (n - 1)) * (x['z_scores'] ** 2).sum()
-    sts = (1 / s2) * sum(aj ** 2 / nj)
+    sts = (1 / s2) * np.sum(aj ** 2 / nj)
     param = k - 1
     A = aj / nj
     t = x[group_col].unique()
