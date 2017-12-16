@@ -632,19 +632,16 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
 
         if not sort:
             x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-            x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
 
-        x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
+        x.sort_values(by=[group_col], ascending=True, inplace=True)
 
     else:
         group_col = group_col if group_col else 'groups'
-        block_col = block_col if block_col else 'blocks'
-        y_col = y_col if y_col else 'y'
+        val_col = val_col if val_col else 'y'
 
         x = np.array(x)
-        x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=np.arange(x.shape[1])+1)
+        x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=[val_col, group_col])
         x.columns.name = group_col
-        x.index.name = block_col
         x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
     n = x[val_col].size
@@ -658,6 +655,7 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
     sts = (1 / s2) * sum(aj ** 2 / nj)
     param = k - 1
     A = aj / nj
+    t =
 
     vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
     combs = it.combinations(range(t), 2)
