@@ -145,8 +145,6 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
     else:
         return vs
 
-
-
 def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = True):
 
     '''Post-hoc pairwise test for multiple comparisons of mean rank sums
@@ -278,7 +276,6 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
         return DataFrame(vs, index=groups_unique, columns=groups_unique)
     else:
         return vs
-
 
 def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust = None, sort = True):
 
@@ -429,7 +426,6 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
     else:
         return vs
 
-
 def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
     '''Pairwise post-hoc test for multiple comparisons of rank sums according to
@@ -560,6 +556,130 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     else:
         return vs
 
+def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adjust = None):
+
+    '''Calculate pairwise multiple comparisons between group levels
+    according to van der Waerden.
+
+        Parameters
+        ----------
+        x : array_like or pandas DataFrame object
+            An array, any object exposing the array interface or a pandas
+            DataFrame. Array must be two-dimensional. Second dimension may vary,
+            i.e. groups may have different lengths.
+
+        val_col : str, optional
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains quantitative data.
+
+        group_col : str, optional
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains group names.
+
+        sort : bool, optional
+            If True, sort data by block and group columns.
+
+        p_adjust : str, optional
+            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+                'bonferroni' : one-step correction
+                'sidak' : one-step correction
+                'holm-sidak' : step-down method using Sidak adjustments
+                'holm' : step-down method using Bonferroni adjustments
+                'simes-hochberg' : step-up method  (independent)
+                'hommel' : closed method based on Simes tests (non-negative)
+                'fdr_bh' : Benjamini/Hochberg  (non-negative)
+                'fdr_by' : Benjamini/Yekutieli (negative)
+                'fdr_tsbh' : two stage fdr correction (non-negative)
+                'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        Returns
+        -------
+        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+
+        Notes
+        -----
+        For one-factorial designs with samples that do not meet the assumptions
+        for one-way-ANOVA and subsequent post-hoc tests, the van der Waerden test
+        vanWaerden.test using normal scores can be employed. Provided that
+        significant differences were detected by this global test, one may be
+        interested in applying post-hoc tests according to van der Waerden
+        for pairwise multiple comparisons of the group levels.
+
+        There is no tie correction applied in this function.
+
+        References
+        ----------
+        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
+              Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
+
+        Examples
+        --------
+        >>> x = np.array([[10,53,13,27], [59,36,87,23], [76,45,23,12]])
+        >>> ph.posthoc_durbin(x)
+
+    '''
+
+    def compare_stats(i, j):
+        dif = np.abs(A[i] - A[j])
+        B = 1 / nj[i] + 1 / nj[j]
+        tval = dif / np.sqrt(s2 * (n - 1 - sts)/(n - k) * B))
+        pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = n - k))
+        return pval
+
+    if isinstance(x, DataFrame):
+        if not all([group_col, val_col]):
+            raise ValueError('group_col, val_col should be explicitly specified if using pandas.DataFrame')
+
+        if not sort:
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+            x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
+
+        x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
+
+    else:
+        group_col = group_col if group_col else 'groups'
+        block_col = block_col if block_col else 'blocks'
+        y_col = y_col if y_col else 'y'
+
+        x = np.array(x)
+        x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=np.arange(x.shape[1])+1)
+        x.columns.name = group_col
+        x.index.name = block_col
+        x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+    n = x[val_col].size
+    k = x[group_col].unique().size
+    r = ss.rankdata(x[val_col])
+    x['z_scores'] = ss.norm.ppf(r / (n + 1))
+
+    aj = x.groupby(group_col)[val_col].sum()
+    nj = x.groupby(group_col)[val_col].count()
+    s2 = (1 / (n - 1)) * (x['z_scores'] ** 2).sum()
+    sts = (1 / s2) * sum(aj ** 2 / nj)
+    param = k - 1
+    A = aj / nj
+
+    vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
+    combs = it.combinations(range(t), 2)
+
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    for i, j in combs:
+        vs[i, j] = compare_stats(i, j)
+
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+
+    vs[tri_lower] = vs.T[tri_lower]
+    np.fill_diagonal(vs, -1)
+
+    if isinstance(x, DataFrame):
+        groups_unique = x[group_col].unique()
+        return DataFrame(vs, index=groups_unique, columns=groups_unique)
+    else:
+        return vs
 
 def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None, sort = True):
 
@@ -689,7 +809,6 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
         return DataFrame(vs, index=groups_unique, columns=groups_unique)
     else:
         return vs
-
 
 def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
