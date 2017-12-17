@@ -524,7 +524,8 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
         else:
             x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=[y_col, block_col, group_col])
 
-    t = x[group_col].unique().size
+    groups = x[group_col].unique()
+    t = groups.size
     b = x[block_col].unique().size
     r = b
     k = t
@@ -538,7 +539,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     df = b * k - b - t + 1
 
     vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
-    combs = it.combinations(range(t), 2)
+    combs = it.combinations(groups, 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
@@ -660,7 +661,7 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
     t = x[group_col].unique()
 
     vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
-    combs = it.combinations(range(t), 2)
+    combs = it.combinations(t, 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
