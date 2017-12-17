@@ -618,8 +618,8 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
 
         Examples
         --------
-        >>> x = np.array([[10,53,13,27], [59,36,87,23], [76,45,23,12]])
-        >>> ph.posthoc_durbin(x)
+        >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
+        >>> ph.posthoc_vanwaerden(x)
 
     '''
 
