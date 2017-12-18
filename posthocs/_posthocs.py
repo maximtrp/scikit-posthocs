@@ -548,15 +548,6 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
             block_col = 'blocks'
             y_col = 'y'
 
-
-        if not melted:
-            x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=np.arange(x.shape[1])+1)
-            x.columns.name = group_col
-            x.index.name = block_col
-            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-        else:
-            x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=[y_col, block_col, group_col])
-
     groups = x[group_col].unique()
     t = groups.size
     b = x[block_col].unique().size
