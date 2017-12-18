@@ -519,12 +519,6 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
             y_col = 'y'
             x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
-        if not sort:
-            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-            x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
-
-        x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
-
     else:
         x = np.array(x)
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
@@ -547,6 +541,11 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
             group_col = 'groups'
             block_col = 'blocks'
             y_col = 'y'
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
+    x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
 
     groups = x[group_col].unique()
     t = groups.size
