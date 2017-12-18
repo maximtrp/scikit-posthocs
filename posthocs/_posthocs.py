@@ -503,21 +503,20 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
 
     '''
 
+    if melted and not all([block_col, group_col, y_col]):
+        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
+
     def compare_stats(i, j):
         dif = np.abs(Rj[i] - Rj[j])
         tval = dif / denom
         pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = df))
         return pval
 
-    if isinstance(x, DataFrame):
-        if melted and not all([block_col, group_col, y_col]):
-            raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted pandas.DataFrame')
-
-        if not melted:
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
-            x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+    if isinstance(x, DataFrame) and not melted:
+        group_col = 'groups'
+        block_col = 'blocks'
+        y_col = 'y'
+        x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
     else:
         x = np.array(x)
@@ -527,14 +526,11 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
             group_col = 'groups'
             block_col = 'blocks'
             y_col = 'y'
-
             x.columns.name = group_col
             x.index.name = block_col
             x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-        else:
-            if not all([block_col, group_col, y_col]):
-                raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted matrix')
 
+        else:
             x.columns[group_col] = 'groups'
             x.columns[block_col] = 'blocks'
             x.columns[y_col] = 'y'
@@ -577,11 +573,8 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
 
-    if isinstance(x, DataFrame):
-        groups_unique = x[group_col].unique()
-        return DataFrame(vs, index=groups_unique, columns=groups_unique)
-    else:
-        return vs
+    groups_unique = x[group_col].unique()
+    return DataFrame(vs, index=groups_unique, columns=groups_unique)
 
 def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adjust = None):
 
@@ -656,12 +649,7 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = n - k))
         return pval
 
-    if isinstance(x, DataFrame):
-        if not sort:
-            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-        x.sort_values(by=[group_col], ascending=True, inplace=True)
-
-    else:
+    if not isinstance(x, DataFrame):
         x = np.array(x)
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[0]))
 
@@ -669,6 +657,10 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         x.columns[val_col] = 'y'
         group_col = 'groups'
         val_col = 'y'
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+    x.sort_values(by=[group_col], ascending=True, inplace=True)
 
     n = x[val_col].size
     k = x[group_col].unique().size
@@ -699,11 +691,8 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
 
-    if isinstance(x, DataFrame):
-        groups_unique = x[group_col].unique()
-        return DataFrame(vs, index=groups_unique, columns=groups_unique)
-    else:
-        return vs
+    groups_unique = x[group_col].unique()
+    return DataFrame(vs, index=groups_unique, columns=groups_unique)
 
 def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None, sort = True):
 
