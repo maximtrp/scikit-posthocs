@@ -430,7 +430,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         return vs
 
 
-def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
+def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False, p_adjust = None):
 
     '''Pairwise post-hoc test for multiple comparisons of rank sums according to
     Durbin and Conover for a two-way balanced incomplete block design (BIBD).
@@ -439,18 +439,29 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
         ----------
         x : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
-            DataFrame. Array must be two-dimensional. Second dimension may vary,
-            i.e. groups may have different lengths.
+            DataFrame.
 
-        y_col : str, optional
+            If x is an array and melted is set to True (default), the length
+            of the second dimension must be equal to three. Furthermore,
+            y_col, block_col and group_col must be set to int and specify
+            index of column containing elements of correspondary type.
+            If x is an array and melted is set to False, x is a typical for
+            block design matrix, i.e. rows are blocks, and columns are groups.
+            In this case you do not need to specify col arguments.
+
+            If x is a Pandas DataFrame and melted is set to True (default),
+            y_col, block_col and group_col must specify columns names (strings).
+            index of column containing elements of correspondary type.
+
+        y_col : str or int
             Must be specified if x is a pandas DataFrame object. The name of
             a column that contains y data.
 
-        block_col : str, optional
+        block_col : str or int
             Must be specified if x is a pandas DataFrame object. The name of
             a column that contains block names.
 
-        group_col : str, optional
+        group_col : str or int
             Must be specified if x is a pandas DataFrame object. The name of
             a column that contains group names.
 
@@ -502,10 +513,13 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
         return pval
 
     if isinstance(x, DataFrame):
-        if not all([block_col, group_col, y_col]):
-            raise ValueError('block_col, group_col, y_col should be explicitly specified if using pandas.DataFrame')
+        if melted and not all([block_col, group_col, y_col]):
+            raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted pandas.DataFrame')
 
         if not melted:
+            group_col = group_col if group_col else 'groups'
+            block_col = block_col if block_col else 'blocks'
+            y_col = y_col if y_col else 'y'
             x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
         if not sort:
@@ -515,15 +529,25 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
         x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
 
     else:
-        group_col = group_col if group_col else 'groups'
-        block_col = block_col if block_col else 'blocks'
-        y_col = y_col if y_col else 'y'
-
         x = np.array(x)
-        x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=np.arange(x.shape[1])+1)
-        x.columns.name = group_col
-        x.index.name = block_col
-        x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+
+        if not melted:
+            group_col = group_col if group_col else 'groups'
+            block_col = block_col if block_col else 'blocks'
+            y_col = y_col if y_col else 'y'
+
+            x.columns.name = group_col
+            x.index.name = block_col
+            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+        else:
+            x.columns[group_col] = 'groups'
+            x.columns[block_col] = 'blocks'
+            x.columns[y_col] = 'y'
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
+
 
     t = x[group_col].unique().size
     b = x[block_col].unique().size
