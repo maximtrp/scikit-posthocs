@@ -112,7 +112,7 @@ def sign_table(a, lower = True, upper = True):
 
 
 def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
-    **kwargs):
+    ax = None, **kwargs):
 
     '''Significance plot
 
@@ -195,7 +195,7 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
         cmap = ['1', '#ef3b2c',  '#005a32',  '#238b45', '#a1d99b']
 
     if flat:
-        return heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, **kwargs)
+        return heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax, **kwargs)
 
     else:
         df[(df > 0.05)] = 0
@@ -207,7 +207,7 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
         if len(cmap) != 5:
             raise ValueError("Cmap list must contain 5 items")
 
-        g = heatmap(df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1, cbar=False, **kwargs)
+        g = heatmap(df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1, cbar=False, ax=ax, **kwargs)
 
         cbar_ax = g.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
         cbar = ColorbarBase(cbar_ax, cmap=ListedColormap(cmap[1:]), boundaries=[0,1,2,3,4])
