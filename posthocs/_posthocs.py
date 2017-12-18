@@ -670,6 +670,7 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     x.sort_values(by=[group_col], ascending=True, inplace=True)
 
+    t = x[group_col].unique()
     n = x[val_col].size
     k = x[group_col].unique().size
     r = ss.rankdata(x[val_col])
@@ -681,9 +682,8 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
     sts = (1 / s2) * np.sum(aj ** 2 / nj)
     param = k - 1
     A = aj / nj
-    t = x[group_col].unique()
 
-    vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
+    vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
     combs = it.combinations(t, 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
