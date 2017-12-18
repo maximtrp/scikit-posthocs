@@ -600,7 +600,8 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
             If True, sort data by block and group columns.
 
         p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details.
+            Available methods are:
                 'bonferroni' : one-step correction
                 'sidak' : one-step correction
                 'holm-sidak' : step-down method using Sidak adjustments
@@ -651,8 +652,15 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
 
     if not isinstance(x, DataFrame):
         x = np.array(x)
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[0]))
 
+        if x.ndim < 2:
+            groups = np.array([len(a) * [i] for i, a in enumerate(x)]).flatten()
+            x = x.flatten()
+            x = np.column_stack([x, g])
+            val_col = 0
+            group_col = 1
+
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[0]))
         x.columns[group_col] = 'groups'
         x.columns[val_col] = 'y'
         group_col = 'groups'
