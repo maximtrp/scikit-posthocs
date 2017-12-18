@@ -524,9 +524,9 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
 
         if not melted:
-            group_col = group_col if group_col else 'groups'
-            block_col = block_col if block_col else 'blocks'
-            y_col = y_col if y_col else 'y'
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
 
             x.columns.name = group_col
             x.index.name = block_col
@@ -646,6 +646,9 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
 
     '''
 
+    if not all([group_col, val_col]):
+            raise ValueError('group_col, val_col should be explicitly specified')
+
     def compare_stats(i, j):
         dif = np.abs(A[i] - A[j])
         B = 1 / nj[i] + 1 / nj[j]
@@ -654,21 +657,18 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         return pval
 
     if isinstance(x, DataFrame):
-        if not all([group_col, val_col]):
-            raise ValueError('group_col, val_col should be explicitly specified if using pandas.DataFrame')
-
         if not sort:
             x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-
         x.sort_values(by=[group_col], ascending=True, inplace=True)
 
     else:
-        group_col = group_col if group_col else 'groups'
-        val_col = val_col if val_col else 'y'
-
         x = np.array(x)
-        x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=[val_col, group_col])
-        x.columns.name = group_col
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[0]))
+
+        x.columns[group_col] = 'groups'
+        x.columns[val_col] = 'y'
+        group_col = 'groups'
+        val_col = 'y'
 
     n = x[val_col].size
     k = x[group_col].unique().size
