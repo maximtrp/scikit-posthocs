@@ -514,10 +514,10 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
             raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted pandas.DataFrame')
 
         if not melted:
-            group_col = group_col if group_col else 'groups'
-            block_col = block_col if block_col else 'blocks'
-            y_col = y_col if y_col else 'y'
-            x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
+            x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
         if not sort:
             x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
@@ -547,15 +547,6 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
             group_col = 'groups'
             block_col = 'blocks'
             y_col = 'y'
-
-
-        if not melted:
-            x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=np.arange(x.shape[1])+1)
-            x.columns.name = group_col
-            x.index.name = block_col
-            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-        else:
-            x = DataFrame(x, index=np.arange(x.shape[0])+1, columns=[y_col, block_col, group_col])
 
     groups = x[group_col].unique()
     t = groups.size
