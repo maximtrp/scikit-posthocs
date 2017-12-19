@@ -507,7 +507,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
         raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
 
     def compare_stats(i, j):
-        dif = np.abs(Rj[i] - Rj[j])
+        dif = np.abs(Rj[groups[i]] - Rj[groups[j]])
         tval = dif / denom
         pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = df))
         return pval
@@ -518,7 +518,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
         y_col = 'y'
         x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
-    else:
+    elif not isinstance(x, DataFrame):
         x = np.array(x)
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
 
@@ -559,7 +559,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     df = b * k - b - t + 1
 
     vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
-    combs = it.combinations(groups, 2)
+    combs = it.combinations(range(t), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
@@ -573,9 +573,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
 
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
-
-    groups_unique = x[group_col].unique()
-    return DataFrame(vs, index=groups_unique, columns=groups_unique)
+    return DataFrame(vs, index=groups, columns=groups)
 
 def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't', melted = True, sort = False, p_adjust = None):
 
