@@ -663,13 +663,13 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
         raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
 
     def compare_stats_t(i, j):
-        dif = np.abs(S[i] - S[j])
+        dif = np.abs(S[groups[i]] - S[groups[j]])
         tval = dif / denom
         pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = (b - 1) * (k - 1)))
         return pval
 
     def compare_stats_norm(i, j):
-        dif = np.abs(W[i] * ff - W[j] * ff)
+        dif = np.abs(W[groups[i]] * ff - W[groups[j]] * ff)
         zval = dif / denom
         pval = 2. * (1. - ss.norm.cdf(np.abs(zval)))
         return pval
@@ -680,7 +680,7 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
         y_col = 'y'
         x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
-    else:
+    elif not isinstance(x, DataFrame):
         x = np.array(x)
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
 
@@ -712,15 +712,16 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
 
     x['r'] = x.groupby(block_col)[y_col].rank()
     q = (x.groupby(block_col)[y_col].max() - x.groupby(block_col)[y_col].min()).rank()
-    x['s'] = q * (x['r'] - (k + 1)/2)
-    x['w'] = q * x['r']
-    A = np.sum(x['s'] ** 2)
-    B = (x.groupby(group_col)['s'].sum() ** 2).sum() / b
+    x['rr'] = x['r'] - (k + 1)/2
+    x['s'] = x.apply(lambda x, y: x['rr'] * y[x['blocks']], axis=1, args=(q,))
+    x['w'] = x.apply(lambda x, y: x['r'] * y[x['blocks']], axis=1, args=(q,))
+    A = (x['s'] ** 2).sum()
     S = x.groupby(group_col)['s'].sum()
+    B = np.sum(S ** 2) / b
     W = x.groupby(group_col)['w'].sum()
 
-    vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
-    combs = it.combinations(groups, 2)
+    vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
+    combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
@@ -734,7 +735,7 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
 
     else:
         n = b * k
-        denom = np.sqrt((k * (k + 1) * (2 * n + 1) * (k-1))/(18 * n * (n + 1)))
+        denom = np.sqrt((k * (k + 1) * (2 * n + 1) * (k-1)) / (18 * n * (n + 1)))
         ff = 1 / (b * (b + 1)/2)
 
         for i, j in combs:
