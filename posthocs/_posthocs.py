@@ -577,7 +577,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     groups_unique = x[group_col].unique()
     return DataFrame(vs, index=groups_unique, columns=groups_unique)
 
-def posthoc_quade(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False, p_adjust = None):
+def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't', melted = True, sort = False, p_adjust = None):
 
     '''Calculate pairwise comparisons using Quade's post-hoc test for
     unreplicated blocked data. This test is usually conducted post-hoc after
@@ -662,10 +662,16 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, melted = 
     if melted and not all([block_col, group_col, y_col]):
         raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
 
-    def compare_stats(i, j):
-        dif = np.abs(Rj[i] - Rj[j])
+    def compare_stats_t(i, j):
+        dif = np.abs(S[i] - S[j])
         tval = dif / denom
-        pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = df))
+        pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = (b - 1) * (k - 1)))
+        return pval
+
+    def compare_stats_norm(i, j):
+        dif = np.abs(W[i] * ff - W[j] * ff)
+        zval = dif / denom
+        pval = 2. * (1. - ss.norm.cdf(np.abs(zval)))
         return pval
 
     if isinstance(x, DataFrame) and not melted:
@@ -704,14 +710,14 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, melted = 
     k = groups.size
     b = x[block_col].unique().size
 
-    x['y_ranked'] = x.groupby(block_col)[y_col].rank()
+    x['r'] = x.groupby(block_col)[y_col].rank()
     q = (x.groupby(block_col)[y_col].max() - x.groupby(block_col)[y_col].min()).rank()
-    x['y_ranked_avg'] = q * (x['y_ranked'] - (k + 1)/2)
-    w = q * r
-    A = np.sum(x['y_ranked_avg'] ** 2)
-    B = (x.groupby(group_col)['y_ranked_avg'].sum() ** 2).sum() / b
-
-
+    x['s'] = q * (x['r'] - (k + 1)/2)
+    x['w'] = q * x['r']
+    A = np.sum(x['s'] ** 2)
+    B = (x.groupby(group_col)['s'].sum() ** 2).sum() / b
+    S = x.groupby(group_col)['s'].sum()
+    W = x.groupby(group_col)['w'].sum()
 
     vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
     combs = it.combinations(groups, 2)
@@ -720,8 +726,19 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, melted = 
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
-    for i, j in combs:
-        vs[i, j] = compare_stats(i, j)
+    if dist == 't':
+        denom = np.sqrt((2 * b * (A - B)) / ((b - 1) * (k - 1)))
+
+        for i, j in combs:
+            vs[i, j] = compare_stats_t(i, j)
+
+    else:
+        n = b * k
+        denom = np.sqrt((k * (k + 1) * (2 * n + 1) * (k-1))/(18 * n * (n + 1)))
+        ff = 1 / (b * (b + 1)/2)
+
+        for i, j in combs:
+            vs[i, j] = compare_stats_norm(i, j)
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
