@@ -577,6 +577,161 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     groups_unique = x[group_col].unique()
     return DataFrame(vs, index=groups_unique, columns=groups_unique)
 
+def posthoc_quade(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False, p_adjust = None):
+
+    '''Calculate pairwise comparisons using Quade's post-hoc test for
+    unreplicated blocked data. This test is usually conducted post-hoc after
+    significant results of the omnibus test.
+
+        Parameters
+        ----------
+        x : array_like or pandas DataFrame object
+            An array, any object exposing the array interface or a pandas
+            DataFrame.
+
+            If x is an array and melted is set to True (default), the length
+            of the second dimension must be equal to three. Furthermore,
+            y_col, block_col and group_col must be set to int and specify
+            index of column containing elements of correspondary type.
+            If x is an array and melted is set to False, x is a typical for
+            block design matrix, i.e. rows are blocks, and columns are groups.
+            In this case you do not need to specify col arguments.
+
+            If x is a Pandas DataFrame and melted is set to True (default),
+            y_col, block_col and group_col must specify columns names (strings).
+            index of column containing elements of correspondary type.
+
+        y_col : str or int
+            Must be specified if x is a pandas DataFrame object. The name or
+            index of a column that contains y data.
+
+        block_col : str or int
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains block names.
+
+        group_col : str or int
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains group names.
+
+        melted : bool, optional
+            Specifies if data are given as melted columns "y", "blocks", and
+            "groups".
+
+        sort : bool, optional
+            If True, sort data by block and group columns.
+
+        p_adjust : str, optional
+            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+                'bonferroni' : one-step correction
+                'sidak' : one-step correction
+                'holm-sidak' : step-down method using Sidak adjustments
+                'holm' : step-down method using Bonferroni adjustments
+                'simes-hochberg' : step-up method  (independent)
+                'hommel' : closed method based on Simes tests (non-negative)
+                'fdr_bh' : Benjamini/Hochberg  (non-negative)
+                'fdr_by' : Benjamini/Yekutieli (negative)
+                'fdr_tsbh' : two stage fdr correction (non-negative)
+                'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        Returns
+        -------
+        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+
+        Notes
+        -----
+
+
+        References
+        ----------
+        W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition, Wiley.
+
+        N. A. Heckert and J. J. Filliben (2003). NIST Handbook 148: Dataplot Reference Manual,
+        Volume 2: Let Subcommands and Library Functions.
+        National Institute of Standards and Technology Handbook Series, June 2003.
+
+        D. Quade (1979), Using weighted rankings in the analysis of complete blocks
+        with additive block effects.
+        Journal of the American Statistical Association, 74, 680-683.
+
+        Examples
+        --------
+        >>> ph.posthoc_quade(x)
+
+    '''
+
+    if melted and not all([block_col, group_col, y_col]):
+        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
+
+    def compare_stats(i, j):
+        dif = np.abs(Rj[i] - Rj[j])
+        tval = dif / denom
+        pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = df))
+        return pval
+
+    if isinstance(x, DataFrame) and not melted:
+        group_col = 'groups'
+        block_col = 'blocks'
+        y_col = 'y'
+        x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+    else:
+        x = np.array(x)
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+
+        if not melted:
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
+            x.columns.name = group_col
+            x.index.name = block_col
+            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+        else:
+            x.columns[group_col] = 'groups'
+            x.columns[block_col] = 'blocks'
+            x.columns[y_col] = 'y'
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
+    x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
+    x.dropna(inplace=True)
+
+    groups = x[group_col].unique()
+    k = groups.size
+    b = x[block_col].unique().size
+
+    x['y_ranked'] = x.groupby(block_col)[y_col].rank()
+    q = (x.groupby(block_col)[y_col].max() - x.groupby(block_col)[y_col].min()).rank()
+    x['y_ranked_avg'] = q * (x['y_ranked'] - (k + 1)/2)
+    w = q * r
+    A = np.sum(x['y_ranked_avg'] ** 2)
+    B = (x.groupby(group_col)['y_ranked_avg'].sum() ** 2).sum() / b
+
+
+
+    vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
+    combs = it.combinations(groups, 2)
+
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    for i, j in combs:
+        vs[i, j] = compare_stats(i, j)
+
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+
+    vs[tri_lower] = vs.T[tri_lower]
+    np.fill_diagonal(vs, -1)
+
+    groups_unique = x[group_col].unique()
+    return DataFrame(vs, index=groups_unique, columns=groups_unique)
+
 def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adjust = None):
 
     '''Calculate pairwise multiple comparisons between group levels
