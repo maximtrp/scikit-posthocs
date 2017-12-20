@@ -744,9 +744,7 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
 
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
-
-    groups_unique = x[group_col].unique()
-    return DataFrame(vs, index=groups_unique, columns=groups_unique)
+    return DataFrame(vs, index=groups, columns=groups)
 
 def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adjust = None):
 
@@ -816,9 +814,9 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
             raise ValueError('group_col, val_col should be explicitly specified')
 
     def compare_stats(i, j):
-        dif = np.abs(A[i] - A[j])
-        B = 1 / nj[i] + 1 / nj[j]
-        tval = dif / np.sqrt(s2 * (n - 1 - sts)/(n - k) * B))
+        dif = np.abs(A[groups[i]] - A[groups[j]])
+        B = 1 / nj[groups[i]] + 1 / nj[groups[j]]
+        tval = dif / np.sqrt(s2 * (n - 1 - sts)/(n - k) * B)
         pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = n - k))
         return pval
 
@@ -842,21 +840,21 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     x.sort_values(by=[group_col], ascending=True, inplace=True)
 
-    t = x[group_col].unique()
+    groups = x[group_col].unique()
     n = x[val_col].size
-    k = x[group_col].unique().size
+    k = groups.size
     r = ss.rankdata(x[val_col])
     x['z_scores'] = ss.norm.ppf(r / (n + 1))
 
-    aj = x.groupby(group_col)[val_col].sum()
-    nj = x.groupby(group_col)[val_col].count()
+    aj = x.groupby(group_col)['z_scores'].sum()
+    nj = x.groupby(group_col)['z_scores'].count()
     s2 = (1 / (n - 1)) * (x['z_scores'] ** 2).sum()
     sts = (1 / s2) * np.sum(aj ** 2 / nj)
     param = k - 1
     A = aj / nj
 
     vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
-    combs = it.combinations(t, 2)
+    combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
@@ -870,9 +868,7 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
 
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
-
-    groups_unique = x[group_col].unique()
-    return DataFrame(vs, index=groups_unique, columns=groups_unique)
+    return DataFrame(vs, index=groups, columns=groups)
 
 def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None, sort = True):
 
