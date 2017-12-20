@@ -426,6 +426,152 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
     else:
         return vs
 
+def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False):
+
+    '''Calculate pairwise comparisons using Nemenyi post-hoc test for
+    unreplicated blocked data. This test is usually conducted post-hoc after
+    significant results of the Friedman's test. The statistics refer to upper
+    quantiles of the studentized range distribution (Tukey).
+
+        Parameters
+        ----------
+        x : array_like or pandas DataFrame object
+            An array, any object exposing the array interface or a pandas
+            DataFrame.
+
+            If `x` is an array and `melted` is set to True (default),
+            y_col, block_col and group_col must specify index of column
+            containing elements of correspondary type.
+
+            If `x` is a Pandas DataFrame and `melted` is set to True (default),
+            y_col, block_col and group_col must specify columns names (string).
+
+            If `melted` is set to False, x is a typical matrix of block design,
+            i.e. rows are blocks, and columns are groups. In this case you do
+            not need to specify col arguments.
+
+        y_col : str or int
+            Must be specified if x is a pandas DataFrame object. The name or
+            index of a column that contains y data.
+
+        block_col : str or int
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains block names.
+
+        group_col : str or int
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains group names.
+
+        melted : bool, optional
+            Specifies if data are given as melted columns "y", "blocks", and
+            "groups".
+
+        sort : bool, optional
+            If True, sort data by block and group columns.
+
+        p_adjust : str, optional
+            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+                'bonferroni' : one-step correction
+                'sidak' : one-step correction
+                'holm-sidak' : step-down method using Sidak adjustments
+                'holm' : step-down method using Bonferroni adjustments
+                'simes-hochberg' : step-up method  (independent)
+                'hommel' : closed method based on Simes tests (non-negative)
+                'fdr_bh' : Benjamini/Hochberg  (non-negative)
+                'fdr_by' : Benjamini/Yekutieli (negative)
+                'fdr_tsbh' : two stage fdr correction (non-negative)
+                'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        Returns
+        -------
+        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+
+        Notes
+        -----
+        A one-way ANOVA with repeated measures that is also referred to as ANOVA with
+        unreplicated block design can also be conducted via the friedman.test. The
+        consequent post-hoc pairwise multiple comparison test according to Nemenyi is
+        conducted with this function.
+
+        This function does not test for ties.
+
+        References
+        ----------
+        Janez Demsar (2006), Statistical comparisons of classifiers over
+        multiple data sets, Journal of Machine Learning Research, 7, 1-30.
+
+        P. Nemenyi (1963) Distribution-free Multiple Comparisons. Ph.D. thesis,
+        Princeton University.
+
+        Lothar Sachs (1997), Angewandte Statistik. Berlin: Springer. Pages: 668-675.
+
+        Examples
+        --------
+        >>> ph.posthoc_nemenyi_friedman(x)
+
+    '''
+
+    if melted and not all([block_col, group_col, y_col]):
+        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
+
+    def compare_stats(i, j):
+        dif = np.abs(R[groups[i]] - R[groups[j]])
+        qval = dif / np.sqrt(k * (k + 1) / (6 * n))
+        return qval
+
+    if isinstance(x, DataFrame) and not melted:
+        group_col = 'groups'
+        block_col = 'blocks'
+        y_col = 'y'
+        x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+    elif not isinstance(x, DataFrame):
+        x = np.array(x)
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+
+        if not melted:
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
+            x.columns.name = group_col
+            x.index.name = block_col
+            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+        else:
+            x.columns[group_col] = 'groups'
+            x.columns[block_col] = 'blocks'
+            x.columns[y_col] = 'y'
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
+    x.sort_values(by=[group_col, block_col], ascending=True, inplace=True)
+    x.dropna(inplace=True)
+
+    groups = x[group_col].unique()
+    k = groups.size
+    n = x[block_col].unique().size
+
+    x['mat'] = x.groupby(block_col)[y_col].rank()
+    R = x.groupby(group_col)['mat'].mean()
+    vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
+    combs = it.combinations(range(k), 2)
+
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    for i, j in combs:
+        vs[i, j] = compare_stats(i, j)
+
+    vs *= np.sqrt(2)
+    vs[tri_upper] = psturng(vs[tri_upper], k, np.inf)
+    vs[tri_lower] = vs.T[tri_lower]
+    np.fill_diagonal(vs, -1)
+    return DataFrame(vs, index=groups, columns=groups)
 
 def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False, p_adjust = None):
 
@@ -438,17 +584,16 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
-            If x is an array and melted is set to True (default), the length
-            of the second dimension must be equal to three. Furthermore,
-            y_col, block_col and group_col must be set to int and specify
-            index of column containing elements of correspondary type.
-            If x is an array and melted is set to False, x is a typical for
-            block design matrix, i.e. rows are blocks, and columns are groups.
-            In this case you do not need to specify col arguments.
+            If `x` is an array and `melted` is set to True (default),
+            y_col, block_col and group_col must specify index of column
+            containing elements of correspondary type.
 
-            If x is a Pandas DataFrame and melted is set to True (default),
-            y_col, block_col and group_col must specify columns names (strings).
-            index of column containing elements of correspondary type.
+            If `x` is a Pandas DataFrame and `melted` is set to True (default),
+            y_col, block_col and group_col must specify columns names (string).
+
+            If `melted` is set to False, x is a typical matrix of block design,
+            i.e. rows are blocks, and columns are groups. In this case you do
+            not need to specify col arguments.
 
         y_col : str or int
             Must be specified if x is a pandas DataFrame object. The name of
@@ -587,17 +732,16 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
-            If x is an array and melted is set to True (default), the length
-            of the second dimension must be equal to three. Furthermore,
-            y_col, block_col and group_col must be set to int and specify
-            index of column containing elements of correspondary type.
-            If x is an array and melted is set to False, x is a typical for
-            block design matrix, i.e. rows are blocks, and columns are groups.
-            In this case you do not need to specify col arguments.
+            If `x` is an array and `melted` is set to True (default),
+            y_col, block_col and group_col must specify index of column
+            containing elements of correspondary type.
 
-            If x is a Pandas DataFrame and melted is set to True (default),
-            y_col, block_col and group_col must specify columns names (strings).
-            index of column containing elements of correspondary type.
+            If `x` is a Pandas DataFrame and `melted` is set to True (default),
+            y_col, block_col and group_col must specify columns names (string).
+
+            If `melted` is set to False, x is a typical matrix of block design,
+            i.e. rows are blocks, and columns are groups. In this case you do
+            not need to specify col arguments.
 
         y_col : str or int
             Must be specified if x is a pandas DataFrame object. The name or
@@ -755,16 +899,15 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         ----------
         x : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
-            DataFrame. Array must be two-dimensional. If x is an array, val_col
-            and group_col must be specified explicitly
+            DataFrame.
 
         val_col : str or int
-            Name (string) or index (int) of a column that contains quantitative
-            data in a pandas DataFrame or an array, correspondingly.
+            Name (string) or index (int) of a column in a pandas DataFrame or an array that
+            contains quantitative data.
 
         group_col : str or int
-            Name (string) or index (int) of a column that contains group names in
-            a pandas DataFrame or an array, correspondingly.
+            Name (string) or index (int) of a column in a pandas DataFrame or an array that
+            contains group names.
 
         sort : bool, optional
             If True, sort data by block and group columns.
@@ -879,8 +1022,7 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
         ----------
         x : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
-            DataFrame. Array must be two-dimensional. Second dimension may
-            vary, i.e. groups may have different lengths.
+            DataFrame. Array must be two-dimensional.
 
         val_col : str, optional
             Must be specified if x is a pandas DataFrame object.
