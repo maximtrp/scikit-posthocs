@@ -755,16 +755,16 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         ----------
         x : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
-            DataFrame. Array must be two-dimensional. Second dimension may vary,
-            i.e. groups may have different lengths.
+            DataFrame. Array must be two-dimensional. If x is an array, val_col
+            and group_col must be specified explicitly
 
-        val_col : str, optional
-            Must be specified if x is a pandas DataFrame object. The name of
-            a column that contains quantitative data.
+        val_col : str or int
+            Name (string) or index (int) of a column that contains quantitative
+            data in a pandas DataFrame or an array, correspondingly.
 
-        group_col : str, optional
-            Must be specified if x is a pandas DataFrame object. The name of
-            a column that contains group names.
+        group_col : str or int
+            Name (string) or index (int) of a column that contains group names in
+            a pandas DataFrame or an array, correspondingly.
 
         sort : bool, optional
             If True, sort data by block and group columns.
@@ -806,12 +806,12 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         Examples
         --------
         >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
-        >>> ph.posthoc_vanwaerden(x)
+        >>> ph.posthoc_vanwaerden(x, val_col = 0, group_col = 1)
 
     '''
 
     if not all([group_col, val_col]):
-            raise ValueError('group_col, val_col should be explicitly specified')
+            raise ValueError('group_col, val_col must be explicitly specified')
 
     def compare_stats(i, j):
         dif = np.abs(A[groups[i]] - A[groups[j]])
