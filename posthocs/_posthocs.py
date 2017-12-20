@@ -469,19 +469,6 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
         sort : bool, optional
             If True, sort data by block and group columns.
 
-        p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
-
         Returns
         -------
         Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
