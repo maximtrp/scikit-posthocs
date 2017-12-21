@@ -426,7 +426,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
     else:
         return vs
 
-def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False):
+def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None, melted = False, sort = False):
 
     '''Calculate pairwise comparisons using Nemenyi post-hoc test for
     unreplicated blocked data. This test is usually conducted post-hoc after
@@ -494,6 +494,7 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
 
         Examples
         --------
+        >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
         >>> ph.posthoc_nemenyi_friedman(x)
 
     '''
