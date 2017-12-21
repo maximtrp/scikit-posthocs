@@ -560,6 +560,144 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
+def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False):
+
+    '''Calculate pairwise comparisons using Conover post-hoc test for unreplicated
+blocked data. This test is usually conducted post-hoc after significant results
+of the Friedman test. The statistics refer to the student-t-distribution
+(TDist).
+
+        Parameters
+        ----------
+        x : array_like or pandas DataFrame object
+            An array, any object exposing the array interface or a pandas
+            DataFrame.
+
+            If `x` is an array and `melted` is set to True (default),
+            y_col, block_col and group_col must specify index of column
+            containing elements of correspondary type.
+
+            If `x` is a Pandas DataFrame and `melted` is set to True (default),
+            y_col, block_col and group_col must specify columns names (string).
+
+            If `melted` is set to False, x is a typical matrix of block design,
+            i.e. rows are blocks, and columns are groups. In this case you do
+            not need to specify col arguments.
+
+        y_col : str or int
+            Must be specified if x is a pandas DataFrame object. The name or
+            index of a column that contains y data.
+
+        block_col : str or int
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains block names.
+
+        group_col : str or int
+            Must be specified if x is a pandas DataFrame object. The name of
+            a column that contains group names.
+
+        melted : bool, optional
+            Specifies if data are given as melted columns "y", "blocks", and
+            "groups".
+
+        sort : bool, optional
+            If True, sort data by block and group columns.
+
+        Returns
+        -------
+        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+
+        Notes
+        -----
+        A one-way ANOVA with repeated measures that is also referred to as ANOVA
+        with unreplicated block design can also be conducted via the
+        friedman.test. The consequent post-hoc pairwise multiple comparison test
+        according to Conover is conducted with this function.
+
+        If y is a matrix, than the columns refer to the treatment and the rows
+        indicate the block.
+
+        References
+        ----------
+        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
+        Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
+
+        W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition,
+        Wiley.
+
+        Examples
+        --------
+        >>> ph.posthoc_nemenyi_friedman(x)
+
+    '''
+
+    if melted and not all([block_col, group_col, y_col]):
+        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
+
+    def compare_stats(i, j):
+        dif = np.abs(R[groups[i]] - R[groups[j]])
+        qval = dif / np.sqrt(k * (k + 1) / (6 * n))
+        return qval
+
+    if isinstance(x, DataFrame) and not melted:
+        group_col = 'groups'
+        block_col = 'blocks'
+        y_col = 'y'
+        x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+    elif not isinstance(x, DataFrame):
+        x = np.array(x)
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+
+        if not melted:
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
+            x.columns.name = group_col
+            x.index.name = block_col
+            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+        else:
+            x.columns[group_col] = 'groups'
+            x.columns[block_col] = 'blocks'
+            x.columns[y_col] = 'y'
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
+    x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
+    x.dropna(inplace=True)
+
+    groups = x[group_col].unique()
+    k = groups.size
+    n = x[block_col].unique().size
+
+    x['mat'] = x.groupby(block_col)[y_col].rank()
+    R = x.groupby(group_col)['mat'].sum()
+    A1 = (x['mat'] ** 2).cumsum()
+    C1 = (n * k * (k + 1) ** 2) / 4
+    TT = ((R - ((n * (k + 1))/2)) ** 2).cumsum()
+    T1 = ((k - 1) * TT) / (A1 - C1)
+
+    vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
+    combs = it.combinations(range(k), 2)
+
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    for i, j in combs:
+        vs[i, j] = compare_stats(i, j)
+
+    vs *= np.sqrt(2)
+    vs[tri_upper] = psturng(vs[tri_upper], k, np.inf)
+    vs[tri_lower] = vs.T[tri_lower]
+    np.fill_diagonal(vs, -1)
+    return DataFrame(vs, index=groups, columns=groups)
+
 def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False, p_adjust = None):
 
     '''Pairwise post-hoc test for multiple comparisons of rank sums according to
