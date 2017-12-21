@@ -627,7 +627,7 @@ of the Friedman test. The statistics refer to the student-t-distribution
 
         Examples
         --------
-        >>> ph.posthoc_nemenyi_friedman(x)
+        >>> ph.posthoc_conover_friedman(x)
 
     '''
 
@@ -636,8 +636,9 @@ of the Friedman test. The statistics refer to the student-t-distribution
 
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
-        qval = dif / np.sqrt(k * (k + 1) / (6 * n))
-        return qval
+        tval = dif / np.sqrt(A / B)
+        pval = 2 * (1. - ss.t.cdf(np.abs(tval), df = ((n-1)*(k-1))))
+        return pval
 
     if isinstance(x, DataFrame) and not melted:
         group_col = 'groups'
@@ -681,6 +682,10 @@ of the Friedman test. The statistics refer to the student-t-distribution
     C1 = (n * k * (k + 1) ** 2) / 4
     TT = ((R - ((n * (k + 1))/2)) ** 2).cumsum()
     T1 = ((k - 1) * TT) / (A1 - C1)
+
+    A = 2 * k * (1 - T1 / (k * (n-1))) * ( A1 - C1)
+    B = (n - 1) * (k - 1)
+
 
     vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
     combs = it.combinations(range(k), 2)
