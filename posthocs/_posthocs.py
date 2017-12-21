@@ -560,12 +560,12 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False):
+def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False, p_adjust = None):
 
     '''Calculate pairwise comparisons using Conover post-hoc test for unreplicated
-blocked data. This test is usually conducted post-hoc after significant results
-of the Friedman test. The statistics refer to the student-t-distribution
-(TDist).
+        blocked data. This test is usually conducted post-hoc after significant results
+        of the Friedman test. The statistics refer to the student-t-distribution
+        (TDist).
 
         Parameters
         ----------
@@ -602,6 +602,19 @@ of the Friedman test. The statistics refer to the student-t-distribution
 
         sort : bool, optional
             If True, sort data by block and group columns.
+
+        p_adjust : str, optional
+            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+                'bonferroni' : one-step correction
+                'sidak' : one-step correction
+                'holm-sidak' : step-down method using Sidak adjustments
+                'holm' : step-down method using Bonferroni adjustments
+                'simes-hochberg' : step-up method  (independent)
+                'hommel' : closed method based on Simes tests (non-negative)
+                'fdr_bh' : Benjamini/Hochberg  (non-negative)
+                'fdr_by' : Benjamini/Yekutieli (negative)
+                'fdr_tsbh' : two stage fdr correction (non-negative)
+                'fdr_tsbky' : two stage fdr correction (non-negative)
 
         Returns
         -------
@@ -678,14 +691,12 @@ of the Friedman test. The statistics refer to the student-t-distribution
 
     x['mat'] = x.groupby(block_col)[y_col].rank()
     R = x.groupby(group_col)['mat'].sum()
-    A1 = (x['mat'] ** 2).cumsum()
+    A1 = (x['mat'] ** 2).sum()
     C1 = (n * k * (k + 1) ** 2) / 4
-    TT = ((R - ((n * (k + 1))/2)) ** 2).cumsum()
+    TT = np.sum([((R[g] - ((n * (k + 1))/2)) ** 2) for g in groups])
     T1 = ((k - 1) * TT) / (A1 - C1)
-
     A = 2 * k * (1 - T1 / (k * (n-1))) * ( A1 - C1)
     B = (n - 1) * (k - 1)
-
 
     vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
     combs = it.combinations(range(k), 2)
@@ -697,8 +708,9 @@ of the Friedman test. The statistics refer to the student-t-distribution
     for i, j in combs:
         vs[i, j] = compare_stats(i, j)
 
-    vs *= np.sqrt(2)
-    vs[tri_upper] = psturng(vs[tri_upper], k, np.inf)
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
