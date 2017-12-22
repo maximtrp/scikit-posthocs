@@ -19,8 +19,12 @@ Features
 
 - Plotting functionality (e.g. significance plots).
 
-- Outlier detection algorithms: simple test based on interquartile range (IQR),
-  Grubbs test, Tietjen-Moore test, and generalized extreme Studentized deviate test (ESD test).
+- Outlier detection algorithms:
+
+  - Simple test based on interquartile range (IQR).
+  - Grubbs' test.
+  - Tietjen-Moore's test.
+  - Generalized Extreme Studentized Deviate test (ESD test).
 
 Dependencies
 ------------
