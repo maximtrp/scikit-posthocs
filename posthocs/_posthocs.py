@@ -476,7 +476,7 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
         Notes
         -----
         A one-way ANOVA with repeated measures that is also referred to as ANOVA with
-        unreplicated block design can also be conducted via the friedman.test. The
+        unreplicated block design can also be conducted via Friedman's test. The
         consequent post-hoc pairwise multiple comparison test according to Nemenyi is
         conducted with this function.
 
