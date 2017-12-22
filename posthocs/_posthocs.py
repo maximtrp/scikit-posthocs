@@ -439,16 +439,16 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
-            If `x` is an array and `melted` is set to True (default),
+            If `melted` is set to False (default), x is a typical matrix of block design,
+            i.e. rows are blocks, and columns are groups. In this case you do
+            not need to specify col arguments.
+
+            If `x` is an array and `melted` is set to True,
             y_col, block_col and group_col must specify index of column
             containing elements of correspondary type.
 
-            If `x` is a Pandas DataFrame and `melted` is set to True (default),
+            If `x` is a Pandas DataFrame and `melted` is set to True,
             y_col, block_col and group_col must specify columns names (string).
-
-            If `melted` is set to False, x is a typical matrix of block design,
-            i.e. rows are blocks, and columns are groups. In this case you do
-            not need to specify col arguments.
 
         y_col : str or int
             Must be specified if x is a pandas DataFrame object. The name or
@@ -561,7 +561,7 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False, p_adjust = None):
+def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
     '''Calculate pairwise comparisons using Conover post-hoc test for unreplicated
         blocked data. This test is usually conducted post-hoc after significant results
@@ -574,16 +574,16 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
-            If `x` is an array and `melted` is set to True (default),
+            If `melted` is set to False (default), x is a typical matrix of block design,
+            i.e. rows are blocks, and columns are groups. In this case you do
+            not need to specify col arguments.
+
+            If `x` is an array and `melted` is set to True,
             y_col, block_col and group_col must specify index of column
             containing elements of correspondary type.
 
-            If `x` is a Pandas DataFrame and `melted` is set to True (default),
+            If `x` is a Pandas DataFrame and `melted` is set to True,
             y_col, block_col and group_col must specify columns names (string).
-
-            If `melted` is set to False, x is a typical matrix of block design,
-            i.e. rows are blocks, and columns are groups. In this case you do
-            not need to specify col arguments.
 
         y_col : str or int
             Must be specified if x is a pandas DataFrame object. The name or
@@ -716,7 +716,7 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted = True, sort = False, p_adjust = None):
+def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
     '''Pairwise post-hoc test for multiple comparisons of rank sums according to
     Durbin and Conover for a two-way balanced incomplete block design (BIBD).
@@ -727,16 +727,16 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
-            If `x` is an array and `melted` is set to True (default),
+            If `melted` is set to False (default), x is a typical matrix of block design,
+            i.e. rows are blocks, and columns are groups. In this case you do
+            not need to specify col arguments.
+
+            If `x` is an array and `melted` is set to True,
             y_col, block_col and group_col must specify index of column
             containing elements of correspondary type.
 
-            If `x` is a Pandas DataFrame and `melted` is set to True (default),
+            If `x` is a Pandas DataFrame and `melted` is set to True,
             y_col, block_col and group_col must specify columns names (string).
-
-            If `melted` is set to False, x is a typical matrix of block design,
-            i.e. rows are blocks, and columns are groups. In this case you do
-            not need to specify col arguments.
 
         y_col : str or int
             Must be specified if x is a pandas DataFrame object. The name of
@@ -863,7 +863,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't', melted = True, sort = False, p_adjust = None):
+def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't', melted = False, sort = False, p_adjust = None):
 
     '''Calculate pairwise comparisons using Quade's post-hoc test for
     unreplicated blocked data. This test is usually conducted post-hoc after
@@ -875,16 +875,16 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
-            If `x` is an array and `melted` is set to True (default),
+            If `melted` is set to False (default), x is a typical matrix of block design,
+            i.e. rows are blocks, and columns are groups. In this case you do
+            not need to specify col arguments.
+
+            If `x` is an array and `melted` is set to True,
             y_col, block_col and group_col must specify index of column
             containing elements of correspondary type.
 
-            If `x` is a Pandas DataFrame and `melted` is set to True (default),
+            If `x` is a Pandas DataFrame and `melted` is set to True,
             y_col, block_col and group_col must specify columns names (string).
-
-            If `melted` is set to False, x is a typical matrix of block design,
-            i.e. rows are blocks, and columns are groups. In this case you do
-            not need to specify col arguments.
 
         y_col : str or int
             Must be specified if x is a pandas DataFrame object. The name or
