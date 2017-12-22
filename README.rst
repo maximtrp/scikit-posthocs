@@ -7,9 +7,13 @@ This Python package provides statistical post-hoc tests for pairwise multiple co
 Features
 --------
 
-- Parametric and non-parametric pairwise post-hoc tests: Conover's, Dunn's, Nemenyi's tests
-  (ported from R's `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package),
-  T test, Mann-Whitney U test, and TukeyHSD test.
+- Multiple comparison post-hoc tests (ported from R's
+  `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package):
+  * Conover's, Dunn's, Nemenyi's tests for use with Kruskal-Wallis test
+  * Quade's, van Waerden's, Durbin's tests
+  * Conover's, Nemenyi's tests for use with Friedman test
+  * Student's T test, Mann-Whitney U test, and TukeyHSD test.
+
   All tests are capable of p adjustments for multiple pairwise comparisons.
 
 - Plotting functionality (e.g. significance plots).
