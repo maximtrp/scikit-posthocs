@@ -494,6 +494,8 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
 
         Examples
         --------
+        >>> # Non-melted case, x is a block design matrix, i.e. rows are blocks
+        >>> # and columns are groups.
         >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
         >>> ph.posthoc_nemenyi_friedman(x)
 
@@ -641,6 +643,7 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
 
         Examples
         --------
+        >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
         >>> ph.posthoc_conover_friedman(x)
 
     '''
@@ -786,7 +789,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
 
         Examples
         --------
-        >>> x = np.array([[10,53,13,27], [59,36,87,23], [76,45,23,12]])
+        >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
         >>> ph.posthoc_durbin(x)
 
     '''
@@ -940,6 +943,7 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
 
         Examples
         --------
+        >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
         >>> ph.posthoc_quade(x)
 
     '''
