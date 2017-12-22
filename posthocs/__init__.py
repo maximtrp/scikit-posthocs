@@ -1,7 +1,10 @@
-__version__ = '0.2.9'
+__version__ = '0.3.2'
 
 from posthocs._posthocs \
-    import posthoc_conover, posthoc_dunn, posthoc_nemenyi, posthoc_ttest, posthoc_tukey_hsd, posthoc_mannwhitney
+    import posthoc_conover, posthoc_dunn, posthoc_nemenyi,\
+           posthoc_ttest, posthoc_tukey_hsd, posthoc_mannwhitney,\
+           posthoc_nemenyi_friedman, posthoc_conover_friedman,\
+           posthoc_quade, posthoc_durbin, posthoc_vanwaerden
 
 from posthocs._plotting \
     import sign_array, sign_plot, sign_table
