@@ -1100,9 +1100,6 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
 
     '''
 
-    if not all([group_col, val_col]):
-            raise ValueError('group_col, val_col must be explicitly specified')
-
     def compare_stats(i, j):
         dif = np.abs(A[groups[i]] - A[groups[j]])
         B = 1 / nj[groups[i]] + 1 / nj[groups[j]]
@@ -1110,19 +1107,25 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = n - k))
         return pval
 
-    if not isinstance(x, DataFrame):
+    if isinstance(x, DataFrame):
+        if not all([group_col, val_col]):
+            raise ValueError('group_col, val_col must be explicitly specified')
+    else:
         x = np.array(x)
 
-        if x.ndim < 2:
-            groups = np.array([len(a) * [i] for i, a in enumerate(x)]).flatten()
-            x = x.flatten()
-            x = np.column_stack([x, g])
-            val_col = 0
-            group_col = 1
+        if not all([group_col, val_col]):
+            try:
+                groups = np.array([len(a) * [i + 1] for i, a in enumerate(x)])
+                groups = sum(groups.tolist(), [])
+                x = sum(x.tolist(), [])
+                x = np.column_stack([x, groups])
+                val_col = 0
+                group_col = 1
+            except:
+                raise ValueError('array cannot be processed, provide val_col and group_col args')
 
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[0]))
-        x.columns[group_col] = 'groups'
-        x.columns[val_col] = 'y'
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+        x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
         group_col = 'groups'
         val_col = 'y'
 
@@ -1448,3 +1451,6 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
         return DataFrame(vs, index=groups_unique, columns=groups_unique)
     else:
         return vs
+
+a = np.array([[1,2,1,1,2],[12,43,12,52],[54,7,23,24]])
+posthoc_vanwaerden(a)
