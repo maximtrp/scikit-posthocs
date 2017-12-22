@@ -1451,6 +1451,3 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
         return DataFrame(vs, index=groups_unique, columns=groups_unique)
     else:
         return vs
-
-a = np.array([[1,2,1,1,2],[12,43,12,52],[54,7,23,24]])
-posthoc_vanwaerden(a)
