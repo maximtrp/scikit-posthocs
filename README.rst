@@ -10,10 +10,10 @@ Features
 - Multiple comparisons post-hoc tests (ported from R's
   `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package):
 
-  - Conover's, Dunn's, and Nemenyi's tests for use with Kruskal-Wallis test.
-  - Quade's, van Waerden's, and Durbin's tests.
-  - Conover's and Nemenyi's tests for use with Friedman test.
-  - Student's T test, Mann-Whitney U test, and TukeyHSD tests.
+  - Conover, Dunn, and Nemenyi tests for use with Kruskal-Wallis test.
+  - Quade, van Waerden, and Durbin tests.
+  - Conover and Nemenyi tests for use with Friedman test.
+  - Student T test, Mann-Whitney U test, Wilcoxon T test, and TukeyHSD tests.
 
   All tests are capable of p adjustments for multiple pairwise comparisons.
 
@@ -22,8 +22,8 @@ Features
 - Outlier detection algorithms:
 
   - Simple test based on interquartile range (IQR).
-  - Grubbs' test.
-  - Tietjen-Moore's test.
+  - Grubbs test.
+  - Tietjen-Moore test.
   - Generalized Extreme Studentized Deviate test (ESD test).
 
 Dependencies
@@ -60,4 +60,4 @@ Example
 Credits
 -------
 
-Thorsten Pohlert, PMCMR's author and maintainer
+Thorsten Pohlert, PMCMR author and maintainer
