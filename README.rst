@@ -50,7 +50,7 @@ You can install the package with:
 Example
 -------
 
-  >>> import scikit-posthocs as sp
+  >>> import scikit_posthocs as sp
   >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
   >>> # This will return a symmetric array of p values
   >>> sp.posthoc_conover(x, p_adjust = 'holm')
