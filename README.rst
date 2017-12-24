@@ -13,7 +13,7 @@ Features
   - Conover, Dunn, and Nemenyi tests for use with Kruskal-Wallis test.
   - Quade, van Waerden, and Durbin tests.
   - Conover and Nemenyi tests for use with Friedman test.
-  - Student T test, Mann-Whitney U test, Wilcoxon T test, and TukeyHSD tests.
+  - Student, Mann-Whitney, Wilcoxon, and TukeyHSD tests.
 
   All tests are capable of p adjustments for multiple pairwise comparisons.
 

@@ -150,6 +150,7 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
             Colorbar axes position rect [left, bottom, width, height] where
             all quantities are in fractions of figure width and height.
             Refer to matplotlib.figure.Figure.add_axes for more information.
+            Default is [0.95, 0.35, 0.04, 0.3].
 
         kwargs : other keyword arguments
             Keyword arguments to be passed to seaborn heatmap method. These
