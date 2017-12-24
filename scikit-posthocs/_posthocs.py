@@ -61,7 +61,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
         --------
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> ph.posthoc_conover(x, p_adjust = 'holm')
+        >>> sp.posthoc_conover(x, p_adjust = 'holm')
         array([[-1.        ,  0.00119517,  0.00278329],
                [ 0.00119517, -1.        ,  0.18672227],
                [ 0.00278329,  0.18672227, -1.        ]])
@@ -201,7 +201,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
         --------
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> ph.posthoc_dunn(x, p_adjust = 'holm')
+        >>> sp.posthoc_dunn(x, p_adjust = 'holm')
         array([[-1.          0.01764845  0.04131415]
                [ 0.01764845 -1.          0.45319956]
                [ 0.04131415  0.45319956 -1.        ]])
@@ -335,7 +335,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         --------
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> ph.posthoc_nemenyi(x, p_adjust = 'holm')
+        >>> sp.posthoc_nemenyi(x, p_adjust = 'holm')
         array([[-1.        ,  0.06618715,  0.13541729]
                [ 0.06618715, -1.        ,  0.75361555]
                [ 0.13541729,  0.75361555, -1.        ]])
@@ -497,7 +497,7 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
         >>> # Non-melted case, x is a block design matrix, i.e. rows are blocks
         >>> # and columns are groups.
         >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
-        >>> ph.posthoc_nemenyi_friedman(x)
+        >>> sp.posthoc_nemenyi_friedman(x)
 
     '''
 
@@ -644,7 +644,7 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
         Examples
         --------
         >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
-        >>> ph.posthoc_conover_friedman(x)
+        >>> sp.posthoc_conover_friedman(x)
 
     '''
 
@@ -790,7 +790,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
         Examples
         --------
         >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
-        >>> ph.posthoc_durbin(x)
+        >>> sp.posthoc_durbin(x)
 
     '''
 
@@ -944,7 +944,7 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
         Examples
         --------
         >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
-        >>> ph.posthoc_quade(x)
+        >>> sp.posthoc_quade(x)
 
     '''
 
@@ -1096,7 +1096,7 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         Examples
         --------
         >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
-        >>> ph.posthoc_vanwaerden(x, val_col = 0, group_col = 1)
+        >>> sp.posthoc_vanwaerden(x, val_col = 0, group_col = 1)
 
     '''
 
@@ -1227,7 +1227,7 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
         --------
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> ph.posthoc_ttest(x, p_adjust = 'holm')
+        >>> sp.posthoc_ttest(x, p_adjust = 'holm')
         array([[-1.        ,  0.04600899,  0.31269089],
                [ 0.04600899, -1.        ,  0.6327077 ],
                [ 0.31269089,  0.6327077 , -1.        ]])
@@ -1321,7 +1321,7 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
         >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
         >>> g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
-        >>> ph.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
+        >>> sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
         array([[-1,  1,  0],
                [ 1, -1,  1],
                [ 0,  1, -1]])
@@ -1407,7 +1407,7 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
         --------
 
         >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
-        >>> ph.posthoc_mannwhitney(x, p_adjust = 'holm')
+        >>> sp.posthoc_mannwhitney(x, p_adjust = 'holm')
         array([[-1.       ,  0.0357757,  0.114961 ],
                [ 0.0357757, -1.       ,  0.0357757],
                [ 0.114961 ,  0.0357757, -1.       ]])
@@ -1516,7 +1516,7 @@ def posthoc_wilcoxon(x, val_col = None, group_col = None, zero_method='wilcox', 
         --------
 
         >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
-        >>> ph.posthoc_wilcoxon(x)
+        >>> sp.posthoc_wilcoxon(x)
         array([[-1.       ,  0.0357757,  0.114961 ],
                [ 0.0357757, -1.       ,  0.0357757],
                [ 0.114961 ,  0.0357757, -1.       ]])

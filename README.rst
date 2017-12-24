@@ -1,8 +1,9 @@
-=========
-Post-hocs
-=========
+===============
+scikit-posthocs
+===============
 
-This Python package provides statistical post-hoc tests for pairwise multiple comparisons.
+This Python package provides statistical post-hoc tests for pairwise multiple comparisons
+and outlier detection algorithms.
 
 Features
 --------
@@ -44,15 +45,15 @@ Install
 -------
 
 You can install the package with:
-``pip install posthocs``
+``pip install scikit-posthocs``
 
 Example
 -------
 
-  >>> import posthocs as ph
+  >>> import scikit-posthocs as sp
   >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
   >>> # This will return a symmetric array of p values
-  >>> ph.posthoc_conover(x, p_adjust = 'holm')
+  >>> sp.posthoc_conover(x, p_adjust = 'holm')
   array([[ 0.        ,  0.00119517,  0.00278329],
          [ 0.00119517,  0.        ,  0.18672227],
          [ 0.00278329,  0.18672227,  0.        ]])
