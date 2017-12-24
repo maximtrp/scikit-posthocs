@@ -8,7 +8,7 @@ and outlier detection algorithms.
 Features
 --------
 
-- Multiple comparisons post-hoc tests (ported from R's
+- Multiple comparisons post-hoc tests (some are ported from R's
   `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package):
 
   - Conover, Dunn, and Nemenyi tests for use with Kruskal-Wallis test.
