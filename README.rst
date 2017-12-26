@@ -8,7 +8,7 @@ and outlier detection algorithms.
 Features
 --------
 
-- Multiple comparisons post-hoc tests (some are ported from R's
+- Multiple comparisons parametric and nonparametric tests (some are ported from R's
   `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package):
 
   - Conover, Dunn, and Nemenyi tests for use with Kruskal-Wallis test.
@@ -51,12 +51,12 @@ Example
 -------
 
   >>> import scikit_posthocs as sp
-  >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
+  >>> x = [[1,2,3,5,1], [12,31,54], [10,12,6,74,11]]
   >>> # This will return a symmetric array of p values
   >>> sp.posthoc_conover(x, p_adjust = 'holm')
-  array([[ 0.        ,  0.00119517,  0.00278329],
-         [ 0.00119517,  0.        ,  0.18672227],
-         [ 0.00278329,  0.18672227,  0.        ]])
+  array([[-1.        ,  0.00119517,  0.00278329],
+         [ 0.00119517, -1.        ,  0.18672227],
+         [ 0.00278329,  0.18672227, -1.        ]])
 
 Credits
 -------
