@@ -73,7 +73,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
         B = (1. / x_lens[i] + 1. / x_lens[j])
         D = (x_len_overall - 1. - H) / (x_len_overall - x_len)
         t_value = diff / np.sqrt(S2 * B * D)
-        p_value = 2. * (1. - ss.t.cdf(np.abs(t_value), df = x_len_overall - x_len))
+        p_value = 2. * ss.t.sf(np.abs(t_value), df = x_len_overall - x_len)
         return p_value
 
     def get_ties(x):
@@ -213,7 +213,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
         A = x_len_overall * (x_len_overall + 1.) / 12.
         B = (1. / x_lens[i] + 1. / x_lens[j])
         z_value = diff / np.sqrt((A - x_ties) * B)
-        p_value = 2. * (1. - ss.norm.cdf(np.abs(z_value)))
+        p_value = 2. * ss.norm.sf(np.abs(z_value)))
         return p_value
 
     def get_ties(x):
@@ -405,7 +405,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         for i,j in combs:
             vs[i, j] = compare_stats_chi(i, j) / x_ties
 
-        vs[tri_upper] = 1 - ss.chi2.cdf(vs[tri_upper], x_len - 1)
+        vs[tri_upper] = ss.chi2.sf(vs[tri_upper], x_len - 1)
         if p_adjust:
             vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
 
@@ -654,7 +654,7 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
         tval = dif / np.sqrt(A / B)
-        pval = 2 * (1. - ss.t.cdf(np.abs(tval), df = ((n-1)*(k-1))))
+        pval = 2 * ss.t.sf(np.abs(tval), df = (n-1)*(k-1))
         return pval
 
     if isinstance(x, DataFrame) and not melted:
@@ -800,7 +800,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     def compare_stats(i, j):
         dif = np.abs(Rj[groups[i]] - Rj[groups[j]])
         tval = dif / denom
-        pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = df))
+        pval = 2. * ss.t.sf(np.abs(tval), df = df))
         return pval
 
     if isinstance(x, DataFrame) and not melted:
@@ -954,13 +954,13 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
     def compare_stats_t(i, j):
         dif = np.abs(S[groups[i]] - S[groups[j]])
         tval = dif / denom
-        pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = (b - 1) * (k - 1)))
+        pval = 2. * ss.t.sf(np.abs(tval), df = (b - 1) * (k - 1))
         return pval
 
     def compare_stats_norm(i, j):
         dif = np.abs(W[groups[i]] * ff - W[groups[j]] * ff)
         zval = dif / denom
-        pval = 2. * (1. - ss.norm.cdf(np.abs(zval)))
+        pval = 2. * ss.norm.sf(np.abs(zval))
         return pval
 
     if isinstance(x, DataFrame) and not melted:
@@ -1104,7 +1104,7 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
         dif = np.abs(A[groups[i]] - A[groups[j]])
         B = 1 / nj[groups[i]] + 1 / nj[groups[j]]
         tval = dif / np.sqrt(s2 * (n - 1 - sts)/(n - k) * B)
-        pval = 2. * (1. - ss.t.cdf(np.abs(tval), df = n - k))
+        pval = 2. * ss.t.sf(np.abs(tval), df = n - k)
         return pval
 
     if isinstance(x, DataFrame):
