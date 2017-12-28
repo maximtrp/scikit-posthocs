@@ -81,6 +81,9 @@ def sign_table(a, lower = True, upper = True):
                ['**', 'NS', '—']], dtype=object)
 
     '''
+    if not any([lower, upper]):
+        raise ValueError("Either lower or upper triangle must be returned")
+
     if not isinstance(a, DataFrame):
         a = np.array(a, dtype = np.float)
 
@@ -99,17 +102,16 @@ def sign_table(a, lower = True, upper = True):
         np.fill_diagonal(a, '—')
         if not lower:
             a[np.tril_indices(a.shape[0], -1)] = ''
-        if not upper:
+        elif not upper:
             a[np.triu_indices(a.shape[0], 1)] = ''
     else:
         np.fill_diagonal(a.values, '—')
         if not lower:
             a.values[np.tril_indices(a.shape[0], -1)] = ''
-        if not upper:
+        elif not upper:
             a.values[np.triu_indices(a.shape[0], 1)] = ''
 
     return a
-
 
 def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
     ax = None, **kwargs):
