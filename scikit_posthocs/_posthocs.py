@@ -124,7 +124,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
     else:
         S2 = (1. / (x_len_overall - 1.)) * (np.sum(x_ranks ** 2.) - (x_len_overall * (((x_len_overall + 1.)**2.) / 4.)))
 
-    vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
+    vs = np.zeros((x_len, x_len), dtype=np.float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
@@ -255,7 +255,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
     x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
     x_ties = get_ties(x_ranks)
 
-    vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
+    vs = np.zeros((x_len, x_len), dtype=np.float)
     combs = it.combinations(range(x_len), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -394,7 +394,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
     x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
     x_ties = get_ties(x_ranks)
 
-    vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
+    vs = np.zeros((x_len, x_len), dtype=np.float)
     combs = it.combinations(range(x_len), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -547,7 +547,7 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
 
     x['mat'] = x.groupby(block_col)[y_col].rank()
     R = x.groupby(group_col)['mat'].mean()
-    vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
+    vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -702,7 +702,7 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
     A = 2 * k * (1 - T1 / (k * (n-1))) * ( A1 - C1)
     B = (n - 1) * (k - 1)
 
-    vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
+    vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -849,7 +849,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1) * (1 - T1 / (b * (k -1))))
     df = b * k - b - t + 1
 
-    vs = np.arange(t, dtype=np.float)[:,None].T.repeat(t, axis=0)
+    vs = np.zeros((t, t), dtype=np.float)
     combs = it.combinations(range(t), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -1009,7 +1009,7 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
     B = np.sum(S ** 2) / b
     W = x.groupby(group_col)['w'].sum()
 
-    vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
+    vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -1146,7 +1146,7 @@ def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adju
     param = k - 1
     A = aj / nj
 
-    vs = np.arange(k, dtype=np.float)[:,None].T.repeat(k, axis=0)
+    vs = np.zeros((x_len, x_len), dtype=np.float)
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -1253,7 +1253,7 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
         raise ValueError("All groups must contain data")
 
     x_len = len(x_grouped)
-    vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
+    vs = np.zeros((x_len, x_len), dtype=np.float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
@@ -1332,7 +1332,7 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
     groups = np.array(result.groupsunique, dtype=np.str)
     groups_len = len(groups)
 
-    vs = np.arange(groups_len, dtype=np.int)[:,None].T.repeat(groups_len, axis=0)
+    vs = np.zeros((groups_len, groups_len), dtype=np.int)
 
     for a in result.summary()[1:]:
         a0 = str(a[0])
@@ -1433,7 +1433,7 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
         raise ValueError("All groups must contain data")
 
     x_len = len(x_grouped)
-    vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
+    vs = np.zeros((x_len, x_len), dtype=np.float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
@@ -1542,7 +1542,7 @@ def posthoc_wilcoxon(x, val_col = None, group_col = None, zero_method='wilcox', 
         raise ValueError("All groups must contain data")
 
     x_len = len(x_grouped)
-    vs = np.arange(x_len, dtype=np.float)[:,None].T.repeat(x_len, axis=0)
+    vs = np.zeros((x_len, x_len), dtype=np.float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
