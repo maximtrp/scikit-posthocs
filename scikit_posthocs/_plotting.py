@@ -118,9 +118,6 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
 
     '''Significance plot
 
-        Flat mode: plots a significance array as a heatmap using seaborn.
-        Non-flat mode: plots an array of p values as a heatmap using seaborn.
-
         Parameters
         ----------
         x : array_like, ndarray or DataFrame
@@ -132,6 +129,12 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
         g : array_like or Numpy array, optional
             An array, any object exposing the array interface, containing
             group names.
+
+        flat : bool, optional
+            If `flat` is True, plots a significance array as a heatmap using
+            seaborn. If `flat` is False (default), plots an array of p values
+            as a heatmap using seaborn. Non-flat mode is useful if you need to
+            differentiate significance levels visually. It is the preferred mode.
 
         cmap : list, optional
             If flat is False (default):
@@ -151,7 +154,7 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
         cbar_ax_bbox : list, optional
             Colorbar axes position rect [left, bottom, width, height] where
             all quantities are in fractions of figure width and height.
-            Refer to matplotlib.figure.Figure.add_axes for more information.
+            Refer to `matplotlib.figure.Figure.add_axes` for more information.
             Default is [0.95, 0.35, 0.04, 0.3].
 
         kwargs : other keyword arguments

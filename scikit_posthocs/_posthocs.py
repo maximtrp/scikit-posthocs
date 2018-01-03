@@ -55,7 +55,8 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
 
         References
         ----------
-        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures, Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
+        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures, Tech.
+        Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
 
         Examples
         --------
@@ -444,11 +445,11 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
             not need to specify col arguments.
 
             If `x` is an array and `melted` is set to True,
-            y_col, block_col and group_col must specify index of column
+            y_col, block_col and group_col must specify the indices of columns
             containing elements of correspondary type.
 
             If `x` is a Pandas DataFrame and `melted` is set to True,
-            y_col, block_col and group_col must specify columns names (string).
+            y_col, block_col and group_col must specify columns names (strings).
 
         y_col : str or int
             Must be specified if x is a pandas DataFrame object. The name or
@@ -567,8 +568,7 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
 
     '''Calculate pairwise comparisons using Conover post-hoc test for unreplicated
         blocked data. This test is usually conducted post-hoc after significant results
-        of the Friedman test. The statistics refer to the student-t-distribution
-        (TDist).
+        of the Friedman test. The statistics refer to the Student t distribution.
 
         Parameters
         ----------
@@ -581,11 +581,11 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
             not need to specify col arguments.
 
             If `x` is an array and `melted` is set to True,
-            y_col, block_col and group_col must specify index of column
+            y_col, block_col and group_col must specify the indices of columns
             containing elements of correspondary type.
 
             If `x` is a Pandas DataFrame and `melted` is set to True,
-            y_col, block_col and group_col must specify columns names (string).
+            y_col, block_col and group_col must specify columns names (strings).
 
         y_col : str or int
             Must be specified if x is a pandas DataFrame object. The name or
@@ -735,7 +735,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
             not need to specify col arguments.
 
             If `x` is an array and `melted` is set to True,
-            y_col, block_col and group_col must specify index of column
+            y_col, block_col and group_col must specify the indices of columns
             containing elements of correspondary type.
 
             If `x` is a Pandas DataFrame and `melted` is set to True,
@@ -883,7 +883,7 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
             not need to specify col arguments.
 
             If `x` is an array and `melted` is set to True,
-            y_col, block_col and group_col must specify index of column
+            y_col, block_col and group_col must specify the indices of columns
             containing elements of correspondary type.
 
             If `x` is a Pandas DataFrame and `melted` is set to True,
@@ -924,10 +924,6 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
         Returns
         -------
         Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
-
-        Notes
-        -----
-
 
         References
         ----------
@@ -1037,7 +1033,7 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_vanwaerden(x, val_col = None, group_col = None, sort = False, p_adjust = None):
+def posthoc_vanwaerden(x, val_col, group_col, sort = False, p_adjust = None):
 
     '''Calculate pairwise multiple comparisons between group levels
     according to van der Waerden.
@@ -1294,7 +1290,7 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
 def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
     '''Pairwise comparisons with TukeyHSD confidence intervals. This is a
-    convenience function to make statsmodels pairwise_tukeyhsd() method more
+    convenience function to make statsmodels `pairwise_tukeyhsd` method more
     applicable for further use.
 
         Parameters
@@ -1345,7 +1341,6 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
     np.fill_diagonal(vs, -1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[tri_lower] = vs.T[tri_lower]
-
 
     return vs
 
