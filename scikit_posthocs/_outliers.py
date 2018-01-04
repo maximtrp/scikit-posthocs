@@ -310,4 +310,3 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
             data = np.delete(data, ms[np.max(np.where(Rs > ls))])
 
         return data
-    

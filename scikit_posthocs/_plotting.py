@@ -116,13 +116,13 @@ def sign_table(a, lower = True, upper = True):
 def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
     ax = None, **kwargs):
 
-    '''Significance plot
+    '''Significance plot, a heatmap of p values.
 
         Parameters
         ----------
         x : array_like, ndarray or DataFrame
             If flat is False (default), x must be a sign_array (returned by
-            posthocs.sign_array() function). If flat is True, x must be
+            `scikit_posthocs.sign_array` function). If flat is True, x must be
             an array, any object exposing the array interface, containing
             p values.
 
