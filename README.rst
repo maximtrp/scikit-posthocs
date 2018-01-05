@@ -2,6 +2,11 @@
 scikit-posthocs
 ===============
 
+.. image:: https://img.shields.io/pypi/v/scikit-posthocs.svg
+   :target:
+.. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg
+   :target: https://github.com/maximtrp/scikit-posthocs/issues
+
 This Python package provides statistical post-hoc tests for pairwise multiple comparisons
 and outlier detection algorithms.
 
