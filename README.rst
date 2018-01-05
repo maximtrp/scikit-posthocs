@@ -3,7 +3,7 @@ scikit-posthocs
 ===============
 
 .. image:: https://img.shields.io/pypi/v/scikit-posthocs.svg
-   :target:
+   :target: https://pypi.python.org/pypi/scikit-posthocs/
 .. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg
    :target: https://github.com/maximtrp/scikit-posthocs/issues
 
