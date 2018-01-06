@@ -214,7 +214,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
         A = x_len_overall * (x_len_overall + 1.) / 12.
         B = (1. / x_lens[i] + 1. / x_lens[j])
         z_value = diff / np.sqrt((A - x_ties) * B)
-        p_value = 2. * ss.norm.sf(np.abs(z_value)))
+        p_value = 2. * ss.norm.sf(np.abs(z_value))
         return p_value
 
     def get_ties(x):
@@ -800,7 +800,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     def compare_stats(i, j):
         dif = np.abs(Rj[groups[i]] - Rj[groups[j]])
         tval = dif / denom
-        pval = 2. * ss.t.sf(np.abs(tval), df = df))
+        pval = 2. * ss.t.sf(np.abs(tval), df = df)
         return pval
 
     if isinstance(x, DataFrame) and not melted:
