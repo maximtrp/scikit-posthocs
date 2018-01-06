@@ -1,5 +1,5 @@
 import unittest
-import test_posthocs
+import tests.test_posthocs
 
 def posthocs_suite():
     loader = unittest.TestLoader()
