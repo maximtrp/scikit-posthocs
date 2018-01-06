@@ -1,9 +1,12 @@
-import unittest as ut
-import scikit_posthocs as sp
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import unittest
+import scikit_posthocs._posthocs as sp
 import seaborn as sb
 import numpy as np
 
-class TestPosthocs(ut.TestCase):
+class TestPosthocs(unittest.TestCase):
 
     df = sb.load_dataset("exercise")
 
@@ -59,4 +62,4 @@ class TestPosthocs(ut.TestCase):
 
 
 if __name__ == '__main__':
-    ut.main()
+    unittest.main()
