@@ -278,7 +278,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
     else:
         return vs
 
-def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust = None, sort = True):
+def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', sort = True):
 
     '''Post-hoc pairwise test for multiple comparisons of mean rank sums
     (Nemenyi's test). May be used after Kruskal-Wallis one-way analysis of
@@ -303,19 +303,6 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
             Method for determining the p value. The default distribution is "chi"
             (chi-squared), else "tukey" (studentized range).
 
-        p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
-
         sort : bool, optional
             Specifies whether to sort DataFrame by group_col or not. Recommended
             unless you sort your data manually.
@@ -336,10 +323,10 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
         --------
 
         >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> sp.posthoc_nemenyi(x, p_adjust = 'holm')
-        array([[-1.        ,  0.06618715,  0.13541729]
-               [ 0.06618715, -1.        ,  0.75361555]
-               [ 0.13541729,  0.75361555, -1.        ]])
+        >>> sp.posthoc_nemenyi(x)
+        array([[-1.        ,  0.02206238,  0.06770864],
+               [ 0.02206238, -1.        ,  0.75361555],
+               [ 0.06770864,  0.75361555, -1.        ]])
 
     '''
 
@@ -366,6 +353,18 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
             if n_ties > 1:
                 tie_sum += n_ties ** 3 - n_ties
         c = np.min([1., 1. - tie_sum / (x_len_overall ** 3 - x_len_overall)])
+        return c
+
+    def get_ties_conover(x):
+        x_sorted = np.array(np.sort(x))
+        tie_sum = 0
+        pos = 0
+        while pos < x_len_overall:
+            n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
+            pos = pos + n_ties
+            if n_ties > 1:
+                tie_sum += n_ties ** 3. - n_ties
+        c = np.min([1., 1. - tie_sum / (x_len_overall ** 3. - x_len_overall)])
         return c
 
     if isinstance(x, DataFrame):
@@ -407,16 +406,12 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', p_adjust
             vs[i, j] = compare_stats_chi(i, j) / x_ties
 
         vs[tri_upper] = ss.chi2.sf(vs[tri_upper], x_len - 1)
-        if p_adjust:
-            vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
 
     elif dist == 'tukey':
         for i,j in combs:
             vs[i, j] = compare_stats_tukey(i, j) * np.sqrt(2)
 
         vs[tri_upper] = psturng(vs[tri_upper], x_len, np.inf)
-        if p_adjust:
-            vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)

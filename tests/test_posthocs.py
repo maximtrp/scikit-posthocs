@@ -17,7 +17,6 @@ class TestPosthocs(unittest.TestCase):
                               [9.354690e-11, 5.496288e-06, -1]])
 
         results = sp.posthoc_conover(self.df, val_col = 'pulse', group_col = 'kind', p_adjust = 'holm')
-
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_dunn(self):
@@ -31,7 +30,14 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_nemenyi(self):
-        self.assertTrue(True)
+
+        r_results = np.array([[-1, 1.313107e-01, 2.431833e-08],
+                              [1.313107e-01, -1, 4.855675e-04],
+                              [2.431833e-08, 4.855675e-04, -1]])
+
+        results = sp.posthoc_nemenyi(self.df, val_col = 'pulse', group_col = 'kind')
+
+        self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_nemenyi_friedman(self):
         self.assertTrue(True)
