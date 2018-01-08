@@ -67,7 +67,7 @@ class TestPosthocs(unittest.TestCase):
                               [2.337133e-03, -1, 1.230888e-05],
                               [2.857818e-06, 1.230888e-05, -1]])
 
-        results = sp.posthoc_wilcoxon(self.df, val_col = 'pulse', group_col = 'kind')
+        results = sp.posthoc_wilcoxon(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
 
 if __name__ == '__main__':
