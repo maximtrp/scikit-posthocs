@@ -1444,7 +1444,7 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
     else:
         return vs
 
-def posthoc_wilcoxon(x, val_col = None, group_col = None, zero_method='wilcox', correction=False, p_adjust = None, sort = True):
+def posthoc_wilcoxon(x, val_col = None, group_col = None, zero_method='wilcox', correction=False, p_adjust = None, sort = False):
 
     '''Pairwise comparisons with Wilcoxon signed-rank test. It is a non-parametric
     version of the paired T-test.
@@ -1491,8 +1491,8 @@ def posthoc_wilcoxon(x, val_col = None, group_col = None, zero_method='wilcox', 
                 'fdr_tsbky' : two stage fdr correction (non-negative)
 
         sort : bool, optional
-            Specifies whether to sort DataFrame by group_col or not. Recommended
-            unless you sort your data manually.
+            Specifies whether to sort DataFrame by group_col and val_col or not.
+            Default is False.
 
         Returns
         -------
@@ -1507,26 +1507,24 @@ def posthoc_wilcoxon(x, val_col = None, group_col = None, zero_method='wilcox', 
 
         >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
         >>> sp.posthoc_wilcoxon(x)
-        array([[-1.       ,  0.0357757,  0.114961 ],
-               [ 0.0357757, -1.       ,  0.0357757],
-               [ 0.114961 ,  0.0357757, -1.       ]])
+        array([[-1.        ,  0.04311445,  0.1755543 ],
+               [ 0.04311445, -1.        ,  0.0421682 ],
+               [ 0.1755543 ,  0.0421682 , -1.        ]])
 
     '''
 
     if isinstance(x, DataFrame):
-        if not sort:
-            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        if sort:
+            x = x.sort_values(by=[group_col, val_col])
 
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
-        x_lens = x.groupby(by=group_col)[val_col].count().values
-        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
-        x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
+        groups = x.groupby(group_col).groups
+        x_lens = x.groupby(group_col)[val_col].count().values
+        x_grouped = np.array([x.loc[groups[g].values, val_col].values for g in groups])
 
     else:
         x = np.array(x)
         x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
         x_lens = np.asarray([len(a) for a in x_grouped])
-        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
 
     if any(x_lens == 0):
         raise ValueError("All groups must contain data")

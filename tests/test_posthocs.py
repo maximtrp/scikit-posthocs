@@ -26,7 +26,6 @@ class TestPosthocs(unittest.TestCase):
                               [9.570998e-09, 1.873208e-04, -1]])
 
         results = sp.posthoc_dunn(self.df, val_col = 'pulse', group_col = 'kind', p_adjust = 'holm')
-
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_nemenyi(self):
@@ -36,7 +35,6 @@ class TestPosthocs(unittest.TestCase):
                               [2.431833e-08, 4.855675e-04, -1]])
 
         results = sp.posthoc_nemenyi(self.df, val_col = 'pulse', group_col = 'kind')
-
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_nemenyi_friedman(self):
@@ -64,8 +62,13 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(True)
 
     def test_posthoc_wilcoxon(self):
-        self.assertTrue(True)
 
+        r_results = np.array([[-1, 2.337133e-03, 2.857818e-06],
+                              [2.337133e-03, -1, 1.230888e-05],
+                              [2.857818e-06, 1.230888e-05, -1]])
+
+        results = sp.posthoc_wilcoxon(self.df, val_col = 'pulse', group_col = 'kind')
+        self.assertTrue(np.allclose(results, r_results))
 
 if __name__ == '__main__':
     unittest.main()
