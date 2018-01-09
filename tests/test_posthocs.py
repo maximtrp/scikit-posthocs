@@ -59,7 +59,13 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(True)
 
     def test_posthoc_mannwhitney(self):
-        self.assertTrue(True)
+
+        r_results = np.array([[-1, 1.714393e-02, 3.420508e-08],
+                              [1.714393e-02, -1, 1.968352e-05],
+                              [3.420508e-08, 1.968352e-05, -1]])
+
+        results = sp.posthoc_mannwhitney(self.df, val_col = 'pulse', group_col = 'kind')
+        self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_wilcoxon(self):
 
