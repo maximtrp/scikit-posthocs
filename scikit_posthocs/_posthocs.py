@@ -6,7 +6,7 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame, Categorical
 
-def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort = True):
+def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort = True):
 
     '''Post-hoc pairwise test for multiple comparisons of mean rank sums
     (Conover's test). May be used after Kruskal-Wallis one-way analysis of
@@ -14,18 +14,18 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas DataFrame.
             Array must be two-dimensional. Second dimension may vary,
             i.e. groups may have different lengths.
 
         val_col : str, optional
-            Must be specified if x is a pandas DataFrame object.
-            The name of a column that contains values.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains values.
 
         group_col : str, optional
-            Must be specified if x is a pandas DataFrame object.
-            The name of a column that contains group names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains group names.
 
         p_adjust : str, optional
             Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
@@ -47,7 +47,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
@@ -89,10 +89,10 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
         c = np.min([1., 1. - tie_sum / (x_len_overall ** 3. - x_len_overall)])
         return c
 
-    if isinstance(x, DataFrame):
+    if isinstance(a, DataFrame):
+        x = a.copy()
         if not sort:
             x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-
         x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_len = x[group_col].unique().size
         x_lens = x.groupby(by=group_col)[val_col].count().values
@@ -101,7 +101,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
         x_grouped = np.array([x_flat[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
 
     else:
-        x = np.array(x)
+        x = np.array(a)
         x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
         x_flat = np.concatenate(x_grouped)
         x_len = len(x_grouped)
@@ -146,7 +146,7 @@ def posthoc_conover(x, val_col = None, group_col = None, p_adjust = None, sort =
     else:
         return vs
 
-def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = True):
+def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = True):
 
     '''Post-hoc pairwise test for multiple comparisons of mean rank sums
     (Dunn's test). May be used after Kruskal-Wallis one-way analysis of
@@ -154,17 +154,17 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas DataFrame.
             Array must be two-dimensional. Second dimension may vary,
             i.e. groups may have different lengths.
 
         val_col : str, optional
-            Must be specified if x is a pandas DataFrame object.
+            Must be specified if `a` is a pandas DataFrame object.
             The name of a column that contains values.
 
         group_col : str, optional
-            Must be specified if x is a pandas DataFrame object.
+            Must be specified if `a` is a pandas DataFrame object.
             The name of a column that contains group names.
 
         p_adjust : str, optional
@@ -187,7 +187,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
@@ -229,7 +229,8 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
         c = tie_sum / (12 * (x_len_overall - 1))
         return c
 
-    if isinstance(x, DataFrame):
+    if isinstance(a, DataFrame):
+        x = a.copy()
         if not sort:
             x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
@@ -239,7 +240,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
         x_flat = x[val_col].values
 
     else:
-        x = np.array(x)
+        x = np.array(a)
         x = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
         x_flat = np.concatenate(x)
         x_len = len(x)
@@ -278,7 +279,7 @@ def posthoc_dunn(x, val_col = None, group_col = None, p_adjust = None, sort = Tr
     else:
         return vs
 
-def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', sort = True):
+def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = True):
 
     '''Post-hoc pairwise test for multiple comparisons of mean rank sums
     (Nemenyi's test). May be used after Kruskal-Wallis one-way analysis of
@@ -286,18 +287,18 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', sort = T
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
             DataFrame. Array must be two-dimensional. Second dimension may vary,
             i.e. groups may have different lengths.
 
         val_col : str, optional
-            Must be specified if x is a pandas DataFrame object. The name of
-            a column that contains values.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains values.
 
         group_col : str, optional
-            Must be specified if x is a pandas DataFrame object. The name of
-            a column that contains group names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains group names.
 
         dist : str, optional
             Method for determining the p value. The default distribution is "chi"
@@ -309,7 +310,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', sort = T
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
@@ -367,7 +368,8 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', sort = T
         c = np.min([1., 1. - tie_sum / (x_len_overall ** 3. - x_len_overall)])
         return c
 
-    if isinstance(x, DataFrame):
+    if isinstance(a, DataFrame):
+        x = a.copy()
         if not sort:
             x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
@@ -377,7 +379,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', sort = T
         x_flat = x[val_col].values
 
     else:
-        x = np.array(x)
+        x = np.array(a)
         x = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
         x_flat = np.concatenate(x)
         x_len = len(x)
@@ -422,7 +424,7 @@ def posthoc_nemenyi(x, val_col = None, group_col = None,  dist = 'chi', sort = T
     else:
         return vs
 
-def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None, melted = False, sort = False):
+def posthoc_nemenyi_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False):
 
     '''Calculate pairwise comparisons using Nemenyi post-hoc test for
     unreplicated blocked data. This test is usually conducted post-hoc after
@@ -431,31 +433,31 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
-            If `melted` is set to False (default), x is a typical matrix of block design,
-            i.e. rows are blocks, and columns are groups. In this case you do
-            not need to specify col arguments.
+            If `melted` is set to False (default), `a` is a typical matrix of
+            block design, i.e. rows are blocks, and columns are groups. In this
+            case you do not need to specify col arguments.
 
-            If `x` is an array and `melted` is set to True,
+            If `a` is an array and `melted` is set to True,
             y_col, block_col and group_col must specify the indices of columns
             containing elements of correspondary type.
 
-            If `x` is a Pandas DataFrame and `melted` is set to True,
+            If `a` is a Pandas DataFrame and `melted` is set to True,
             y_col, block_col and group_col must specify columns names (strings).
 
         y_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name or
+            Must be specified if `a` is a pandas DataFrame object. The name or
             index of a column that contains y data.
 
         block_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name of
+            Must be specified if `a` is a pandas DataFrame object. The name of
             a column that contains block names.
 
         group_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name of
+            Must be specified if `a` is a pandas DataFrame object. The name of
             a column that contains group names.
 
         melted : bool, optional
@@ -467,7 +469,7 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+        Pandas DataFrame containing p values.
 
         Notes
         -----
@@ -505,14 +507,14 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
         qval = dif / np.sqrt(k * (k + 1) / (6 * n))
         return qval
 
-    if isinstance(x, DataFrame) and not melted:
+    if isinstance(a, DataFrame) and not melted:
         group_col = 'groups'
         block_col = 'blocks'
         y_col = 'y'
-        x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
-    elif not isinstance(x, DataFrame):
-        x = np.array(x)
+    elif not isinstance(a, DataFrame):
+        x = np.array(a)
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
 
         if not melted:
@@ -559,7 +561,7 @@ def posthoc_nemenyi_friedman(x, y_col = None, block_col = None, group_col = None
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
+def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
     '''Calculate pairwise comparisons using Conover post-hoc test for unreplicated
         blocked data. This test is usually conducted post-hoc after significant results
@@ -567,31 +569,31 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
-            If `melted` is set to False (default), x is a typical matrix of block design,
-            i.e. rows are blocks, and columns are groups. In this case you do
-            not need to specify col arguments.
+            If `melted` is set to False (default), `a` is a typical matrix of
+            block design, i.e. rows are blocks, and columns are groups. In this
+            case you do not need to specify col arguments.
 
-            If `x` is an array and `melted` is set to True,
+            If `a` is an array and `melted` is set to True,
             y_col, block_col and group_col must specify the indices of columns
             containing elements of correspondary type.
 
-            If `x` is a Pandas DataFrame and `melted` is set to True,
+            If `a` is a Pandas DataFrame and `melted` is set to True,
             y_col, block_col and group_col must specify columns names (strings).
 
         y_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name or
+            Must be specified if `a` is a pandas DataFrame object. The name or
             index of a column that contains y data.
 
         block_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name of
+            Must be specified if `a` is a pandas DataFrame object. The name of
             a column that contains block names.
 
         group_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name of
+            Must be specified if `a` is a pandas DataFrame object. The name of
             a column that contains group names.
 
         melted : bool, optional
@@ -616,7 +618,7 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+        Pandas DataFrame containing p values.
 
         Notes
         -----
@@ -652,14 +654,14 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
         pval = 2 * ss.t.sf(np.abs(tval), df = (n-1)*(k-1))
         return pval
 
-    if isinstance(x, DataFrame) and not melted:
+    if isinstance(a, DataFrame) and not melted:
         group_col = 'groups'
         block_col = 'blocks'
         y_col = 'y'
-        x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
-    elif not isinstance(x, DataFrame):
-        x = np.array(x)
+    elif not isinstance(a, DataFrame):
+        x = np.array(a)
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
 
         if not melted:
@@ -714,38 +716,38 @@ def posthoc_conover_friedman(x, y_col = None, block_col = None, group_col = None
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
+def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
     '''Pairwise post-hoc test for multiple comparisons of rank sums according to
     Durbin and Conover for a two-way balanced incomplete block design (BIBD).
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
-            If `melted` is set to False (default), x is a typical matrix of block design,
+            If `melted` is set to False (default), `a` is a typical matrix of block design,
             i.e. rows are blocks, and columns are groups. In this case you do
             not need to specify col arguments.
 
-            If `x` is an array and `melted` is set to True,
+            If `a` is an array and `melted` is set to True,
             y_col, block_col and group_col must specify the indices of columns
             containing elements of correspondary type.
 
-            If `x` is a Pandas DataFrame and `melted` is set to True,
+            If `a` is a Pandas DataFrame and `melted` is set to True,
             y_col, block_col and group_col must specify columns names (string).
 
         y_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name of
+            Must be specified if `a` is a pandas DataFrame object. The name of
             a column that contains y data.
 
         block_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name of
+            Must be specified if `a` is a pandas DataFrame object. The name of
             a column that contains block names.
 
         group_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name of
+            Must be specified if `a` is a pandas DataFrame object. The name of
             a column that contains group names.
 
         melted : bool, optional
@@ -770,11 +772,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
-
-        Notes
-        -----
-
+        Pandas DataFrame containing p values.
 
         References
         ----------
@@ -798,14 +796,14 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
         pval = 2. * ss.t.sf(np.abs(tval), df = df)
         return pval
 
-    if isinstance(x, DataFrame) and not melted:
+    if isinstance(a, DataFrame) and not melted:
         group_col = 'groups'
         block_col = 'blocks'
         y_col = 'y'
-        x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
-    elif not isinstance(x, DataFrame):
-        x = np.array(x)
+    elif not isinstance(a, DataFrame):
+        x = np.array(a)
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
 
         if not melted:
@@ -861,7 +859,7 @@ def posthoc_durbin(x, y_col = None, block_col = None, group_col = None, melted =
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't', melted = False, sort = False, p_adjust = None):
+def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't', melted = False, sort = False, p_adjust = None):
 
     '''Calculate pairwise comparisons using Quade's post-hoc test for
     unreplicated blocked data. This test is usually conducted post-hoc after
@@ -869,31 +867,31 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
-            If `melted` is set to False (default), x is a typical matrix of block design,
-            i.e. rows are blocks, and columns are groups. In this case you do
-            not need to specify col arguments.
+            If `melted` is set to False (default), `a` is a typical matrix of
+            block design, i.e. rows are blocks, and columns are groups. In this
+            case you do not need to specify col arguments.
 
-            If `x` is an array and `melted` is set to True,
+            If `a` is an array and `melted` is set to True,
             y_col, block_col and group_col must specify the indices of columns
             containing elements of correspondary type.
 
-            If `x` is a Pandas DataFrame and `melted` is set to True,
+            If `a` is a Pandas DataFrame and `melted` is set to True,
             y_col, block_col and group_col must specify columns names (string).
 
         y_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name or
+            Must be specified if `a` is a pandas DataFrame object. The name or
             index of a column that contains y data.
 
         block_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name of
+            Must be specified if `a` is a pandas DataFrame object. The name of
             a column that contains block names.
 
         group_col : str or int
-            Must be specified if x is a pandas DataFrame object. The name of
+            Must be specified if `a` is a pandas DataFrame object. The name of
             a column that contains group names.
 
         melted : bool, optional
@@ -918,7 +916,7 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+        Pandas DataFrame containing p values.
 
         References
         ----------
@@ -954,14 +952,14 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
         pval = 2. * ss.norm.sf(np.abs(zval))
         return pval
 
-    if isinstance(x, DataFrame) and not melted:
+    if isinstance(a, DataFrame) and not melted:
         group_col = 'groups'
         block_col = 'blocks'
         y_col = 'y'
-        x = x.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
-    elif not isinstance(x, DataFrame):
-        x = np.array(x)
+    elif not isinstance(a, DataFrame):
+        x = np.array(a)
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
 
         if not melted:
@@ -1028,14 +1026,14 @@ def posthoc_quade(x, y_col = None, block_col = None, group_col = None, dist = 't
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_vanwaerden(x, val_col, group_col, sort = False, p_adjust = None):
+def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 
     '''Calculate pairwise multiple comparisons between group levels
     according to van der Waerden.
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
             DataFrame.
 
@@ -1066,7 +1064,7 @@ def posthoc_vanwaerden(x, val_col, group_col, sort = False, p_adjust = None):
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+        Pandas DataFrame containing p values.
 
         Notes
         -----
@@ -1098,11 +1096,12 @@ def posthoc_vanwaerden(x, val_col, group_col, sort = False, p_adjust = None):
         pval = 2. * ss.t.sf(np.abs(tval), df = n - k)
         return pval
 
-    if isinstance(x, DataFrame):
+    if isinstance(a, DataFrame):
+        x = a.copy()
         if not all([group_col, val_col]):
             raise ValueError('group_col, val_col must be explicitly specified')
     else:
-        x = np.array(x)
+        x = np.array(a)
 
         if not all([group_col, val_col]):
             try:
@@ -1154,24 +1153,24 @@ def posthoc_vanwaerden(x, val_col, group_col, sort = False, p_adjust = None):
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None, sort = True):
+def posthoc_ttest(a, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None, sort = True):
 
     '''Pairwise T test for multiple comparisons of independent groups. May be
     used after ordinary ANOVA to do pairwise comparisons.
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
             DataFrame. Array must be two-dimensional.
 
         val_col : str, optional
-            Must be specified if x is a pandas DataFrame object.
-            The name of a column that contains values.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains values.
 
         group_col : str, optional
-            Must be specified if x is a pandas DataFrame object.
-            The name of a column that contains group names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains group names.
 
         equal_var : bool, optional
             If True (default), perform a standard independent test
@@ -1206,7 +1205,7 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
 
         References
         ----------
@@ -1225,7 +1224,8 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
 
     '''
 
-    if isinstance(x, DataFrame):
+    if isinstance(a, DataFrame):
+        x = a.copy()
         if not sort:
             x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
@@ -1235,7 +1235,7 @@ def posthoc_ttest(x, val_col = None, group_col = None, pool_sd = False, equal_va
         x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
 
     else:
-        x = np.array(x)
+        x = np.array(a)
         x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
         x_lens = np.asarray([len(a) for a in x_grouped])
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
@@ -1339,22 +1339,22 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
     return vs
 
-def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = True, alternative = 'two-sided', p_adjust = None, sort = True):
+def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = True, alternative = 'two-sided', p_adjust = None, sort = True):
 
     '''Pairwise comparisons with Mann-Whitney rank test.
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
             DataFrame. Array must be two-dimensional.
 
         val_col : str, optional
-            Must be specified if x is a pandas DataFrame object.
+            Must be specified if `a` is a pandas DataFrame object.
             The name of a column that contains values.
 
         group_col : str, optional
-            Must be specified if x is a pandas DataFrame object.
+            Must be specified if `a` is a pandas DataFrame object.
             The name of a column that contains group names.
 
         use_continuity : bool, optional
@@ -1387,7 +1387,7 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
@@ -1404,7 +1404,8 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
 
     '''
 
-    if isinstance(x, DataFrame):
+    if isinstance(a, DataFrame):
+        x = a.copy()
         if not sort:
             x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
@@ -1414,7 +1415,7 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
         x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
 
     else:
-        x = np.array(x)
+        x = np.array(a)
         x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
         x_lens = np.asarray([len(a) for a in x_grouped])
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
@@ -1444,23 +1445,23 @@ def posthoc_mannwhitney(x, val_col = None, group_col = None, use_continuity = Tr
     else:
         return vs
 
-def posthoc_wilcoxon(x, val_col = None, group_col = None, zero_method='wilcox', correction=False, p_adjust = None, sort = False):
+def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox', correction=False, p_adjust = None, sort = False):
 
     '''Pairwise comparisons with Wilcoxon signed-rank test. It is a non-parametric
     version of the paired T-test.
 
         Parameters
         ----------
-        x : array_like or pandas DataFrame object
+        a : array_like or pandas DataFrame object
             An array, any object exposing the array interface or a pandas
             DataFrame. Array must be two-dimensional.
 
         val_col : str, optional
-            Must be specified if x is a pandas DataFrame object.
+            Must be specified if `a` is a pandas DataFrame object.
             The name of a column that contains values.
 
         group_col : str, optional
-            Must be specified if x is a pandas DataFrame object.
+            Must be specified if `a` is a pandas DataFrame object.
             The name of a column that contains group names.
 
         zero_method : string, {"pratt", "wilcox", "zsplit"}, optional
@@ -1496,7 +1497,7 @@ def posthoc_wilcoxon(x, val_col = None, group_col = None, zero_method='wilcox', 
 
         Returns
         -------
-        Numpy ndarray if x is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
 
         Notes
         -----
@@ -1513,7 +1514,8 @@ def posthoc_wilcoxon(x, val_col = None, group_col = None, zero_method='wilcox', 
 
     '''
 
-    if isinstance(x, DataFrame):
+    if isinstance(a, DataFrame):
+        x = a.copy()
         if sort:
             x = x.sort_values(by=[group_col, val_col])
 
@@ -1522,7 +1524,7 @@ def posthoc_wilcoxon(x, val_col = None, group_col = None, zero_method='wilcox', 
         x_grouped = np.array([x.loc[groups[g].values, val_col].values for g in groups])
 
     else:
-        x = np.array(x)
+        x = np.array(a)
         x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
         x_lens = np.asarray([len(a) for a in x_grouped])
 
