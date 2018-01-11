@@ -53,7 +53,13 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(True)
 
     def test_posthoc_ttest(self):
-        self.assertTrue(True)
+
+        r_results = np.array([[-1, 9.757069e-03, 4.100954e-07],
+                              [9.757069e-03, -1, 1.556010e-05],
+                              [4.100954e-07, 1.556010e-05, -1]])
+
+        results = sp.posthoc_ttest(self.df, val_col = 'pulse', group_col = 'kind', equal_var = False, p_adjust='holm')
+        self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_tukey_hsd(self):
         self.assertTrue(True)

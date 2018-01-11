@@ -161,11 +161,11 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
 
         val_col : str, optional
             Must be specified if `a` is a pandas DataFrame object.
-            The name of a column that contains values.
+            Name of the column that contains values.
 
         group_col : str, optional
             Must be specified if `a` is a pandas DataFrame object.
-            The name of a column that contains group names.
+            Name of the column that contains group names.
 
         p_adjust : str, optional
             Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
@@ -449,16 +449,16 @@ def posthoc_nemenyi_friedman(a, y_col = None, block_col = None, group_col = None
             y_col, block_col and group_col must specify columns names (strings).
 
         y_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name or
-            index of a column that contains y data.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains y data.
 
         block_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name of
-            a column that contains block names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains block names.
 
         group_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name of
-            a column that contains group names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains group names.
 
         melted : bool, optional
             Specifies if data are given as melted columns "y", "blocks", and
@@ -585,16 +585,16 @@ def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None
             y_col, block_col and group_col must specify columns names (strings).
 
         y_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name or
-            index of a column that contains y data.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains y data.
 
         block_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name of
-            a column that contains block names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains block names.
 
         group_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name of
-            a column that contains group names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains group names.
 
         melted : bool, optional
             Specifies if data are given as melted columns "y", "blocks", and
@@ -739,16 +739,16 @@ def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted =
             y_col, block_col and group_col must specify columns names (string).
 
         y_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name of
-            a column that contains y data.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains y data.
 
         block_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name of
-            a column that contains block names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains block names.
 
         group_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name of
-            a column that contains group names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains group names.
 
         melted : bool, optional
             Specifies if data are given as melted columns "y", "blocks", and
@@ -883,16 +883,16 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
             y_col, block_col and group_col must specify columns names (string).
 
         y_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name or
-            index of a column that contains y data.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains y data.
 
         block_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name of
-            a column that contains block names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains block names.
 
         group_col : str or int
-            Must be specified if `a` is a pandas DataFrame object. The name of
-            a column that contains group names.
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains group names.
 
         melted : bool, optional
             Specifies if data are given as melted columns "y", "blocks", and
@@ -1038,12 +1038,12 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
             DataFrame.
 
         val_col : str or int
-            Name (string) or index (int) of a column in a pandas DataFrame or an array that
-            contains quantitative data.
+            Name (string) or index (int) of a column in a pandas DataFrame or an
+            array that contains quantitative data.
 
         group_col : str or int
-            Name (string) or index (int) of a column in a pandas DataFrame or an array that
-            contains group names.
+            Name (string) or index (int) of a column in a pandas DataFrame or an
+            array that contains group names.
 
         sort : bool, optional
             If True, sort data by block and group columns.
@@ -1297,7 +1297,7 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
         g : array_like or pandas Series object, 1d
             An array, any object exposing the array interface, containing
-            the groups' names. Can be string or integers.
+            groups names. Can be string or integers.
 
         alpha : float, optional
             Significance level for the test. Default is 0.05.
@@ -1351,11 +1351,11 @@ def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = Tr
 
         val_col : str, optional
             Must be specified if `a` is a pandas DataFrame object.
-            The name of a column that contains values.
+            Name of the column that contains values.
 
         group_col : str, optional
             Must be specified if `a` is a pandas DataFrame object.
-            The name of a column that contains group names.
+            Name of the column that contains group names.
 
         use_continuity : bool, optional
             Whether a continuity correction (1/2.) should be taken into account.
@@ -1458,11 +1458,11 @@ def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox', 
 
         val_col : str, optional
             Must be specified if `a` is a pandas DataFrame object.
-            The name of a column that contains values.
+            Name of the column that contains values.
 
         group_col : str, optional
             Must be specified if `a` is a pandas DataFrame object.
-            The name of a column that contains group names.
+            Name of the column that contains group names.
 
         zero_method : string, {"pratt", "wilcox", "zsplit"}, optional
             "pratt": Pratt treatment: includes zero-differences in the ranking
