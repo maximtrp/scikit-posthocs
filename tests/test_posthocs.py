@@ -50,7 +50,12 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(True)
 
     def test_posthoc_vanwaerden(self):
-        self.assertTrue(True)
+        r_results = np.array([[-1, 1.054709e-02, 6.476665e-11],
+                              [1.054709e-02, -1, 4.433141e-06],
+                              [6.476665e-11, 4.433141e-06, -1]])
+
+        results = sp.posthoc_vanwaerden(self.df, val_col = 'pulse', group_col = 'kind', p_adjust='holm')
+        self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_ttest(self):
 

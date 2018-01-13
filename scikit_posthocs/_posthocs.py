@@ -1136,7 +1136,7 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
     param = k - 1
     A = aj / nj
 
-    vs = np.zeros((x_len, x_len), dtype=np.float)
+    vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
