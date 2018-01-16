@@ -67,7 +67,12 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_tukey_hsd(self):
-        self.assertTrue(True)
+
+        x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
+        g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
+        results = sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
+        n_results = np.array([[-1,  1,  0],[ 1, -1,  1],[ 0,  1, -1]])
+        self.assertTrue(np.allclose(n_results, results))
 
     def test_posthoc_mannwhitney(self):
 
