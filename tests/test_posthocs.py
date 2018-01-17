@@ -56,8 +56,13 @@ class TestPosthocs(unittest.TestCase):
                                 -1.        ,  0.54381888],
                                [ 0.9       ,  0.9       ,  0.9       ,  0.9       ,  0.9       ,
                                  0.54381888, -1.        ]])
+<<<<<<< HEAD
         results = sp.posthoc_nemenyi_friedman(self.df_bn)
         self.assertTrue(np.allclose(results, p_results))
+=======
+        results = sp.posthoc_nemenyi_friedman(df_bn)
+        self.assertTrue(np.allclose(results, r_results))
+>>>>>>> 88188cc397da79919b4988fa930b2798fcc3b1b8
 
     def test_posthoc_conover_friedman(self):
         self.assertTrue(True)
