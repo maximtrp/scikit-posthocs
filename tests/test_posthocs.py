@@ -9,6 +9,9 @@ import numpy as np
 class TestPosthocs(unittest.TestCase):
 
     df = sb.load_dataset("exercise")
+    df_bn = np.array([[4,3,4,4,5,6,3],
+                      [1,2,3,5,6,7,7],
+                      [1,2,6,4,1,5,1]])
 
     def test_posthoc_conover(self):
 
@@ -38,7 +41,23 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_nemenyi_friedman(self):
-        self.assertTrue(True)
+
+        p_results = np.array([[ -1.        ,  0.9       ,  0.82163255,  0.9       ,  0.9       ,
+                                 0.21477876,  0.9       ],
+                               [ 0.9       , -1.        ,  0.87719193,  0.9       ,  0.9       ,
+                                 0.25967965,  0.9       ],
+                               [ 0.82163255,  0.87719193, -1.        ,  0.9       ,  0.9       ,
+                                 0.9       ,  0.9       ],
+                               [ 0.9       ,  0.9       ,  0.9       , -1.        ,  0.9       ,
+                                 0.87719193,  0.9       ],
+                               [ 0.9       ,  0.9       ,  0.9       ,  0.9       , -1.        ,
+                                 0.87719193,  0.9       ],
+                               [ 0.21477876,  0.25967965,  0.9       ,  0.87719193,  0.87719193,
+                                -1.        ,  0.54381888],
+                               [ 0.9       ,  0.9       ,  0.9       ,  0.9       ,  0.9       ,
+                                 0.54381888, -1.        ]])
+        results = sp.posthoc_nemenyi_friedman(self.df_bn)
+        self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_conover_friedman(self):
         self.assertTrue(True)
