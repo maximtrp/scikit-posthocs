@@ -680,10 +680,10 @@ def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None
             block_col = 'blocks'
             y_col = 'y'
 
-    if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-        x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
-    x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
+    #if not sort:
+    #    x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+    #    x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
+    x.sort_values(by=[group_col,block_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
 
     groups = x[group_col].unique()

@@ -60,7 +60,16 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_conover_friedman(self):
-        self.assertTrue(True)
+
+        results = sp.posthoc_conover_friedman(self.df_bn)
+        p_results = np.array(  [[-1.000000, 0.935333, 0.268619, 0.339721, 0.339721, 0.060540, 0.628079],
+                                [0.935333, -1.000000, 0.302605, 0.380025, 0.380025, 0.070050, 0.685981],
+                                [0.268619, 0.302605, -1.000000, 0.871144, 0.871144, 0.380025, 0.519961],
+                                [0.339721, 0.380025, 0.871144, -1.000000, 1.000000, 0.302605, 0.628079],
+                                [0.339721, 0.380025, 0.871144, 1.000000, -1.000000, 0.302605, 0.628079],
+                                [0.060540, 0.070050, 0.380025, 0.302605, 0.302605, -1.000000, 0.141412],
+                                [0.628079, 0.685981, 0.519961, 0.628079, 0.628079, 0.141412, -1.000000]])
+        self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_durbin(self):
         self.assertTrue(True)
