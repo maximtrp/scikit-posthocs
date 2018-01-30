@@ -882,17 +882,21 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
             If `a` is a Pandas DataFrame and `melted` is set to True,
             y_col, block_col and group_col must specify columns names (string).
 
-        y_col : str or int
+        y_col : str or int, optional
             Must be specified if `a` is a pandas DataFrame object.
             Name of the column that contains y data.
 
-        block_col : str or int
+        block_col : str or int, optional
             Must be specified if `a` is a pandas DataFrame object.
             Name of the column that contains block names.
 
-        group_col : str or int
+        group_col : str or int, optional
             Must be specified if `a` is a pandas DataFrame object.
             Name of the column that contains group names.
+
+        dist : str, optional
+            Method for determining p values.
+            The default distribution is "t", else "normal".
 
         melted : bool, optional
             Specifies if data are given as melted columns "y", "blocks", and

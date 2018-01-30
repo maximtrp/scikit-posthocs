@@ -188,9 +188,9 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
 
     dtype = df.values.dtype
 
-    if not np.issubdtype(dtype, np.int) and flat:
+    if not np.issubdtype(dtype, np.integer) and flat:
         raise ValueError("X should be a sign_array or DataFrame of integer values")
-    elif not np.issubdtype(dtype, np.float) and not flat:
+    elif not np.issubdtype(dtype, np.floating) and not flat:
         raise ValueError("X should be an array or DataFrame of float p values")
 
     if not cmap and flat:
