@@ -54,16 +54,21 @@ Install
 You can install the package with:
 ``pip install scikit-posthocs``
 
-Example
+Examples
 -------
 
   >>> import scikit_posthocs as sp
   >>> x = [[1,2,3,5,1], [12,31,54], [10,12,6,74,11]]
-  >>> # This will return a symmetric array of p values
   >>> sp.posthoc_conover(x, p_adjust = 'holm')
   array([[-1.        ,  0.00119517,  0.00278329],
          [ 0.00119517, -1.        ,  0.18672227],
          [ 0.00278329,  0.18672227, -1.        ]])
+
+  >>> import scikit_posthocs as sp
+  >>> import pandas as pd
+  >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54], "c": [10,12,6,74,11]})
+  >>> x = x.melt(var_name='groups', value_name='values')
+  >>> sp.posthoc_conover(x, val_col='values', group_col='groups')
 
 Credits
 -------
