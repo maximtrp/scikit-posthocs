@@ -55,7 +55,9 @@ You can install the package with:
 ``pip install scikit-posthocs``
 
 Examples
--------
+--------
+
+- List or NumPy array
 
   >>> import scikit_posthocs as sp
   >>> x = [[1,2,3,5,1], [12,31,54], [10,12,6,74,11]]
@@ -63,6 +65,8 @@ Examples
   array([[-1.        ,  0.00119517,  0.00278329],
          [ 0.00119517, -1.        ,  0.18672227],
          [ 0.00278329,  0.18672227, -1.        ]])
+
+- Pandas DataFrame, `val_col` and `group_col` must be melted prior to making comparisons.
 
   >>> import scikit_posthocs as sp
   >>> import pandas as pd

@@ -51,7 +51,7 @@ def sign_table(a, lower = True, upper = True):
     '''Significance table
 
         Returns table that can be used in a publication. P values are replaced
-        with asterisks: * — p < 0.05, ** — p < 0.01, *** — p < 0.001.
+        with asterisks: * - p < 0.05, ** - p < 0.01, *** - p < 0.001.
 
         Parameters
         ----------
@@ -76,9 +76,9 @@ def sign_table(a, lower = True, upper = True):
                           [ 0.00119517, -1.        ,  0.18672227],
                           [ 0.00278329,  0.18672227, -1.        ]])
         >>> ph.sign_table(x)
-        array([['—', '**', '**'],
-               ['**', '—', 'NS'],
-               ['**', 'NS', '—']], dtype=object)
+        array([['-', '**', '**'],
+               ['**', '-', 'NS'],
+               ['**', 'NS', '-']], dtype=object)
 
     '''
     if not any([lower, upper]):
@@ -99,13 +99,13 @@ def sign_table(a, lower = True, upper = True):
     a[one] = '*'
 
     if not isinstance(a, DataFrame):
-        np.fill_diagonal(a, '—')
+        np.fill_diagonal(a, '-')
         if not lower:
             a[np.tril_indices(a.shape[0], -1)] = ''
         elif not upper:
             a[np.triu_indices(a.shape[0], 1)] = ''
     else:
-        np.fill_diagonal(a.values, '—')
+        np.fill_diagonal(a.values, '-')
         if not lower:
             a.values[np.tril_indices(a.shape[0], -1)] = ''
         elif not upper:

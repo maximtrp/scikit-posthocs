@@ -225,8 +225,8 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
             n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
             pos = pos + n_ties
             if n_ties > 1:
-                tie_sum += n_ties ** 3 - n_ties
-        c = tie_sum / (12 * (x_len_overall - 1))
+                tie_sum += n_ties ** 3. - n_ties
+        c = tie_sum / (12. * (x_len_overall - 1))
         return c
 
     if isinstance(a, DataFrame):
@@ -333,15 +333,15 @@ def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = T
 
     def compare_stats_chi(i, j):
         diff = np.abs(x_ranks_avg[i] - x_ranks_avg[j])
-        A = x_len_overall * (x_len_overall + 1) / 12.
+        A = x_len_overall * (x_len_overall + 1.) / 12.
         B = (1. / x_lens[i] + 1. / x_lens[j])
-        chi = diff ** 2 / (A * B)
+        chi = diff ** 2. / (A * B)
         return chi
 
     def compare_stats_tukey(i, j):
         diff = np.abs(x_ranks_avg[i] - x_ranks_avg[j])
         B = (1. / x_lens[i] + 1. / x_lens[j])
-        q = diff / np.sqrt((x_len_overall * (x_len_overall + 1) / 12.) * B)
+        q = diff / np.sqrt((x_len_overall * (x_len_overall + 1.) / 12.) * B)
         return q
 
     def get_ties(x):
@@ -352,8 +352,8 @@ def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = T
             n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
             pos = pos + n_ties
             if n_ties > 1:
-                tie_sum += n_ties ** 3 - n_ties
-        c = np.min([1., 1. - tie_sum / (x_len_overall ** 3 - x_len_overall)])
+                tie_sum += n_ties ** 3. - n_ties
+        c = np.min([1., 1. - tie_sum / (x_len_overall ** 3. - x_len_overall)])
         return c
 
     def get_ties_conover(x):
@@ -411,7 +411,7 @@ def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = T
 
     elif dist == 'tukey':
         for i,j in combs:
-            vs[i, j] = compare_stats_tukey(i, j) * np.sqrt(2)
+            vs[i, j] = compare_stats_tukey(i, j) * np.sqrt(2.)
 
         vs[tri_upper] = psturng(vs[tri_upper], x_len, np.inf)
 
@@ -504,7 +504,7 @@ def posthoc_nemenyi_friedman(a, y_col = None, block_col = None, group_col = None
 
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
-        qval = dif / np.sqrt(k * (k + 1) / (6 * n))
+        qval = dif / np.sqrt(k * (k + 1.) / (6. * n))
         return qval
 
     if isinstance(a, DataFrame) and not melted:
@@ -555,7 +555,7 @@ def posthoc_nemenyi_friedman(a, y_col = None, block_col = None, group_col = None
     for i, j in combs:
         vs[i, j] = compare_stats(i, j)
 
-    vs *= np.sqrt(2)
+    vs *= np.sqrt(2.)
     vs[tri_upper] = psturng(vs[tri_upper], k, np.inf)
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
@@ -1095,8 +1095,8 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 
     def compare_stats(i, j):
         dif = np.abs(A[groups[i]] - A[groups[j]])
-        B = 1 / nj[groups[i]] + 1 / nj[groups[j]]
-        tval = dif / np.sqrt(s2 * (n - 1 - sts)/(n - k) * B)
+        B = 1. / nj[groups[i]] + 1. / nj[groups[j]]
+        tval = dif / np.sqrt(s2 * (n - 1. - sts)/(n - k) * B)
         pval = 2. * ss.t.sf(np.abs(tval), df = n - k)
         return pval
 
@@ -1135,8 +1135,8 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 
     aj = x.groupby(group_col)['z_scores'].sum()
     nj = x.groupby(group_col)['z_scores'].count()
-    s2 = (1 / (n - 1)) * (x['z_scores'] ** 2).sum()
-    sts = (1 / s2) * np.sum(aj ** 2 / nj)
+    s2 = (1. / (n - 1.)) * (x['z_scores'] ** 2.).sum()
+    sts = (1. / s2) * np.sum(aj ** 2. / nj)
     param = k - 1
     A = aj / nj
 
@@ -1365,7 +1365,7 @@ def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = Tr
             Whether a continuity correction (1/2.) should be taken into account.
             Default is True.
 
-        alternative : {'two-sided', 'less', or ‘greater’}, optional
+        alternative : ['two-sided', 'less', or 'greater'], optional
             Whether to get the p-value for the one-sided hypothesis
             ('less' or 'greater') or for the two-sided hypothesis ('two-sided').
             Defaults to 'two-sided'.
@@ -1524,8 +1524,9 @@ def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox', 
             x = x.sort_values(by=[group_col, val_col])
 
         groups = x.groupby(group_col).groups
+        groups_names = x[group_col].unique()
         x_lens = x.groupby(group_col)[val_col].count().values
-        x_grouped = np.array([x.loc[groups[g].values, val_col].values for g in groups])
+        x_grouped = np.array([x.loc[groups[g].values, val_col].values for g in groups_names])
 
     else:
         x = np.array(a)
@@ -1547,7 +1548,7 @@ def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox', 
         vs[i, j] = ss.wilcoxon(x_grouped[i], x_grouped[j], zero_method=zero_method, correction=correction)[1]
 
     if p_adjust:
-        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+        vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
 
