@@ -66,7 +66,7 @@ Examples
          [ 0.00119517, -1.        ,  0.18672227],
          [ 0.00278329,  0.18672227, -1.        ]])
 
-- Pandas DataFrame, `val_col` and `group_col` must be melted prior to making comparisons.
+- Pandas DataFrame, ``val_col`` and ``group_col`` must be melted prior to making comparisons.
 
   >>> import scikit_posthocs as sp
   >>> import pandas as pd
