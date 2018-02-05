@@ -72,13 +72,9 @@ Examples
   >>> import pandas as pd
   >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
   >>> x = x.melt(var_name='groups', value_name='values')
-<<<<<<< HEAD
+  
   .. image:: images/melted-dataframe.png
-=======
 
-.. image:: images/melted-dataframe.png
-
->>>>>>> 31472065f2511e6b3c9f123d805568722e77a79f
   >>> sp.posthoc_conover(x, val_col='values', group_col='groups')
 
 Credits
