@@ -57,7 +57,8 @@ You can install the package with:
 Examples
 --------
 
-- List or NumPy array
+List or NumPy array
+~~~~~~~~~~~~~~~~~~~
 
   >>> import scikit_posthocs as sp
   >>> x = [[1,2,3,5,1], [12,31,54], [10,12,6,74,11]]
@@ -66,18 +67,31 @@ Examples
          [ 0.00119517, -1.        ,  0.18672227],
          [ 0.00278329,  0.18672227, -1.        ]])
 
-- Pandas DataFrame, ``val_col`` and ``group_col`` must be melted prior to making comparisons.
+Pandas DataFrame
+~~~~~~~~~~~~~~~~
+
+Columns specified with ``val_col`` and ``group_col`` args must be melted prior to making comparisons.
 
   >>> import scikit_posthocs as sp
   >>> import pandas as pd
   >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
   >>> x = x.melt(var_name='groups', value_name='values')
 
-  .. image:: images/melted-dataframe.png
+.. image:: images/melted-dataframe.png
 
   >>> sp.posthoc_conover(x, val_col='values', group_col='groups')
 
-  .. image:: images/result-conover.png
+.. image:: images/result-conover.png
+
+Significance plots
+~~~~~~~~~~~~~~~~~~
+
+P values may be plotted using a heatmap:
+
+  >>> pc = sp.posthoc_conover(x, val_col='values', group_col='groups')
+  >>> sp.sign_plot(pc, square=True, cbar_ax_bbox=[0.80, 0.35, 0.04, 0.3])
+
+.. image:: images/plot-conover.png
 
 Credits
 -------
