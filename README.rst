@@ -60,6 +60,8 @@ Examples
 List or NumPy array
 ~~~~~~~~~~~~~~~~~~~
 
+.. code:: python
+
   >>> import scikit_posthocs as sp
   >>> x = [[1,2,3,5,1], [12,31,54], [10,12,6,74,11]]
   >>> sp.posthoc_conover(x, p_adjust = 'holm')
@@ -72,35 +74,43 @@ Pandas DataFrame
 
 Columns specified with ``val_col`` and ``group_col`` args must be melted prior to making comparisons.
 
-  >>> import scikit_posthocs as sp
-  >>> import pandas as pd
-  >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
-  >>> x = x.melt(var_name='groups', value_name='values')
+.. code:: python
+
+  import scikit_posthocs as sp
+  import pandas as pd
+  x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+  x = x.melt(var_name='groups', value_name='values')
 
 .. image:: images/melted-dataframe.png
 
-  >>> sp.posthoc_conover(x, val_col='values', group_col='groups')
+.. code:: python
+
+  sp.posthoc_conover(x, val_col='values', group_col='groups')
 
 .. image:: images/result-conover.png
 
 Significance plots
 ~~~~~~~~~~~~~~~~~~
 
-P values may be plotted using a heatmap:
+P values can be plotted using a heatmap:
 
-  >>> pc = sp.posthoc_conover(x, val_col='values', group_col='groups')
-  >>> heatmap_args = {'linewidths': 0.25, 'linecolor': '0.5', 'clip_on': False, 'square': True, 'cbar_ax_bbox': [0.80, 0.35, 0.04, 0.3]}
-  >>> sp.sign_plot(pc, **heatmap_args)
+.. code:: python
+
+  pc = sp.posthoc_conover(x, val_col='values', group_col='groups')
+  heatmap_args = {'linewidths': 0.25, 'linecolor': '0.5', 'clip_on': False, 'square': True, 'cbar_ax_bbox': [0.80, 0.35, 0.04, 0.3]}
+  sp.sign_plot(pc, **heatmap_args)
 
 .. image:: images/plot-conover.png
 
-Custom colormap can be applied to a plot:
+Custom colormap applied to a plot:
 
-  >>> pc = sp.posthoc_conover(x, val_col='values', group_col='groups')
-  >>> # Format: diagonal, non-significant, p<0.001, p<0.01, p<0.05
-  >>> cmap = ['1', '#fb6a4a',  '#08306b',  '#4292c6', '#c6dbef']
-  >>> heatmap_args = {'cmap': cmap, 'linewidths': 0.25, 'linecolor': '0.5', 'clip_on': False, 'square': True, 'cbar_ax_bbox': [0.80, 0.35, 0.04, 0.3]}
-  >>> sp.sign_plot(pc, **heatmap_args)
+.. code:: python
+
+  pc = sp.posthoc_conover(x, val_col='values', group_col='groups')
+  # Format: diagonal, non-significant, p<0.001, p<0.01, p<0.05
+  cmap = ['1', '#fb6a4a',  '#08306b',  '#4292c6', '#c6dbef']
+  heatmap_args = {'cmap': cmap, 'linewidths': 0.25, 'linecolor': '0.5', 'clip_on': False, 'square': True, 'cbar_ax_bbox': [0.80, 0.35, 0.04, 0.3]}
+  sp.sign_plot(pc, **heatmap_args)
 
 .. image:: images/plot-conover-custom-cmap.png
 
