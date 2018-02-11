@@ -89,9 +89,18 @@ Significance plots
 P values may be plotted using a heatmap:
 
   >>> pc = sp.posthoc_conover(x, val_col='values', group_col='groups')
-  >>> sp.sign_plot(pc, square=True, cbar_ax_bbox=[0.80, 0.35, 0.04, 0.3])
+  >>> heatmap_args = {'linewidths': 0.25, 'linecolor': '0.5', 'clip_on': False, 'square': True, 'cbar_ax_bbox': [0.80, 0.35, 0.04, 0.3]}
+  >>> sp.sign_plot(pc, **heatmap_args)
 
 .. image:: images/plot-conover.png
+
+Custom colormap can be applied to a plot:
+
+  >>> pc = sp.posthoc_conover(x, val_col='values', group_col='groups')
+  >>> # Format: diagonal, non-significant, p<0.001, p<0.01, p<0.05
+  >>> cmap = ['1', '#fb6a4a',  '#08306b',  '#4292c6', '#c6dbef']
+  >>> heatmap_args = {'cmap': cmap, 'linewidths': 0.25, 'linecolor': '0.5', 'clip_on': False, 'square': True, 'cbar_ax_bbox': [0.80, 0.35, 0.04, 0.3]}
+  >>> sp.sign_plot(pc, **heatmap_args)
 
 Credits
 -------
