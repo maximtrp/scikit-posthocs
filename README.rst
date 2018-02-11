@@ -62,9 +62,12 @@ List or NumPy array
 
 .. code:: python
 
-  >>> import scikit_posthocs as sp
-  >>> x = [[1,2,3,5,1], [12,31,54], [10,12,6,74,11]]
-  >>> sp.posthoc_conover(x, p_adjust = 'holm')
+  import scikit_posthocs as sp
+  x = [[1,2,3,5,1], [12,31,54], [10,12,6,74,11]]
+  sp.posthoc_conover(x, p_adjust = 'holm')
+
+::
+
   array([[-1.        ,  0.00119517,  0.00278329],
          [ 0.00119517, -1.        ,  0.18672227],
          [ 0.00278329,  0.18672227, -1.        ]])
