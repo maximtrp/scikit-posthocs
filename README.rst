@@ -102,7 +102,7 @@ Custom colormap can be applied to a plot:
   >>> heatmap_args = {'cmap': cmap, 'linewidths': 0.25, 'linecolor': '0.5', 'clip_on': False, 'square': True, 'cbar_ax_bbox': [0.80, 0.35, 0.04, 0.3]}
   >>> sp.sign_plot(pc, **heatmap_args)
 
-  .. image:: images/plot-conover-custom-cmap.png
+.. image:: images/plot-conover-custom-cmap.png
 
 Credits
 -------
