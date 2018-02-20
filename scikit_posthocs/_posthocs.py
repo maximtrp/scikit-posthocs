@@ -859,6 +859,114 @@ def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted =
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
+def posthoc_anderson(a, val_col = None, group_col = None, sort = False, p_adjust = None):
+
+    '''Anderson-Darling All-Pairs Comparison Test. Performs a comparison test for
+        all-pairs comparisons in an one-factorial layout with non-normally distributed
+        residuals.
+
+        Parameters
+        ----------
+        a : array_like or pandas DataFrame object
+            An array, any object exposing the array interface or a pandas
+            DataFrame.
+
+        val_col : str
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains y data.
+
+        group_col : str
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains group names.
+
+        sort : bool, optional
+            If True, sort data by block and group columns.
+
+        p_adjust : str, optional
+            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+                'bonferroni' : one-step correction
+                'sidak' : one-step correction
+                'holm-sidak' : step-down method using Sidak adjustments
+                'holm' : step-down method using Bonferroni adjustments
+                'simes-hochberg' : step-up method  (independent)
+                'hommel' : closed method based on Simes tests (non-negative)
+                'fdr_bh' : Benjamini/Hochberg  (non-negative)
+                'fdr_by' : Benjamini/Yekutieli (negative)
+                'fdr_tsbh' : two stage fdr correction (non-negative)
+                'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        Returns
+        -------
+        Pandas DataFrame containing p values.
+
+        References
+        ----------
+        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
+              Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
+        W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition, Wiley.
+
+        Examples
+        --------
+        >>> x = np.array([[2.9, 3.0, 2.5, 2.6, 3.2], [3.8, 2.7, 4.0, 2.4], [2.8, 3.4, 3.7, 2.2, 2.0]])
+        >>> sp.posthoc_anderson(x)
+
+    '''
+
+    def compare_stats(i, j):
+
+        return pval
+
+    if isinstance(a, DataFrame):
+        x = a.copy()
+        if not all([group_col, val_col]):
+            raise ValueError('group_col, val_col must be explicitly specified')
+    else:
+        x = np.array(a)
+
+        if not all([group_col, val_col]):
+            try:
+                groups = np.array([len(a) * [i + 1] for i, a in enumerate(x)])
+                groups = sum(groups.tolist(), [])
+                x = sum(x.tolist(), [])
+                x = np.column_stack([x, groups])
+                val_col = 0
+                group_col = 1
+            except:
+                raise ValueError('array cannot be processed, provide val_col and group_col args')
+
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+        x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
+        group_col = 'groups'
+        val_col = 'y'
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+    x.sort_values(by=[group_col], ascending=True, inplace=True)
+
+    groups = x[group_col].unique()
+    n = x[val_col].size
+    k = groups.size
+
+
+
+
+    vs = np.zeros((k, k), dtype=np.float)
+    combs = it.combinations(range(k), 2)
+
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    for i, j in combs:
+        vs[i, j] = compare_stats(i, j)
+
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+
+    vs[tri_lower] = vs.T[tri_lower]
+    np.fill_diagonal(vs, -1)
+    return DataFrame(vs, index=groups, columns=groups)
+
 def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't', melted = False, sort = False, p_adjust = None):
 
     '''Calculate pairwise comparisons using Quade's post-hoc test for
