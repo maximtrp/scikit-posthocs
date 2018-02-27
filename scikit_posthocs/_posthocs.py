@@ -859,11 +859,11 @@ def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted =
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_anderson(a, val_col = None, group_col = None, sort = False, p_adjust = None):
+def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort = False, p_adjust = None):
 
-    '''Anderson-Darling All-Pairs Comparison Test. Performs a comparison test for
-        all-pairs comparisons in an one-factorial layout with non-normally distributed
-        residuals.
+    '''Anderson-Darling Pairwise Test for k-samples. Tests the null hypothesis that
+        k-samples are drawn from the same population without having to specify the
+        distribution function of that population.
 
         Parameters
         ----------
@@ -878,6 +878,11 @@ def posthoc_anderson(a, val_col = None, group_col = None, sort = False, p_adjust
         group_col : str
             Must be specified if `a` is a pandas DataFrame object.
             Name of the column that contains group names.
+
+        midrank : bool, optional
+            Type of Anderson-Darling test which is computed. If set to True (default), the
+            midrank test applicable to continuous and discrete populations is performed. If
+            False, the right side empirical distribution is used.
 
         sort : bool, optional
             If True, sort data by block and group columns.
@@ -901,9 +906,8 @@ def posthoc_anderson(a, val_col = None, group_col = None, sort = False, p_adjust
 
         References
         ----------
-        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
-              Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
-        W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition, Wiley.
+        Scholz, F. W and Stephens, M. A. (1987), K-Sample Anderson-Darling Tests,
+            Journal of the American Statistical Association, Vol. 82, pp. 918-924.
 
         Examples
         --------
@@ -911,10 +915,6 @@ def posthoc_anderson(a, val_col = None, group_col = None, sort = False, p_adjust
         >>> sp.posthoc_anderson(x)
 
     '''
-
-    def compare_stats(i, j):
-
-        return pval
 
     if isinstance(a, DataFrame):
         x = a.copy()
@@ -944,12 +944,7 @@ def posthoc_anderson(a, val_col = None, group_col = None, sort = False, p_adjust
     x.sort_values(by=[group_col], ascending=True, inplace=True)
 
     groups = x[group_col].unique()
-    n = x[val_col].size
     k = groups.size
-
-
-
-
     vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
 
@@ -958,7 +953,7 @@ def posthoc_anderson(a, val_col = None, group_col = None, sort = False, p_adjust
     vs[:,:] = 0
 
     for i, j in combs:
-        vs[i, j] = compare_stats(i, j)
+        vs[i, j] = ss.anderson_ksamp([x.loc[x[group_col] == groups[i], val_col], x.loc[x[group_col] == groups[j], val_col]])[2]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
