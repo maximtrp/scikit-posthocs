@@ -92,7 +92,7 @@ def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort =
     if isinstance(a, DataFrame):
         x = a.copy()
         if not sort:
-            x[group_col] = Categorical(x[group_col], ordered=True)
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
         x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_groups_unique = np.asarray(x[group_col].unique())
         x_len = x_groups_unique.size
@@ -232,7 +232,7 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
     if isinstance(a, DataFrame):
         x = a.copy()
         if not sort:
-            x[group_col] = Categorical(x[group_col], ordered=True)
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
         x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_groups_unique = np.asarray(x[group_col].unique())
@@ -965,8 +965,8 @@ def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted =
             y_col = 'y'
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
-        x[block_col] = Categorical(x[block_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
     x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
 
@@ -1082,7 +1082,7 @@ def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort =
         val_col = 'y'
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     x.sort_values(by=[group_col], ascending=True, inplace=True)
 
     groups = np.asarray(x[group_col].unique())
@@ -1228,8 +1228,8 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
             y_col = 'y'
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
-        x[block_col] = Categorical(x[block_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
     x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
 
@@ -1369,7 +1369,7 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
         val_col = 'y'
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     x.sort_values(by=[group_col], ascending=True, inplace=True)
 
     groups = np.asarray(x[group_col].unique())
@@ -1476,7 +1476,7 @@ def posthoc_ttest(a, val_col = None, group_col = None, pool_sd = False, equal_va
     if isinstance(a, DataFrame):
         x = a.copy()
         if not sort:
-            x[group_col] = Categorical(x[group_col], ordered=True)
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
         x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_lens = x.groupby(by=group_col)[val_col].count().values
@@ -1656,7 +1656,7 @@ def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = Tr
     if isinstance(a, DataFrame):
         x = a.copy()
         if not sort:
-            x[group_col] = Categorical(x[group_col], ordered=True)
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
         x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_lens = x.groupby(by=group_col)[val_col].count().values
