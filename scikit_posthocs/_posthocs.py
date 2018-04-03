@@ -1275,6 +1275,114 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
+def posthoc_mackwolfe(a, val_col, group_col, sort = False, p_adjust = None):
+
+    '''Mack-Wolfe Test for Umbrella Alternatives.
+
+    In dose-finding studies one may assume an increasing treatment effect with
+    increasing dose level. However, the test subject may actually succumb to
+    toxic effects at high doses, which leads to decresing treatment effects.
+
+    The scope of the Mack-Wolfe Test is to test for umbrella alternatives for
+    either a known or unknown point P (i.e. dose-level), where the peak
+    (umbrella point) is present.
+
+        Parameters
+        ----------
+        a : array_like or pandas DataFrame object
+            An array, any object exposing the array interface or a pandas
+            DataFrame.
+
+        val_col : str or int
+            Name (string) or index (int) of a column in a pandas DataFrame or an
+            array that contains quantitative data.
+
+        group_col : str or int
+            Name (string) or index (int) of a column in a pandas DataFrame or an
+            array that contains group names.
+
+        p : int, optional
+            The a-priori known peak as an ordinal number of the treatment group
+            including the zero dose level, i.e. p = {1, …, k}. Defaults to None.
+
+        sort : bool, optional
+            If True, sort data by block and group columns.
+
+        Returns
+        -------
+        Pandas DataFrame containing p values.
+
+        References
+        ----------
+        Chen, I.Y. (1991) Notes on the Mack-Wolfe and Chen-Wolfe Tests for
+            Umbrella Alternatives. Biom. J., 33, 281-290.
+        Mack, G.A., Wolfe, D. A. (1981) K-sample rank tests for umbrella
+            alternatives. J. Amer. Statist. Assoc., 76, 175-181.
+
+        Examples
+        --------
+        >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
+        >>> sp.posthoc_mackwolfe(x, val_col = 0, group_col = 1)
+
+    '''
+
+    if isinstance(a, DataFrame):
+        x = a.copy()
+        if not all([group_col, val_col]):
+            raise ValueError('group_col, val_col must be explicitly specified')
+    else:
+        x = np.array(a)
+
+        if not all([group_col, val_col]):
+            try:
+                groups = np.array([len(a) * [i + 1] for i, a in enumerate(x)])
+                groups = sum(groups.tolist(), [])
+                x = sum(x.tolist(), [])
+                x = np.column_stack([x, groups])
+                val_col = 0
+                group_col = 1
+            except:
+                raise ValueError('array cannot be processed, provide val_col and group_col args')
+
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+        x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
+        group_col = 'groups'
+        val_col = 'y'
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+    x.sort_values(by=[group_col], ascending=True, inplace=True)
+
+    groups = np.asarray(x[group_col].unique())
+    n = x[val_col].size
+    k = groups.size
+    r = ss.rankdata(x[val_col])
+    x['z_scores'] = ss.norm.ppf(r / (n + 1))
+
+    aj = x.groupby(group_col)['z_scores'].sum()
+    nj = x.groupby(group_col)['z_scores'].count()
+    s2 = (1. / (n - 1.)) * (x['z_scores'] ** 2.).sum()
+    sts = (1. / s2) * np.sum(aj ** 2. / nj)
+    param = k - 1
+    A = aj / nj
+
+    vs = np.zeros((k, k), dtype=np.float)
+    combs = it.combinations(range(k), 2)
+
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    for i, j in combs:
+        vs[i, j] = compare_stats(i, j)
+
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+
+    vs[tri_lower] = vs.T[tri_lower]
+    np.fill_diagonal(vs, -1)
+    return DataFrame(vs, index=groups, columns=groups)
+
 def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 
     '''Calculate pairwise multiple comparisons between group levels
