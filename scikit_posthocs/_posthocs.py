@@ -1275,7 +1275,7 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_mackwolfe(a, val_col, group_col, sort = False, p_adjust = None):
+def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adjust = None):
 
     '''Mack-Wolfe Test for Umbrella Alternatives.
 
@@ -1342,7 +1342,7 @@ def posthoc_mackwolfe(a, val_col, group_col, sort = False, p_adjust = None):
                 val_col = 0
                 group_col = 1
             except:
-                raise ValueError('array cannot be processed, provide val_col and group_col args')
+                raise ValueError('Array cannot be processed, provide val_col and group_col args')
 
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
         x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
@@ -1353,18 +1353,88 @@ def posthoc_mackwolfe(a, val_col, group_col, sort = False, p_adjust = None):
         x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     x.sort_values(by=[group_col], ascending=True, inplace=True)
 
-    groups = np.asarray(x[group_col].unique())
-    n = x[val_col].size
-    k = groups.size
-    r = ss.rankdata(x[val_col])
-    x['z_scores'] = ss.norm.ppf(r / (n + 1))
+    if p:
+        if p > k:
+            print("Selected 'p' > number of groups:", str(p), " > ", str(k))
+            return False
+        elif p < 1:
+            print("Selected 'p' < 1: ", str(p))
+            return False
 
-    aj = x.groupby(group_col)['z_scores'].sum()
-    nj = x.groupby(group_col)['z_scores'].count()
-    s2 = (1. / (n - 1.)) * (x['z_scores'] ** 2.).sum()
-    sts = (1. / s2) * np.sum(aj ** 2. / nj)
-    param = k - 1
-    A = aj / nj
+    Rij = x[val_col].rank()
+    n = x.groupby(group_col).count()
+    k = x[group_col].unique().size
+
+    def _fn(Ri, Rj):
+        return np.sum(Ri.apply(lambda x: Rj[Rj > x].size))
+
+    def _ustat(Rij, g, k):
+        levels = np.unique(g)
+        U = np.identity(k)
+
+        for i in range(2, k+1):
+            for j in range(1, i):
+                U[i,j] = _fn(Rij[x[group_col] == levels[i]], Rij[x[group_col] == levels[j]])
+                U[j,i] = _fn(Rij[x[group_col] == levels[j]], Rij[x[group_col] == levels[i]])
+
+        return U
+
+    def _ap(p, U):
+        tmp1 = 0
+        if p > 1:
+            for i in range(p):
+                for j in range(i+1:p+1):
+                    tmp1 += U[i,j]
+        tmp2 = 0
+        if p < k:
+            for i in range(p, k):
+                for j in range(i+1:k+1):
+                    tmp2 += U[j,i]
+        return tmp1 + tmp2
+
+    def _n1(p, n):
+        return np.sum(n[1:p+1])
+
+    def _n2(p, n):
+        return np.sum(n[p:k+1])
+
+    def _mean_at(p, n):
+        N1 = _n1(p, n)
+        N2 = _n2(p, n)
+        return (N1**2 + N2**2 - np.sum(n**2) - n[p+1]**2)/4
+
+    def _var_at(p, n):
+        N1 = _n1(p, n)
+        N2 = _n2(p, n)
+        N = np.sum(n)
+
+        var = (2 * (N1**3 + N2**3) + 3 * (N1**2 + N2**2) -\
+                np.sum(n**2 * (2*n + 3)) - n[p+1]**2 * (2 * n[p+1] + 3) +\
+                12 * n[p+1] * N1 * N2 - 12 * n[p+1] ** 2 * N) / 72
+        return var
+
+    if p:
+        if (x.groupby(val_col).count() > 1).any():
+            print("")
+        U = _ustat(Rij, x[group_col], k)
+        est = _ap(p, U)
+        mean = _mean_at(p, n)
+        sd = np.sqrt(_var_at(p, n))
+        stat = (est - mean)/sd
+        p_val = ss.norm.sf(stat)
+    else:
+        U = _ustat(Rij, x[group_col], k)
+        Ap = [_ap(i, U) for i in range(k+1)]
+        mean = [_mean_at(i, n) for i in range(k+1)]
+        var = [_var_at(i, n) for i in range(k+1)]
+        A = (Ap - mean) / np.sqrt(var)
+        stat = np.max(A)
+        p = A == stat
+        est = None
+
+        for i in range(n_perm):
+            
+
 
     vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
