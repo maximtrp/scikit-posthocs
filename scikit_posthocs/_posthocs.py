@@ -1415,7 +1415,7 @@ def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adju
 
     if p:
         if (x.groupby(val_col).count() > 1).any():
-            print("")
+            print("Ties are present")
         U = _ustat(Rij, x[group_col], k)
         est = _ap(p, U)
         mean = _mean_at(p, n)
@@ -1436,9 +1436,9 @@ def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adju
         for i in range(n_perm):
 
             ix = np.random.permutation(Rij)
-            Uix <- _ustat(ix, x[group_col], k)
-            Apix <- [_ap(i, Uix) for i in range(1, k+1)]
-            Astarix <- (Apix - mean) / np.sqrt(var)
+            Uix = _ustat(ix, x[group_col], k)
+            Apix = [_ap(i, Uix) for i in range(1, k+1)]
+            Astarix = (Apix - mean) / np.sqrt(var)
             mt.append(np.max(Astarix))
 
         PVAL = len(mt[mt > stat]) / n_perm
