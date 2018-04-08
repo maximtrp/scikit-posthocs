@@ -19,7 +19,7 @@ Features
   `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package):
 
   - Conover, Dunn, and Nemenyi tests for use with Kruskal-Wallis test.
-  - Conover and Nemenyi tests for use with Friedman test.
+  - Conover, Nemenyi, and Siegel tests for use with Friedman test.
   - Quade, van Waerden, and Durbin tests.
   - Student, Mann-Whitney, Wilcoxon, and TukeyHSD tests.
   - Anderson-Darling test.
