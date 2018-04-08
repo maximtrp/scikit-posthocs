@@ -1383,12 +1383,12 @@ def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adju
         tmp1 = 0
         if p > 1:
             for i in range(p):
-                for j in range(i+1:p+1):
+                for j in range(i+1, p+1):
                     tmp1 += U[i,j]
         tmp2 = 0
         if p < k:
             for i in range(p, k):
-                for j in range(i+1:k+1):
+                for j in range(i+1, k+1):
                     tmp2 += U[j,i]
         return tmp1 + tmp2
 
@@ -1432,9 +1432,16 @@ def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adju
         p = A == stat
         est = None
 
+        mt = []
         for i in range(n_perm):
-            
 
+            ix = np.random.permutation(Rij)
+            Uix <- _ustat(ix, x[group_col], k)
+            Apix <- [_ap(i, Uix) for i in range(1, k+1)]
+            Astarix <- (Apix - mean) / np.sqrt(var)
+            mt.append(np.max(Astarix))
+
+        PVAL = len(mt[mt > stat]) / n_perm
 
     vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
