@@ -4,7 +4,8 @@ import itertools as it
 from statsmodels.sandbox.stats.multicomp import multipletests
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
-from pandas import DataFrame, Categorical
+from pandas import DataFrame, Categorical, Series
+import pandas as pd
 
 def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort = True):
 
@@ -1275,7 +1276,7 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adjust = None):
+def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = False, p_adjust = None):
 
     '''Mack-Wolfe Test for Umbrella Alternatives.
 
@@ -1353,6 +1354,8 @@ def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adju
         x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     x.sort_values(by=[group_col], ascending=True, inplace=True)
 
+    k = x[group_col].unique().size
+
     if p:
         if p > k:
             print("Selected 'p' > number of groups:", str(p), " > ", str(k))
@@ -1363,7 +1366,6 @@ def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adju
 
     Rij = x[val_col].rank()
     n = x.groupby(group_col).count()
-    k = x[group_col].unique().size
 
     def _fn(Ri, Rj):
         return np.sum(Ri.apply(lambda x: Rj[Rj > x].size))
@@ -1372,8 +1374,8 @@ def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adju
         levels = np.unique(g)
         U = np.identity(k)
 
-        for i in range(2, k+1):
-            for j in range(1, i):
+        for i in range(1, k):
+            for j in range(i):
                 U[i,j] = _fn(Rij[x[group_col] == levels[i]], Rij[x[group_col] == levels[j]])
                 U[j,i] = _fn(Rij[x[group_col] == levels[j]], Rij[x[group_col] == levels[i]])
 
@@ -1387,21 +1389,21 @@ def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adju
                     tmp1 += U[i,j]
         tmp2 = 0
         if p < k:
-            for i in range(p, k):
-                for j in range(i+1, k+1):
+            for i in range(p, k-1):
+                for j in range(i+1, k):
                     tmp2 += U[j,i]
         return tmp1 + tmp2
 
     def _n1(p, n):
-        return np.sum(n[1:p+1])
+        return np.sum(n[:p+1])
 
     def _n2(p, n):
-        return np.sum(n[p:k+1])
+        return np.sum(n[p:k])
 
     def _mean_at(p, n):
         N1 = _n1(p, n)
         N2 = _n2(p, n)
-        return (N1**2 + N2**2 - np.sum(n**2) - n[p+1]**2)/4
+        return (N1**2 + N2**2 - np.sum(n**2) - n.iloc[p]**2)/4
 
     def _var_at(p, n):
         N1 = _n1(p, n)
@@ -1409,24 +1411,28 @@ def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adju
         N = np.sum(n)
 
         var = (2 * (N1**3 + N2**3) + 3 * (N1**2 + N2**2) -\
-                np.sum(n**2 * (2*n + 3)) - n[p+1]**2 * (2 * n[p+1] + 3) +\
-                12 * n[p+1] * N1 * N2 - 12 * n[p+1] ** 2 * N) / 72
+                np.sum(n**2 * (2*n + 3)) - n.iloc[p]**2 * (2 * n.iloc[p] + 3) +\
+                12 * n.iloc[p] * N1 * N2 - 12 * n.iloc[p] ** 2 * N) / 72
         return var
 
     if p:
-        if (x.groupby(val_col).count() > 1).any():
+        if (x.groupby(val_col).count() > 1).any().any():
             print("Ties are present")
         U = _ustat(Rij, x[group_col], k)
         est = _ap(p, U)
+        #print(est)
         mean = _mean_at(p, n)
+        print(mean)
         sd = np.sqrt(_var_at(p, n))
+        print(sd)
         stat = (est - mean)/sd
-        p_val = ss.norm.sf(stat)
+        print(stat)
+        p_value = ss.norm.sf(stat)
     else:
         U = _ustat(Rij, x[group_col], k)
-        Ap = [_ap(i, U) for i in range(k+1)]
-        mean = [_mean_at(i, n) for i in range(k+1)]
-        var = [_var_at(i, n) for i in range(k+1)]
+        Ap = np.array([_ap(i, U) for i in range(k)])
+        mean = np.array([_mean_at(i, n) for i in range(k)])
+        var = np.array([_var_at(i, n) for i in range(k)])
         A = (Ap - mean) / np.sqrt(var)
         stat = np.max(A)
         p = A == stat
@@ -1435,30 +1441,20 @@ def posthoc_mackwolfe(a, val_col, group_col, n_perm = 1000, sort = False, p_adju
         mt = []
         for i in range(n_perm):
 
-            ix = np.random.permutation(Rij)
+            ix = Series(np.random.permutation(Rij))
             Uix = _ustat(ix, x[group_col], k)
-            Apix = [_ap(i, Uix) for i in range(1, k+1)]
+            Apix = [_ap(i, Uix) for i in range(k)]
             Astarix = (Apix - mean) / np.sqrt(var)
             mt.append(np.max(Astarix))
 
-        PVAL = len(mt[mt > stat]) / n_perm
+        mt = np.array(mt)
+        p_value = len(mt[mt > stat]) / n_perm
 
-    vs = np.zeros((k, k), dtype=np.float)
-    combs = it.combinations(range(k), 2)
+    return stat, p_value
 
-    tri_upper = np.triu_indices(vs.shape[0], 1)
-    tri_lower = np.tril_indices(vs.shape[0], -1)
-    vs[:,:] = 0
+df = pd.read_csv('/home/maxim/Documents/Datasets/mack-wolfe.csv')
+posthoc_mackwolfe(df, 'x', 'y', p=2)
 
-    for i, j in combs:
-        vs[i, j] = compare_stats(i, j)
-
-    if p_adjust:
-        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
-
-    vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
-    return DataFrame(vs, index=groups, columns=groups)
 
 def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 
