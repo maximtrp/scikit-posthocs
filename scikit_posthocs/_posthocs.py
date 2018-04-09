@@ -5,7 +5,6 @@ from statsmodels.sandbox.stats.multicomp import multipletests
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame, Categorical, Series
-import pandas as pd
 
 def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort = True):
 
@@ -1374,7 +1373,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
         levels = np.unique(g)
         U = np.identity(k)
 
-        for i in range(1, k):
+        for i in range(k):
             for j in range(i):
                 U[i,j] = _fn(Rij[x[group_col] == levels[i]], Rij[x[group_col] == levels[j]])
                 U[j,i] = _fn(Rij[x[group_col] == levels[j]], Rij[x[group_col] == levels[i]])
@@ -1383,15 +1382,16 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
 
     def _ap(p, U):
         tmp1 = 0
-        if p > 1:
+        if p > 0:
             for i in range(p):
                 for j in range(i+1, p+1):
                     tmp1 += U[i,j]
         tmp2 = 0
         if p < k:
-            for i in range(p, k-1):
+            for i in range(p, k):
                 for j in range(i+1, k):
                     tmp2 += U[j,i]
+
         return tmp1 + tmp2
 
     def _n1(p, n):
@@ -1420,19 +1420,15 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
             print("Ties are present")
         U = _ustat(Rij, x[group_col], k)
         est = _ap(p, U)
-        #print(est)
         mean = _mean_at(p, n)
-        print(mean)
         sd = np.sqrt(_var_at(p, n))
-        print(sd)
         stat = (est - mean)/sd
-        print(stat)
         p_value = ss.norm.sf(stat)
     else:
         U = _ustat(Rij, x[group_col], k)
-        Ap = np.array([_ap(i, U) for i in range(k)])
-        mean = np.array([_mean_at(i, n) for i in range(k)])
-        var = np.array([_var_at(i, n) for i in range(k)])
+        Ap = np.array([_ap(i, U) for i in range(k)]).ravel()
+        mean = np.array([_mean_at(i, n) for i in range(k)]).ravel()
+        var = np.array([_var_at(i, n) for i in range(k)]).ravel()
         A = (Ap - mean) / np.sqrt(var)
         stat = np.max(A)
         p = A == stat
@@ -1443,17 +1439,14 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
 
             ix = Series(np.random.permutation(Rij))
             Uix = _ustat(ix, x[group_col], k)
-            Apix = [_ap(i, Uix) for i in range(k)]
+            Apix = np.array([_ap(i, Uix) for i in range(k)])
             Astarix = (Apix - mean) / np.sqrt(var)
             mt.append(np.max(Astarix))
 
         mt = np.array(mt)
-        p_value = len(mt[mt > stat]) / n_perm
+        p_value = mt[mt > stat] / n_perm
 
     return stat, p_value
-
-df = pd.read_csv('/home/maxim/Documents/Datasets/mack-wolfe.csv')
-posthoc_mackwolfe(df, 'x', 'y', p=2)
 
 
 def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
