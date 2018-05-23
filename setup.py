@@ -12,7 +12,7 @@ setup(name='scikit-posthocs',
       packages=['scikit_posthocs'],
       keywords='statistics posthoc anova',
       install_requires=['numpy', 'scipy', 'statsmodels',
-                        'pandas', 'seaborn', 'matplotlib'],
+                        'pandas>=0.20.0', 'seaborn', 'matplotlib'],
 	  classifiers=[
 		'Development Status :: 4 - Beta',
 
