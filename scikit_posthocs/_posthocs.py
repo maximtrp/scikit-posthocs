@@ -775,55 +775,32 @@ def posthoc_npm_test(a, y_col = None, block_col = None, group_col = None, melted
 
     '''
 
-
-    def compare(i, j):
-        diff = np.abs(x_ranks_avg[i] - x_ranks_avg[j])
-        A = x_len_overall * (x_len_overall + 1.) / 12.
-        B = (1. / x_lens[i] + 1. / x_lens[j])
-        z_value = diff / np.sqrt((A - x_ties) * B)
-        p_value = 2. * ss.norm.sf(np.abs(z_value))
-        return p_value
-
-    def get_ties(x):
-        x_sorted = np.array(np.sort(x))
-        tie_sum = 0
-        pos = 0
-        while pos < x_len_overall:
-            n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
-            pos = pos + n_ties
-            if n_ties > 1:
-                tie_sum += n_ties ** 3. - n_ties
-        c = tie_sum / (12. * (x_len_overall - 1))
-        return c
-
     if isinstance(a, DataFrame):
         x = a.copy()
-        if not sort:
-            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
-        x_groups_unique = np.asarray(x[group_col].unique())
-        x_len = x_groups_unique.size
-        x_lens = x.groupby(by=group_col)[val_col].count().values
-        x_flat = x[val_col].values
-
+        if not all([group_col, val_col]):
+            raise ValueError('group_col, val_col must be explicitly specified')
     else:
         x = np.array(a)
-        x = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
-        x_flat = np.concatenate(x)
-        x_len = len(x)
-        x_lens = np.asarray([len(a) for a in x])
 
-    x_len_overall = len(x_flat)
+        if not all([group_col, val_col]):
+            try:
+                groups = np.array([len(a) * [i + 1] for i, a in enumerate(x)])
+                groups = sum(groups.tolist(), [])
+                x = sum(x.tolist(), [])
+                x = np.column_stack([x, groups])
+                val_col = 0
+                group_col = 1
+            except:
+                raise ValueError('array cannot be processed, provide val_col and group_col args')
 
-    if any(x_lens == 0):
-        raise ValueError("All groups must contain data")
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+        x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
+        group_col = 'groups'
+        val_col = 'y'
 
-    x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
-    x_ranks = ss.rankdata(x_flat)
-    x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
-    x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
-    x_ties = get_ties(x_ranks)
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+    x.sort_values(by=[group_col], ascending=True, inplace=True)
 
     vs = np.zeros((x_len, x_len), dtype=np.float)
     combs = it.combinations(range(x_len), 2)
