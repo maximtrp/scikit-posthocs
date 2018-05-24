@@ -716,6 +716,136 @@ def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
+def posthoc_npm_test(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
+
+    '''Calculate pairwise comparisons using Nashimoto and Wright's all-pairs comparison
+        procedure (NPM test) for simply ordered mean ranksums. NPM test is basically an
+        extension of Nemenyi's procedure for testing increasingly ordered alternatives.
+
+        Parameters
+        ----------
+        a : array_like or pandas DataFrame object
+            An array, any object exposing the array interface or a pandas
+            DataFrame.
+
+        val_col : str
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains y data.
+
+        group_col : str or int
+            Must be specified if `a` is a pandas DataFrame object.
+            Name of the column that contains group names.
+
+        sort : bool, optional
+            If True, sort data by block and group columns.
+
+        p_adjust : str, optional
+            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+                'bonferroni' : one-step correction
+                'sidak' : one-step correction
+                'holm-sidak' : step-down method using Sidak adjustments
+                'holm' : step-down method using Bonferroni adjustments
+                'simes-hochberg' : step-up method  (independent)
+                'hommel' : closed method based on Simes tests (non-negative)
+                'fdr_bh' : Benjamini/Hochberg  (non-negative)
+                'fdr_by' : Benjamini/Yekutieli (negative)
+                'fdr_tsbh' : two stage fdr correction (non-negative)
+                'fdr_tsbky' : two stage fdr correction (non-negative)
+
+        Returns
+        -------
+        Pandas DataFrame containing p values.
+
+        Notes
+        -----
+        The p-values are estimated from the studentized range distribution. If
+        the medians are already increasingly ordered, than the NPM-test
+        simplifies to the ordinary Nemenyi test
+
+        References
+        ----------
+        Nashimoto, K., Wright, F.T., (2005), Multiple comparison procedures for
+        detecting differences in simply ordered means. Comput. Statist. Data
+        Anal. 48, 291--306.
+
+        Examples
+        --------
+        >>>
+        >>> sp.posthoc_npm_test(x)
+
+    '''
+
+
+    def compare(i, j):
+        diff = np.abs(x_ranks_avg[i] - x_ranks_avg[j])
+        A = x_len_overall * (x_len_overall + 1.) / 12.
+        B = (1. / x_lens[i] + 1. / x_lens[j])
+        z_value = diff / np.sqrt((A - x_ties) * B)
+        p_value = 2. * ss.norm.sf(np.abs(z_value))
+        return p_value
+
+    def get_ties(x):
+        x_sorted = np.array(np.sort(x))
+        tie_sum = 0
+        pos = 0
+        while pos < x_len_overall:
+            n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
+            pos = pos + n_ties
+            if n_ties > 1:
+                tie_sum += n_ties ** 3. - n_ties
+        c = tie_sum / (12. * (x_len_overall - 1))
+        return c
+
+    if isinstance(a, DataFrame):
+        x = a.copy()
+        if not sort:
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+
+        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
+        x_groups_unique = np.asarray(x[group_col].unique())
+        x_len = x_groups_unique.size
+        x_lens = x.groupby(by=group_col)[val_col].count().values
+        x_flat = x[val_col].values
+
+    else:
+        x = np.array(a)
+        x = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
+        x_flat = np.concatenate(x)
+        x_len = len(x)
+        x_lens = np.asarray([len(a) for a in x])
+
+    x_len_overall = len(x_flat)
+
+    if any(x_lens == 0):
+        raise ValueError("All groups must contain data")
+
+    x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
+    x_ranks = ss.rankdata(x_flat)
+    x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
+    x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
+    x_ties = get_ties(x_ranks)
+
+    vs = np.zeros((x_len, x_len), dtype=np.float)
+    combs = it.combinations(range(x_len), 2)
+
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    for i,j in combs:
+        vs[i, j] = compare_dunn(i, j)
+
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+
+    vs[tri_lower] = vs.T[tri_lower]
+    np.fill_diagonal(vs, -1)
+
+    if isinstance(x, DataFrame):
+        return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
+    else:
+        return vs
+
 def posthoc_siegel_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
     '''Siegel and Castellan's All-Pairs Comparisons Test for Unreplicated Blocked Data.
@@ -1656,6 +1786,7 @@ def posthoc_ttest(a, val_col = None, group_col = None, pool_sd = False, equal_va
         x_lens = x.groupby(by=group_col)[val_col].count().values
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
         x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
+        #x_grouped = [x.loc[v, val_col].values.tolist() for g, v in x.groupby(group_col, sort=False).groups.items()]
 
     else:
         x = np.array(a)
