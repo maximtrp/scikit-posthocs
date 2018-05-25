@@ -798,30 +798,44 @@ def posthoc_npm_test(a, y_col = None, block_col = None, group_col = None, melted
         group_col = 'groups'
         val_col = 'y'
 
+    x_groups_unique = x[group_col].unique()
+
     if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x_groups_unique, ordered=True)
+
     x.sort_values(by=[group_col], ascending=True, inplace=True)
+    x['ranks'] = x.rank()
+    Ri = x.groupby(group_col).mean()
+    ni = x.groupby(group_col).count()
+    k = x[group_col].unique().size
+    n = x.shape[0]
+    sigma = np.sqrt(n * (n + 1) / 12.)
+    df = np.inf
 
-    vs = np.zeros((x_len, x_len), dtype=np.float)
-    combs = it.combinations(range(x_len), 2)
+    def compare(m, u):
+        return (Ri[u] - Ri[m]) / (sigma / np.sqrt(2) * np.sqrt(1. / ni[m] + 1. / ni[u]))
 
-    tri_upper = np.triu_indices(vs.shape[0], 1)
-    tri_lower = np.tril_indices(vs.shape[0], -1)
-    vs[:,:] = 0
+    stat = np.empty((k-1, k-1))
+    for i, j in it.combinations(range(k), 2):
+        u = j
+        m = np.arange(i, u-1)
+        tmp = compare(m, u)
+        stat[j-1, i] = np.max(tmp)
 
-    for i,j in combs:
-        vs[i, j] = compare_dunn(i, j)
+    p_values = psturng(stat, k, np.inf)
+    tri_upper = np.triu_indices(p_values.shape[0], 1)
+    tri_lower = np.tril_indices(p_values.shape[0], -1)
+    p_values[tri_lower] = p_values.T[tri_lower]
 
     if p_adjust:
-        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+        p_values[tri_upper] = multipletests(p_values[tri_upper], method = p_adjust)[1]
 
-    vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(p_values, -1)
 
-    if isinstance(x, DataFrame):
-        return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
-    else:
-        return vs
+    #if isinstance(x, DataFrame):
+    return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
+    #else:
+    #    return p_values
 
 def posthoc_siegel_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
