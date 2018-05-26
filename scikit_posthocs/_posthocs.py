@@ -6,6 +6,64 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame, Categorical, Series
 
+def __convert_to_df(a, val_col, group_col):
+
+    if isinstance(a, DataFrame):
+        x = a.copy()
+        if not all([group_col, val_col]):
+            raise ValueError('group_col, val_col must be explicitly specified')
+    else:
+        x = np.array(a)
+
+        if not all([group_col, val_col]):
+            try:
+                groups = np.array([len(a) * [i + 1] for i, a in enumerate(x)])
+                groups = sum(groups.tolist(), [])
+                x = sum(x.tolist(), [])
+                x = np.column_stack([x, groups])
+                val_col = 0
+                group_col = 1
+            except:
+                raise ValueError('array cannot be processed, provide val_col and group_col args')
+
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+        x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
+        group_col = 'groups'
+        val_col = 'y'
+
+    return x
+
+def __convert_to_block_df(a, y_col, group_col, block_col, melted):
+
+    if isinstance(a, DataFrame) and not melted:
+        group_col = 'groups'
+        block_col = 'blocks'
+        y_col = 'y'
+        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+    elif not isinstance(a, DataFrame):
+        x = np.array(a)
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+
+        if not melted:
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
+            x.columns.name = group_col
+            x.index.name = block_col
+            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+
+        else:
+            x.columns[group_col] = 'groups'
+            x.columns[block_col] = 'blocks'
+            x.columns[y_col] = 'y'
+            group_col = 'groups'
+            block_col = 'blocks'
+            y_col = 'y'
+
+    return x, 'y', 'groups', 'blocks'
+
+
 def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort = True):
 
     '''Post-hoc pairwise test for multiple comparisons of mean rank sums
@@ -507,31 +565,7 @@ def posthoc_nemenyi_friedman(a, y_col = None, block_col = None, group_col = None
         qval = dif / np.sqrt(k * (k + 1.) / (6. * n))
         return qval
 
-    if isinstance(a, DataFrame) and not melted:
-        group_col = 'groups'
-        block_col = 'blocks'
-        y_col = 'y'
-        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-
-    elif not isinstance(a, DataFrame):
-        x = np.array(a)
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
-
-        if not melted:
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
-            x.columns.name = group_col
-            x.index.name = block_col
-            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-
-        else:
-            x.columns[group_col] = 'groups'
-            x.columns[block_col] = 'blocks'
-            x.columns[y_col] = 'y'
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
+    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     #if not sort:
     #    x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
@@ -654,31 +688,7 @@ def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None
         pval = 2 * ss.t.sf(np.abs(tval), df = (n-1)*(k-1))
         return pval
 
-    if isinstance(a, DataFrame) and not melted:
-        group_col = 'groups'
-        block_col = 'blocks'
-        y_col = 'y'
-        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-
-    elif not isinstance(a, DataFrame):
-        x = np.array(a)
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
-
-        if not melted:
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
-            x.columns.name = group_col
-            x.index.name = block_col
-            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-
-        else:
-            x.columns[group_col] = 'groups'
-            x.columns[block_col] = 'blocks'
-            x.columns[y_col] = 'y'
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
+    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     #if not sort:
     #    x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
@@ -775,29 +785,7 @@ def posthoc_npm_test(a, y_col = None, block_col = None, group_col = None, melted
 
     '''
 
-    if isinstance(a, DataFrame):
-        x = a.copy()
-        if not all([group_col, val_col]):
-            raise ValueError('group_col, val_col must be explicitly specified')
-    else:
-        x = np.array(a)
-
-        if not all([group_col, val_col]):
-            try:
-                groups = np.array([len(a) * [i + 1] for i, a in enumerate(x)])
-                groups = sum(groups.tolist(), [])
-                x = sum(x.tolist(), [])
-                x = np.column_stack([x, groups])
-                val_col = 0
-                group_col = 1
-            except:
-                raise ValueError('array cannot be processed, provide val_col and group_col args')
-
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
-        x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
-        group_col = 'groups'
-        val_col = 'y'
-
+    x = __convert_to_df(a, val_col, group_col)
     x_groups_unique = x[group_col].unique()
 
     if not sort:
@@ -920,31 +908,7 @@ def posthoc_siegel_friedman(a, y_col = None, block_col = None, group_col = None,
         zval = dif / np.sqrt(k * (k + 1) / (6 * n))
         return zval
 
-    if isinstance(a, DataFrame) and not melted:
-        group_col = 'groups'
-        block_col = 'blocks'
-        y_col = 'y'
-        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-
-    elif not isinstance(a, DataFrame):
-        x = np.array(a)
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
-
-        if not melted:
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
-            x.columns.name = group_col
-            x.index.name = block_col
-            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-
-        else:
-            x.columns[group_col] = 'groups'
-            x.columns[block_col] = 'blocks'
-            x.columns[y_col] = 'y'
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
+    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     #if not sort:
     #    x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
@@ -1059,31 +1023,7 @@ def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted =
         pval = 2. * ss.t.sf(np.abs(tval), df = df)
         return pval
 
-    if isinstance(a, DataFrame) and not melted:
-        group_col = 'groups'
-        block_col = 'blocks'
-        y_col = 'y'
-        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-
-    elif not isinstance(a, DataFrame):
-        x = np.array(a)
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
-
-        if not melted:
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
-            x.columns.name = group_col
-            x.index.name = block_col
-            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-
-        else:
-            x.columns[group_col] = 'groups'
-            x.columns[block_col] = 'blocks'
-            x.columns[y_col] = 'y'
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
+    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     if not sort:
         x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
@@ -1179,28 +1119,7 @@ def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort =
 
     '''
 
-    if isinstance(a, DataFrame):
-        x = a.copy()
-        if not all([group_col, val_col]):
-            raise ValueError('group_col, val_col must be explicitly specified')
-    else:
-        x = np.array(a)
-
-        if not all([group_col, val_col]):
-            try:
-                groups = np.array([len(a) * [i + 1] for i, a in enumerate(x)])
-                groups = sum(groups.tolist(), [])
-                x = sum(x.tolist(), [])
-                x = np.column_stack([x, groups])
-                val_col = 0
-                group_col = 1
-            except:
-                raise ValueError('array cannot be processed, provide val_col and group_col args')
-
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
-        x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
-        group_col = 'groups'
-        val_col = 'y'
+    x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
         x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
@@ -1322,31 +1241,7 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
         pval = 2. * ss.norm.sf(np.abs(zval))
         return pval
 
-    if isinstance(a, DataFrame) and not melted:
-        group_col = 'groups'
-        block_col = 'blocks'
-        y_col = 'y'
-        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-
-    elif not isinstance(a, DataFrame):
-        x = np.array(a)
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
-
-        if not melted:
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
-            x.columns.name = group_col
-            x.index.name = block_col
-            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
-
-        else:
-            x.columns[group_col] = 'groups'
-            x.columns[block_col] = 'blocks'
-            x.columns[y_col] = 'y'
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
+    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     if not sort:
         x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
@@ -1447,28 +1342,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
 
     '''
 
-    if isinstance(a, DataFrame):
-        x = a.copy()
-        if not all([group_col, val_col]):
-            raise ValueError('group_col, val_col must be explicitly specified')
-    else:
-        x = np.array(a)
-
-        if not all([group_col, val_col]):
-            try:
-                groups = np.array([len(a) * [i + 1] for i, a in enumerate(x)])
-                groups = sum(groups.tolist(), [])
-                x = sum(x.tolist(), [])
-                x = np.column_stack([x, groups])
-                val_col = 0
-                group_col = 1
-            except:
-                raise ValueError('Array cannot be processed, provide val_col and group_col args')
-
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
-        x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
-        group_col = 'groups'
-        val_col = 'y'
+    x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
         x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
@@ -1640,28 +1514,7 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
         pval = 2. * ss.t.sf(np.abs(tval), df = n - k)
         return pval
 
-    if isinstance(a, DataFrame):
-        x = a.copy()
-        if not all([group_col, val_col]):
-            raise ValueError('group_col, val_col must be explicitly specified')
-    else:
-        x = np.array(a)
-
-        if not all([group_col, val_col]):
-            try:
-                groups = np.array([len(a) * [i + 1] for i, a in enumerate(x)])
-                groups = sum(groups.tolist(), [])
-                x = sum(x.tolist(), [])
-                x = np.column_stack([x, groups])
-                val_col = 0
-                group_col = 1
-            except:
-                raise ValueError('array cannot be processed, provide val_col and group_col args')
-
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
-        x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
-        group_col = 'groups'
-        val_col = 'y'
+    x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
         x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
