@@ -726,7 +726,7 @@ def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_npm_test(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
+def posthoc_npm_test(a, y_col = None, group_col = None, sort = False, p_adjust = None):
 
     '''Calculate pairwise comparisons using Nashimoto and Wright's all-pairs comparison
         procedure (NPM test) for simply ordered mean ranksums. NPM test is basically an
@@ -793,8 +793,8 @@ def posthoc_npm_test(a, y_col = None, block_col = None, group_col = None, melted
 
     x.sort_values(by=[group_col], ascending=True, inplace=True)
     x['ranks'] = x.rank()
-    Ri = x.groupby(group_col).mean()
-    ni = x.groupby(group_col).count()
+    Ri = x.groupby(group_col)[val_col].mean()
+    ni = x.groupby(group_col)[val_col].count()
     k = x[group_col].unique().size
     n = x.shape[0]
     sigma = np.sqrt(n * (n + 1) / 12.)
@@ -820,10 +820,7 @@ def posthoc_npm_test(a, y_col = None, block_col = None, group_col = None, melted
 
     np.fill_diagonal(p_values, -1)
 
-    #if isinstance(x, DataFrame):
     return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
-    #else:
-    #    return p_values
 
 def posthoc_siegel_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
@@ -1359,7 +1356,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
             return False
 
     Rij = x[val_col].rank()
-    n = x.groupby(group_col).count()
+    n = x.groupby(group_col)[val_col].count()
 
     def _fn(Ri, Rj):
         return np.sum(Ri.apply(lambda x: Rj[Rj > x].size))
@@ -1951,3 +1948,103 @@ def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox', 
         return DataFrame(vs, index=groups_unique, columns=groups_unique)
     else:
         return vs
+
+def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust = None):
+
+    '''Scheffe's all-pairs comparisons test for normally distributed data with equal
+    group variances. For all-pairs comparisons in an one-factorial layout with
+    normally distributed residuals and equal variances Scheffe's test can be
+    performed. A total of m = k(k-1)/2 hypotheses can be tested.
+
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
+
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
+
+    sort : bool, optional
+        If True, sort data by block and group columns.
+
+    p_adjust : str, optional
+        Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+            'bonferroni' : one-step correction
+            'sidak' : one-step correction
+            'holm-sidak' : step-down method using Sidak adjustments
+            'holm' : step-down method using Bonferroni adjustments
+            'simes-hochberg' : step-up method  (independent)
+            'hommel' : closed method based on Simes tests (non-negative)
+            'fdr_bh' : Benjamini/Hochberg  (non-negative)
+            'fdr_by' : Benjamini/Yekutieli (negative)
+            'fdr_tsbh' : two stage fdr correction (non-negative)
+            'fdr_tsbky' : two stage fdr correction (non-negative)
+
+    Returns
+    -------
+    Pandas DataFrame containing p values.
+
+    Notes
+    -----
+    The p-values are computed from the F-distribution.
+
+    References
+    ----------
+    J. Bortz (1993) Statistik für Sozialwissenschaftler. 4. Aufl., Berlin:
+    Springer.
+
+    L. Sachs (1997) Angewandte Statistik, New York: Springer.
+
+    H. Scheffe (1953) A Method for Judging all Contrasts in the Analysis of
+    Variance. Biometrika 40, 87--110.
+
+    Examples
+    --------
+    >>>
+    >>> sp.posthoc_scheffe(x)
+
+    '''
+
+    x = __convert_to_df(a, val_col, group_col)
+    x_groups_unique = x[group_col].unique()
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x_groups_unique, ordered=True)
+
+    x.sort_values(by=[group_col], ascending=True, inplace=True)
+    x_grouped = x.groupby(group_col)[val_col]
+
+    ni = x_grouped.count()
+    n = ni.sum()
+    xi = x_grouped.mean()
+    si = x_grouped.var()
+    sin = 1 / (n - k) * np.sum(si * (ni - 1))
+
+    def compare(i, j):
+        dif = xi[i] - xi[j]
+        A = sin * (1. / ni[i] + 1. / ni[j]) * (k - 1)
+        f_val = dif ** 2 / A
+        return f_val
+
+    vs = np.zeros((x_len, x_len), dtype=np.float)
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    combs = it.combinations(range(x_groups_unique.size), 2)
+
+    for i,j in combs:
+        vs[i, j] = compare(x_groups_unique[i], x_groups_unique[j])
+
+    vs[tri_lower] = vs.T[tri_lower]
+    p_values = ss.f.sf(vs, k - 1, n - k)
+
+    np.fill_diagonal(p_values, -1)
+
+    return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
