@@ -41,6 +41,11 @@ def __convert_to_block_df(a, y_col, group_col, block_col, melted):
         y_col = 'y'
         x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
+    elif melted:
+        x = DataFrame.from_dict({'groups': a[group_col],
+                                 'blocks': a[block_col],
+                                 'y': a[y_col]})
+
     elif not isinstance(a, DataFrame):
         x = np.array(a)
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
