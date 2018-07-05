@@ -12,6 +12,9 @@ scikit-posthocs
 This Python package provides statistical post-hoc tests for pairwise multiple comparisons
 and outlier detection algorithms.
 
+..contents::
+  :depth: 2
+
 Features
 --------
 
