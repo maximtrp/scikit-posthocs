@@ -203,10 +203,10 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
         return heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax, **kwargs)
 
     else:
-        df[(df < 0.001) & (df >= 0)] = 1
-        df[(df < 0.01)  & (df > 0.001)] = 2
-        df[(df < 0.05)  & (df > 0.01)] = 3
-        df[(df > 0.05)] = 0
+        df[(x <= 0.001) & (x >= 0)] = 1
+        df[(x <= 0.01)  & (x > 0.001)] = 2
+        df[(x <= 0.05)  & (x > 0.01)] = 3
+        df[(x > 0.05)] = 0
         np.fill_diagonal(df.values, -1)
 
         if len(cmap) != 5:
