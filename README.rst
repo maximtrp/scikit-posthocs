@@ -17,14 +17,15 @@ and outlier detection algorithms.
 Features
 --------
 
-- Multiple comparisons parametric and nonparametric tests (some are ported from R's
-  `PMCMR <https://cran.r-project.org/web/packages/PMCMR/index.html>`_ package):
+- Multiple comparisons parametric and nonparametric tests:
 
   - Conover, Dunn, and Nemenyi tests for use with Kruskal-Wallis test.
   - Conover, Nemenyi, and Siegel tests for use with Friedman test.
   - Quade, van Waerden, and Durbin tests.
   - Student, Mann-Whitney, Wilcoxon, and TukeyHSD tests.
   - Anderson-Darling test.
+  - Mack-Wolfe test.
+  - Scheffe test.
 
   All tests are capable of p adjustments for multiple pairwise comparisons.
 
