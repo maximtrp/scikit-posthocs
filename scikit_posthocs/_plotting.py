@@ -113,10 +113,10 @@ def sign_table(a, lower = True, upper = True):
 
     return a
 
-def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
-    ax = None, **kwargs):
+def sign_plot(x, g = None, flat = False, labels = True, cmap = None,\
+    cbar_ax_bbox = None, ax = None, **kwargs):
 
-    '''Significance plot, a heatmap of p values.
+    '''Significance plot, a heatmap of p values (based on Seaborn).
 
         Parameters
         ----------
@@ -131,9 +131,12 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
 
         flat : bool, optional
             If `flat` is True, plots a significance array as a heatmap using
-            seaborn. If `flat` is False (default), plots an array of p values
-            as a heatmap using seaborn. Non-flat mode is useful if you need to
-            differentiate significance levels visually. It is the preferred mode.
+            seaborn. If `flat` is False (default), plots an array of p values.
+            Non-flat mode is useful if you need to  differentiate significance
+            levels visually. It is the preferred mode.
+
+        labels : bool, optional
+            Plot axes labels (default) or not.
 
         cmap : list, optional
             If flat is False (default):
@@ -162,8 +165,8 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
 
         Returns
         -------
-        Numpy ndarray where 0 is False (not significant), 1 is True (significant),
-        and -1 is for diagonal elements.
+        Axes object with the heatmap (and ColorBase object of cbar if `flat` is set to
+        False).
 
         Examples
         --------
@@ -200,7 +203,11 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
         cmap = ['1', '#ef3b2c',  '#005a32',  '#238b45', '#a1d99b']
 
     if flat:
-        return heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax, **kwargs)
+        g = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax, **kwargs)
+        if not labels:
+            g.set_xlabel('')
+            g.set_ylabel('')
+        return g
 
     else:
         df[(x <= 0.001) & (x >= 0)] = 1
@@ -213,6 +220,9 @@ def sign_plot(x, g = None, flat = False, cmap = None, cbar_ax_bbox = None,\
             raise ValueError("Cmap list must contain 5 items")
 
         g = heatmap(df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1, cbar=False, ax=ax, **kwargs)
+        if not labels:
+            g.set_xlabel('')
+            g.set_ylabel('')
 
         cbar_ax = g.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
         cbar = ColorbarBase(cbar_ax, cmap=ListedColormap(cmap[1:]), boundaries=[0,1,2,3,4])
