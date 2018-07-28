@@ -92,7 +92,7 @@ Columns specified with ``val_col`` and ``group_col`` args must be melted prior t
 
 .. code:: python
 
-  sp.posthoc_conover(x, val_col='values', group_col='groups')
+  sp.posthoc_conover(x, val_col='values', group_col='groups', p_adjust = 'fdr_bh')
 
 .. image:: images/result-conover.png
 
