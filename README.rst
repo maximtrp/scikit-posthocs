@@ -9,15 +9,15 @@ scikit-posthocs
 .. image:: https://img.shields.io/pypi/v/scikit-posthocs.svg
     :target: https://pypi.python.org/pypi/scikit-posthocs/
 
-This Python package provides statistical post-hoc tests for pairwise multiple comparisons
-and outlier detection algorithms.
+This Python package provides statistical post-hoc tests for pairwise multiple
+comparisons and outlier detection algorithms.
 
 .. contents:: :local:
 
 Features
 --------
 
-- Multiple comparisons parametric and nonparametric tests:
+- Pairwise multiple comparisons parametric and nonparametric tests:
 
   - Conover, Dunn, and Nemenyi tests for use with Kruskal-Wallis test.
   - Conover, Nemenyi, Siegel, and Miller tests for use with Friedman test.
@@ -25,9 +25,8 @@ Features
   - Student, Mann-Whitney, Wilcoxon, and TukeyHSD tests.
   - Anderson-Darling test.
   - Mack-Wolfe test.
+  - Nashimoto and Wright's test (NPM test).
   - Scheffe test.
-
-  All tests are capable of p adjustments for multiple pairwise comparisons.
 
 - Plotting functionality (e.g. significance plots).
 
@@ -37,6 +36,8 @@ Features
   - Grubbs test.
   - Tietjen-Moore test.
   - Generalized Extreme Studentized Deviate test (ESD test).
+
+  All tests are capable of p adjustments for multiple pairwise comparisons.
 
 Dependencies
 ------------
