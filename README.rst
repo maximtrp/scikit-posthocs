@@ -8,7 +8,7 @@ scikit-posthocs
     :target: https://github.com/maximtrp/scikit-posthocs/issues
 .. image:: https://img.shields.io/pypi/v/scikit-posthocs.svg
     :target: https://pypi.python.org/pypi/scikit-posthocs/
-.. image:: https://img.shields.io/badge/Donate-PayPal-blue.svg
+.. image:: https://img.shields.io/badge/donate-PayPal-blue.svg
     :target: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K5J3W3WUQ754U&lc=US&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 
 This Python package provides statistical post-hoc tests for pairwise multiple
@@ -128,3 +128,7 @@ Credits
 -------
 
 Thorsten Pohlert, PMCMR author and maintainer
+
+Donate
+------
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K5J3W3WUQ754U&lc=US&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
