@@ -110,7 +110,8 @@ def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort =
 
         Returns
         -------
-        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray or pandas DataFrame of p values depending on input
+        data type.
 
         Notes
         -----
@@ -250,7 +251,8 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
 
         Returns
         -------
-        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray or pandas DataFrame of p values depending on input
+        data type.
 
         Notes
         -----
@@ -373,7 +375,8 @@ def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = T
 
         Returns
         -------
-        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray or pandas DataFrame of p values depending on input
+        data type.
 
         Notes
         -----
@@ -785,12 +788,14 @@ def posthoc_npm_test(a, y_col = None, group_col = None, sort = False, p_adjust =
 
         Examples
         --------
-        >>>
+        >>> x = np.array([[102,109,114,120,124],
+                          [110,112,123,130,145],
+                          [132,141,156,160,172]])
         >>> sp.posthoc_npm_test(x)
 
     '''
 
-    x = __convert_to_df(a, val_col, group_col)
+    x = __convert_to_df(a, y_col, group_col)
     x_groups_unique = x[group_col].unique()
 
     if not sort:
@@ -945,7 +950,7 @@ def posthoc_siegel_friedman(a, y_col = None, block_col = None, group_col = None,
     return DataFrame(vs, index=groups, columns=groups)
 
 
-def posthoc_miller_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
+def posthoc_miller_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False):
 
     '''Miller's All-Pairs Comparisons Test for Unreplicated Blocked Data.
         The p-values are computed from the chi-square distribution.
@@ -985,20 +990,6 @@ def posthoc_miller_friedman(a, y_col = None, block_col = None, group_col = None,
 
         sort : bool, optional
             If True, sort data by block and group columns.
-
-        p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details.
-            Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
 
         Returns
         -------
@@ -1061,9 +1052,6 @@ def posthoc_miller_friedman(a, y_col = None, block_col = None, group_col = None,
         vs[i, j] = compare_stats(i, j)
     vs = vs ** 2
     vs = ss.chi2.sf(vs, k - 1)
-
-    #if p_adjust:
-    #    vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
@@ -1274,8 +1262,8 @@ def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort =
 def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't', melted = False, sort = False, p_adjust = None):
 
     '''Calculate pairwise comparisons using Quade's post-hoc test for
-    unreplicated blocked data. This test is usually conducted post-hoc after
-    significant results of the omnibus test.
+    unreplicated blocked data. This test is usually conducted if significant
+    results were obtained by the omnibus test.
 
         Parameters
         ----------
@@ -1318,7 +1306,9 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
             If True, sort data by block and group columns.
 
         p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+            Method for adjusting p values.
+            See statsmodels.sandbox.stats.multicomp for details.
+            Available methods are:
                 'bonferroni' : one-step correction
                 'sidak' : one-step correction
                 'holm-sidak' : step-down method using Sidak adjustments
@@ -1336,15 +1326,16 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
 
         References
         ----------
-        W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition, Wiley.
+        W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition,
+        Wiley.
 
-        N. A. Heckert and J. J. Filliben (2003). NIST Handbook 148: Dataplot Reference Manual,
-        Volume 2: Let Subcommands and Library Functions.
+        N. A. Heckert and J. J. Filliben (2003). NIST Handbook 148: Dataplot
+        Reference Manual, Volume 2: Let Subcommands and Library Functions.
         National Institute of Standards and Technology Handbook Series, June 2003.
 
-        D. Quade (1979), Using weighted rankings in the analysis of complete blocks
-        with additive block effects.
-        Journal of the American Statistical Association, 74, 680-683.
+        D. Quade (1979), Using weighted rankings in the analysis of complete
+        blocks with additive block effects. Journal of the American Statistical
+        Association, 74, 680-683.
 
         Examples
         --------
@@ -1568,13 +1559,13 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
         mt = np.array(mt)
         p_value = mt[mt > stat] / n_perm
 
-    return stat, p_value
+    return p_value, stat
 
 
 def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 
-    '''Calculate pairwise multiple comparisons between group levels
-    according to van der Waerden.
+    '''Van der Waerden's test for pairwise multiple comparisons between group
+    levels.
 
         Parameters
         ----------
@@ -1594,7 +1585,8 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
             If True, sort data by block and group columns.
 
         p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details.
+            Method for adjusting p values.
+            See statsmodels.sandbox.stats.multicomp for details.
             Available methods are:
                 'bonferroni' : one-step correction
                 'sidak' : one-step correction
@@ -1626,6 +1618,9 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
         ----------
         W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
               Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
+
+        B. L. van der Waerden (1952) Order tests for the two-sample problem and
+        their power, Indagationes Mathematicae, 14, 453-458.
 
         Examples
         --------
@@ -1680,7 +1675,7 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 def posthoc_ttest(a, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None, sort = True):
 
     '''Pairwise T test for multiple comparisons of independent groups. May be
-    used after ordinary ANOVA to do pairwise comparisons.
+    used after an ordinary ANOVA to do pairwise comparisons.
 
         Parameters
         ----------
@@ -1729,7 +1724,8 @@ def posthoc_ttest(a, val_col = None, group_col = None, pool_sd = False, equal_va
 
         Returns
         -------
-        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
+        Numpy ndarray or pandas DataFrame of p values depending on input
+        data type.
 
         References
         ----------
@@ -1970,7 +1966,8 @@ def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = Tr
     else:
         return vs
 
-def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox', correction=False, p_adjust = None, sort = False):
+def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox',\
+    correction=False, p_adjust = None, sort = False):
 
     '''Pairwise comparisons with Wilcoxon signed-rank test. It is a non-parametric
     version of the paired T-test.
@@ -2132,7 +2129,7 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
     L. Sachs (1997) Angewandte Statistik, New York: Springer.
 
     H. Scheffe (1953) A Method for Judging all Contrasts in the Analysis of
-    Variance. Biometrika 40, 87--110.
+    Variance. Biometrika 40, 87-110.
 
     Examples
     --------
