@@ -125,7 +125,7 @@ def sign_plot(x, g = None, flat = False, labels = True, cmap = None,\
             the array interface, containing p values. If flat is True, x must be
             a sign_array (returned by `scikit_posthocs.sign_array` function)
 
-        g : array_like or Numpy array, optional
+        g : array_like or ndarray, optional
             An array, any object exposing the array interface, containing
             group names.
 
