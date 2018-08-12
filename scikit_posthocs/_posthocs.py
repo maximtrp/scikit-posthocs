@@ -2173,5 +2173,176 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
     p_values = ss.f.sf(vs, k - 1, n - k)
 
     np.fill_diagonal(p_values, -1)
+    return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
 
+
+def posthoc_tamhane(a, val_col = None, group_col = None, sort = False):
+
+    '''Tamhane's T2 all-pairs comparison test for normally distributed data with
+    unequal variances. Tamhane's T2 test can be performed for all-pairs comparisons
+    in an one-factorial layout with normally distributed residuals but unequal
+    groups variances. A total of m = k(k-1)/2 hypotheses can be tested. The null
+    hypothesis is tested in the two-tailed test against the alternative hypothesis.
+
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
+
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
+
+    sort : bool, optional
+        If True, sort data by block and group columns.
+
+    Returns
+    -------
+    Pandas DataFrame containing p values.
+
+    Notes
+    -----
+    The p-values are computed from the t-distribution and adjusted according to
+    Dunn-Sidak.
+
+    References
+    ----------
+    A. C. Tamhane (1979), A Comparison of Procedures for Multiple Comparisons of
+    Means with Unequal Variances. Journal of the American Statistical Association},
+    74, 471--480.
+
+    Examples
+    --------
+    >>> x = []
+    >>> sp.posthoc_tamhane(x)
+
+    '''
+
+    x = __convert_to_df(a, val_col, group_col)
+    x_groups_unique = x[group_col].unique()
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x_groups_unique, ordered=True)
+
+    x.sort_values(by=[group_col], ascending=True, inplace=True)
+    x_grouped = x.groupby(group_col)[val_col]
+
+    ni = x_grouped.count()
+    n = ni.sum()
+    xi = x_grouped.mean()
+    si = x_grouped.var()
+    sin = 1 / (n - k) * np.sum(si * (ni - 1))
+
+    def compare(i, j):
+        dif = xi[i] - xi[j]
+        A = (si[i] / ni[i] + si[j] / ni[j])
+        t_val = dif / np.sqrt(A)
+        df = A ** 2 / (si[i] ** 2 / (ni[i] ** 2 * (ni[i] - 1)) + si[j] ** 2 / (ni[j] ** 2 * (ni[j] - 1)))
+        p_val = ss.t.sf(t_val, df=df)
+        return p_val
+
+    vs = np.zeros((x_len, x_len), dtype=np.float)
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    combs = it.combinations(range(x_groups_unique.size), 2)
+
+    for i,j in combs:
+        vs[i, j] = compare(x_groups_unique[i], x_groups_unique[j])
+
+    vs[tri_upper] = np.min([1, 1 - (1 - p) ** x_groups_unique.size])
+    vs[tri_lower] = vs.T[tri_lower]
+
+    np.fill_diagonal(p_values, -1)
+    return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
+
+
+def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
+
+    '''Performs Tukey's all-pairs comparisons test for normally distributed data
+    with equal group variances. For all-pairs comparisons in an one-factorial
+    layout with normally distributed residuals and equal variances Tukey's test
+    can be performed. A total of m = k(k-1)/2 hypotheses can be tested. The null
+    hypothesis is tested in the two-tailed test against the alternative
+    hypothesis.
+
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
+
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
+
+    sort : bool, optional
+        If True, sort data by block and group columns.
+
+    Returns
+    -------
+    Pandas DataFrame containing p values.
+
+    Notes
+    -----
+    The p-values are computed from the Tukey-distribution.
+
+    References
+    ----------
+    L. Sachs (1997) Angewandte Statistik, New York: Springer.
+    J. Tukey (1949) Comparing Individual Means in the Analysis of Variance,
+    Biometrics 5, 99-114.
+
+    Examples
+    --------
+    >>> x = []
+    >>> sp.posthoc_tukey(x)
+
+    '''
+
+    x = __convert_to_df(a, val_col, group_col)
+    x_groups_unique = x[group_col].unique()
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x_groups_unique, ordered=True)
+
+    x.sort_values(by=[group_col], ascending=True, inplace=True)
+    x_grouped = x.groupby(group_col)[val_col]
+
+    ni = x_grouped.count()
+    n = ni.sum()
+    xi = x_grouped.mean()
+    si = x_grouped.var()
+    sin = 1 / (n - k) * np.sum(si * (ni - 1))
+
+    def compare(i, j):
+        dif = xi[i] - xi[j]
+        A = sin * 0.5 * (1 / ni[i] + 1 / ni[j])
+        q_val = dif / np.sqrt(A)
+        return q_val
+
+    vs = np.zeros((x_len, x_len), dtype=np.float)
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    combs = it.combinations(range(x_groups_unique.size), 2)
+
+    for i,j in combs:
+        vs[i, j] = compare(x_groups_unique[i], x_groups_unique[j])
+
+    vs[tri_upper] = psturng(np.abs(vs[tri_upper]), x_groups_unique.size, n - x_groups_unique.size)
+    vs[tri_lower] = vs.T[tri_lower]
+
+    np.fill_diagonal(p_values, -1)
     return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
