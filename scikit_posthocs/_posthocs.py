@@ -2151,15 +2151,15 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
     n = ni.sum()
     xi = x_grouped.mean()
     si = x_grouped.var()
-    sin = 1 / (n - k) * np.sum(si * (ni - 1))
+    sin = 1 / (n - x_groups_unique.size) * np.sum(si * (ni - 1))
 
     def compare(i, j):
         dif = xi[i] - xi[j]
-        A = sin * (1. / ni[i] + 1. / ni[j]) * (k - 1)
+        A = sin * (1. / ni[i] + 1. / ni[j]) * (x_groups_unique.size - 1)
         f_val = dif ** 2 / A
         return f_val
 
-    vs = np.zeros((x_len, x_len), dtype=np.float)
+    vs = np.zeros((x_groups_unique.size, x_groups_unique.size), dtype=np.float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
@@ -2170,13 +2170,13 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
         vs[i, j] = compare(x_groups_unique[i], x_groups_unique[j])
 
     vs[tri_lower] = vs.T[tri_lower]
-    p_values = ss.f.sf(vs, k - 1, n - k)
+    p_values = ss.f.sf(vs, x_groups_unique.size - 1, n - x_groups_unique.size)
 
     np.fill_diagonal(p_values, -1)
     return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
 
 
-def posthoc_tamhane(a, val_col = None, group_col = None, sort = False):
+def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = False):
 
     '''Tamhane's T2 all-pairs comparison test for normally distributed data with
     unequal variances. Tamhane's T2 test can be performed for all-pairs comparisons
@@ -2197,6 +2197,10 @@ def posthoc_tamhane(a, val_col = None, group_col = None, sort = False):
     group_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
         Name of the column that contains group names.
+
+    welch : bool, optional
+        If True, use Welch's approximate solution for calculating the degree of
+        freedom. T2 test uses the usual df = N - 2 approximation.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -2236,17 +2240,28 @@ def posthoc_tamhane(a, val_col = None, group_col = None, sort = False):
     n = ni.sum()
     xi = x_grouped.mean()
     si = x_grouped.var()
-    sin = 1 / (n - k) * np.sum(si * (ni - 1))
+    sin = 1 / (n - x_groups_unique.size) * np.sum(si * (ni - 1))
 
     def compare(i, j):
         dif = xi[i] - xi[j]
-        A = (si[i] / ni[i] + si[j] / ni[j])
+        A = si[i] / ni[i] + si[j] / ni[j]
         t_val = dif / np.sqrt(A)
-        df = A ** 2 / (si[i] ** 2 / (ni[i] ** 2 * (ni[i] - 1)) + si[j] ** 2 / (ni[j] ** 2 * (ni[j] - 1)))
-        p_val = ss.t.sf(t_val, df=df)
+        if welch:
+            df = A ** 2. / (si[i] ** 2. / (ni[i] ** 2. * (ni[i] - 1.)) + si[j] ** 2. / (ni[j] ** 2. * (ni[j] - 1.)))
+        else:
+            ## checks according to Tamhane (1979, p. 474)
+            ok1 = (9/10. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 10/9.)
+            ok2 = (9/10. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 10/9.)
+            ok3 = (4/5. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 5/4.) and (1/2. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 2.)
+            ok4 = (2/3. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 3/2.) and (3/4. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 4/3.)
+            OK = any(ok1, ok2, ok3, ok4)
+            if not OK:
+                print("Sample sizes or standard errors are not balanced. T2 test is recommended.")
+            df = ni[i] + ni[j] - 2.
+        p_val = 2. * ss.t.sf(np.abs(t_val), df=df)
         return p_val
 
-    vs = np.zeros((x_len, x_len), dtype=np.float)
+    vs = np.zeros((x_groups_unique.size, x_groups_unique.size), dtype=np.float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
@@ -2256,11 +2271,12 @@ def posthoc_tamhane(a, val_col = None, group_col = None, sort = False):
     for i,j in combs:
         vs[i, j] = compare(x_groups_unique[i], x_groups_unique[j])
 
-    vs[tri_upper] = np.min([1, 1 - (1 - p) ** x_groups_unique.size])
+    vs[tri_upper] = 1. - (1. - vs[tri_upper]) ** x_groups_unique.size
     vs[tri_lower] = vs.T[tri_lower]
+    vs[vs > 1] = 1
 
-    np.fill_diagonal(p_values, -1)
-    return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
+    np.fill_diagonal(vs, -1)
+    return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
 
 
 def posthoc_tukey(a, val_col = None, group_col = None, sort = False):

@@ -160,5 +160,25 @@ class TestPosthocs(unittest.TestCase):
         results = sp.posthoc_wilcoxon(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
 
+    def test_posthoc_scheffe(self):
+
+        r_results = np.array([[-1, 3.378449e-01, 3.047472e-10],
+                              [3.378449e-01, -1, 2.173209e-07],
+                              [3.047472e-10, 2.173209e-07, -1]])
+
+        results = sp.posthoc_scheffe(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
+        self.assertTrue(np.allclose(results, r_results))
+
+    def test_posthoc_tamhane(self):
+
+        r_results = np.array([[-1, 2.898653e-02, 4.100954e-07],
+                              [2.898653e-02, -1, 2.333996e-05],
+                              [4.100954e-07, 2.333996e-05, -1]])
+
+        results = sp.posthoc_tamhane(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
+        self.assertTrue(np.allclose(results, r_results))
+
+
+
 if __name__ == '__main__':
     unittest.main()
