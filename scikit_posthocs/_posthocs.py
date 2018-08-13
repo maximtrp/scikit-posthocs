@@ -2339,7 +2339,7 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
     n = ni.sum()
     xi = x_grouped.mean()
     si = x_grouped.var()
-    sin = 1 / (n - k) * np.sum(si * (ni - 1))
+    sin = 1 / (n - x_groups_unique.size) * np.sum(si * (ni - 1))
 
     def compare(i, j):
         dif = xi[i] - xi[j]
@@ -2347,7 +2347,7 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
         q_val = dif / np.sqrt(A)
         return q_val
 
-    vs = np.zeros((x_len, x_len), dtype=np.float)
+    vs = np.zeros((x_groups_unique.size, x_groups_unique.size), dtype=np.float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
@@ -2360,5 +2360,5 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
     vs[tri_upper] = psturng(np.abs(vs[tri_upper]), x_groups_unique.size, n - x_groups_unique.size)
     vs[tri_lower] = vs.T[tri_lower]
 
-    np.fill_diagonal(p_values, -1)
-    return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
+    np.fill_diagonal(vs, -1)
+    return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)

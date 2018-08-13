@@ -178,6 +178,15 @@ class TestPosthocs(unittest.TestCase):
         results = sp.posthoc_tamhane(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
 
+    def test_posthoc_tukey(self):
+        r_results = np.array([[-1, 3.042955e-01, 4.308631e-10],
+                              [3.042955e-01, -1, 9.946571e-08],
+                              [4.308631e-10, 9.946571e-08, -1]])
+
+        results = sp.posthoc_tukey(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
+        print(results)
+        self.assertTrue(np.allclose(results, r_results, atol=1.e-3))
+
 
 
 if __name__ == '__main__':
