@@ -2100,19 +2100,6 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
     sort : bool, optional
         If True, sort data by block and group columns.
 
-    p_adjust : str, optional
-        Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
-            'bonferroni' : one-step correction
-            'sidak' : one-step correction
-            'holm-sidak' : step-down method using Sidak adjustments
-            'holm' : step-down method using Bonferroni adjustments
-            'simes-hochberg' : step-up method  (independent)
-            'hommel' : closed method based on Simes tests (non-negative)
-            'fdr_bh' : Benjamini/Hochberg  (non-negative)
-            'fdr_by' : Benjamini/Yekutieli (negative)
-            'fdr_tsbh' : two stage fdr correction (non-negative)
-            'fdr_tsbky' : two stage fdr correction (non-negative)
-
     Returns
     -------
     Pandas DataFrame containing p values.
@@ -2133,8 +2120,11 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
 
     Examples
     --------
-    >>>
-    >>> sp.posthoc_scheffe(x)
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_scheffe(x, val_col='values', group_col='groups')
 
     '''
 
@@ -2222,8 +2212,11 @@ def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = Fa
 
     Examples
     --------
-    >>> x = []
-    >>> sp.posthoc_tamhane(x)
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_tamhane(x, val_col='values', group_col='groups')
 
     '''
 
@@ -2321,8 +2314,11 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
 
     Examples
     --------
-    >>> x = []
-    >>> sp.posthoc_tukey(x)
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_tukey(x, val_col='values', group_col='groups')
 
     '''
 
