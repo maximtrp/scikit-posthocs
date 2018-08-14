@@ -29,6 +29,7 @@ Features
   - Mack-Wolfe test.
   - Nashimoto and Wright's test (NPM test).
   - Scheffe test.
+  - Tamhane T2 test.
 
 - Plotting functionality (e.g. significance plots).
 
