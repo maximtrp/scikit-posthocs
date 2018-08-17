@@ -92,13 +92,33 @@ Columns specified with ``val_col`` and ``group_col`` args must be melted prior t
   x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
   x = x.melt(var_name='groups', value_name='values')
 
-.. image:: images/melted-dataframe.png
+::
+     groups  values
+  0       a       1
+  1       a       2
+  2       a       3
+  3       a       5
+  4       a       1
+  5       b      12
+  6       b      31
+  7       b      54
+  8       b      62
+  9       b      12
+  10      c      10
+  11      c      12
+  12      c       6
+  13      c      74
+  14      c      11
 
 .. code:: python
 
   sp.posthoc_conover(x, val_col='values', group_col='groups', p_adjust = 'fdr_bh')
 
-.. image:: images/result-conover.png
+::
+            a         b         c
+  a -1.000000  0.000328  0.002780
+  b  0.000328 -1.000000  0.121659
+  c  0.002780  0.121659 -1.000000
 
 Significance plots
 ~~~~~~~~~~~~~~~~~~
