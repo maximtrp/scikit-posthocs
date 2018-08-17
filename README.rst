@@ -93,6 +93,7 @@ Columns specified with ``val_col`` and ``group_col`` args must be melted prior t
   x = x.melt(var_name='groups', value_name='values')
 
 ::
+
      groups  values
   0       a       1
   1       a       2
@@ -115,6 +116,7 @@ Columns specified with ``val_col`` and ``group_col`` args must be melted prior t
   sp.posthoc_conover(x, val_col='values', group_col='groups', p_adjust = 'fdr_bh')
 
 ::
+
             a         b         c
   a -1.000000  0.000328  0.002780
   b  0.000328 -1.000000  0.121659
