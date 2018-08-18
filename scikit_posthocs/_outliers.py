@@ -3,9 +3,9 @@
 import numpy as np
 from scipy.stats import t
 
-def outliers_iqr(x, ret = 'filtered', coef = 1.5):
+def outliers_iqr(x, return_='filtered', coef = 1.5):
 
-    '''Simple detection of potential outliers based on interquartile range (IQR).
+    """Simple detection of potential outliers based on interquartile range (IQR).
 
         Data that lie within the lower and upper limits are considered
         non-outliers. The lower limit is the number that lies 1.5 IQRs below
@@ -19,7 +19,7 @@ def outliers_iqr(x, ret = 'filtered', coef = 1.5):
             An array, any object exposing the array interface, containing
             p values.
 
-        return : str, optional
+        return_ : str, optional
             Specifies object to be returned. Available options are:
                 'filtered' : return a filtered array (default)
                 'outliers' : return outliers
@@ -40,7 +40,7 @@ def outliers_iqr(x, ret = 'filtered', coef = 1.5):
         >>> x = np.array([4,5,6,10,12,4,3,1,2,3,23,5,3])
         >>> ph.outliers_iqr(x, ret = 'outliers')
         array([12, 23])
-    '''
+    """
 
     x = np.asarray(x)
 
@@ -49,18 +49,18 @@ def outliers_iqr(x, ret = 'filtered', coef = 1.5):
     ll = q1 - iqr * coef
     ul = q3 + iqr * coef
 
-    if ret == 'indices':
+    if return_ == 'indices':
         return np.where((x >= ll) & (x <= ul))[0]
-    elif ret == 'outliers':
+    elif return_ == 'outliers':
         return x[(x < ll) | (x > ul)]
-    elif ret == 'outliers_indices':
+    elif return_ == 'outliers_indices':
         return np.where((x < ll) | (x > ul))[0]
     else:
         return x[(x >= ll) & (x <= ul)]
 
 def outliers_grubbs(x, hypo = False, alpha = 0.05):
 
-    '''Grubbs' Test for Outliers [1]_. This is the two-sided version of the test.
+    """Grubbs' Test for Outliers [1]_. This is the two-sided version of the test.
 
         The null hypothesis implies that there are no outliers in the data set.
 
@@ -94,7 +94,7 @@ def outliers_grubbs(x, hypo = False, alpha = 0.05):
         >>> x = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18,245.57])
         >>> ph.outliers_grubbs(x)
         array([ 199.31,  199.53,  200.19,  200.82,  201.92,  201.95,  202.18])
-    '''
+    """
 
     val = np.max(np.abs(x - np.mean(x)))
     ind = np.argmax(np.abs(x - np.mean(x)))
@@ -112,7 +112,7 @@ def outliers_grubbs(x, hypo = False, alpha = 0.05):
 
 def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
-    '''Tietjen-Moore test [1]_ to detect multiple outliers in a univariate
+    """Tietjen-Moore test [1]_ to detect multiple outliers in a univariate
         data set that follows an approximately normal distribution.
         The Tietjen-Moore test [2]_ is a generalization of the Grubbs' test to
         the case of multiple outliers. If testing for a single outlier,
@@ -158,14 +158,14 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
         >>> ph.outliers_tietjen(x, 2)
         array([-0.44, -0.3 , -0.24, -0.22, -0.13, -0.05,  0.06,  0.1 ,  0.18,
         0.2 ,  0.39,  0.48,  0.63])
-    '''
+    """
 
     n = x.size
-    def tietjen(x, k):
-        x_mean = x.mean()
-        r = np.abs(x - x_mean)
-        z = x[r.argsort()]
-        E = np.sum((z[:-k] - z[:-k].mean()) ** 2) / np.sum((z - x_mean) ** 2)
+    def tietjen(x_, k_):
+        x_mean = x_.mean()
+        r = np.abs(x_ - x_mean)
+        z = x_[r.argsort()]
+        E = np.sum((z[:-k_] - z[:-k_].mean()) ** 2) / np.sum((z - x_mean) ** 2)
         return E
 
     E_x = tietjen(x, k)
@@ -189,17 +189,17 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
 def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
 
-    '''The generalized (Extreme Studentized Deviate) ESD test is used
+    """The generalized (Extreme Studentized Deviate) ESD test is used
     to detect one or more outliers in a univariate data set that follows
     an approximately normal distribution [1]_.
 
         Parameters
         ----------
-        x : array_like or ndarray, 1d
+        data : array_like or ndarray, 1d
             An array, any object exposing the array interface, containing
             data to test for outliers.
 
-        iters : int, optional
+        outliers : int, optional
             Number of potential outliers to test for. Test is two-tailed, i.e.
             maximum and minimum values are checked for potential outliers.
 
@@ -224,9 +224,9 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
         Examples
         --------
 
-        >>> x = np.array([-0.25, 0.68, 0.94, 1.15, 1.2, 1.26, 1.26, 1.34, 1.38, 1.43, 1.49, 1.49, 1.55, 1.56, 1.58, 1.65, 1.69, 1.7, 1.76, 1.77, 1.81, 1.91, 1.94, 1.96, 1.99, 2.06, 2.09, 2.1, 2.14, 2.15, 2.23, 2.24, 2.26, 2.35, 2.37, 2.4, 2.47, 2.54, 2.62, 2.64, 2.9, 2.92, 2.92, 2.93, 3.21, 3.26, 3.3, 3.59, 3.68, 4.3, 4.64, 5.34, 5.42, 6.01])
+        >>> data = np.array([-0.25, 0.68, 0.94, 1.15, 1.2, 1.26, 1.26, 1.34, 1.38, 1.43, 1.49, 1.49, 1.55, 1.56, 1.58, 1.65, 1.69, 1.7, 1.76, 1.77, 1.81, 1.91, 1.94, 1.96, 1.99, 2.06, 2.09, 2.1, 2.14, 2.15, 2.23, 2.24, 2.26, 2.35, 2.37, 2.4, 2.47, 2.54, 2.62, 2.64, 2.9, 2.92, 2.92, 2.93, 3.21, 3.26, 3.3, 3.59, 3.68, 4.3, 4.64, 5.34, 5.42, 6.01])
 
-        >>> ph.outliers_gesd(x, 5)
+        >>> ph.outliers_gesd(data, 5)
         array([-0.25,  0.68,  0.94,  1.15,  1.2 ,  1.26,  1.26,  1.34,  1.38,
                 1.43,  1.49,  1.49,  1.55,  1.56,  1.58,  1.65,  1.69,  1.7 ,
                 1.76,  1.77,  1.81,  1.91,  1.94,  1.96,  1.99,  2.06,  2.09,
@@ -234,7 +234,7 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
                 2.47,  2.54,  2.62,  2.64,  2.9 ,  2.92,  2.92,  2.93,  3.21,
                 3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
 
-        >>> ph.outliers_gesd(x, outliers = 5, report = True)
+        >>> ph.outliers_gesd(data, outliers = 5, report = True)
         H0: no outliers in the data
         Ha: up to 5 outliers in the data
         Significance level:  α = 0.05
@@ -251,7 +251,7 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
                   3          3.179        3.144 *
                   4           2.81        3.136
                   5          2.816        3.128
-    '''
+    """
 
     Rs, ls = np.zeros(outliers, dtype = np.float), np.zeros(outliers, dtype = np.float)
     ms = []

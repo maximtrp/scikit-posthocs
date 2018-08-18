@@ -4,9 +4,9 @@ from matplotlib.colorbar import ColorbarBase
 from seaborn import heatmap
 from pandas import DataFrame
 
-def sign_array(a, alpha = 0.05):
 
-    '''Significance array
+def sign_array(p_values, alpha=0.05):
+    """Significance array
 
         Converts an array with p values to a significance array where
         0 is False (not significant), 1 is True (significant),
@@ -14,7 +14,7 @@ def sign_array(a, alpha = 0.05):
 
         Parameters
         ----------
-        x : array_like or ndarray
+        p_values : array_like or ndarray
             An array, any object exposing the array interface, containing
             p values.
 
@@ -29,33 +29,32 @@ def sign_array(a, alpha = 0.05):
         Examples
         --------
 
-        >>> x = np.array([[ 0.        ,  0.00119517,  0.00278329],
+        >>> p_values = np.array([[ 0.        ,  0.00119517,  0.00278329],
                           [ 0.00119517,  0.        ,  0.18672227],
                           [ 0.00278329,  0.18672227,  0.        ]])
-        >>> ph.sign_array(x)
+        >>> ph.sign_array(p_values)
         array([[-1,  1,  1],
                [ 1, -1,  0],
                [ 1,  0, -1]])
 
-    '''
+    """
 
-    a = np.array(a)
-    a[a > alpha] = 0
-    a[(a < alpha) & (a > 0)] = 1
-    np.fill_diagonal(a, -1)
-    return a
+    p_values = np.array(p_values)
+    p_values[p_values > alpha] = 0
+    p_values[(p_values < alpha) & (p_values > 0)] = 1
+    np.fill_diagonal(p_values, -1)
+    return p_values
 
 
-def sign_table(a, lower = True, upper = True):
-
-    '''Significance table
+def sign_table(p_values, lower=True, upper=True):
+    """Significance table
 
         Returns table that can be used in a publication. P values are replaced
         with asterisks: * - p < 0.05, ** - p < 0.01, *** - p < 0.001.
 
         Parameters
         ----------
-        x : array_like, or ndarray, or pandas DataFrame
+        p_values : array_like, or ndarray, or pandas DataFrame
             An array, any object exposing the array interface, containing
             p values.
 
@@ -72,51 +71,51 @@ def sign_table(a, lower = True, upper = True):
         Examples
         --------
 
-        >>> x = np.array([[-1.        ,  0.00119517,  0.00278329],
+        >>> p_values = np.array([[-1.        ,  0.00119517,  0.00278329],
                           [ 0.00119517, -1.        ,  0.18672227],
                           [ 0.00278329,  0.18672227, -1.        ]])
-        >>> ph.sign_table(x)
+        >>> ph.sign_table(p_values)
         array([['-', '**', '**'],
                ['**', '-', 'NS'],
                ['**', 'NS', '-']], dtype=object)
 
-    '''
+    """
     if not any([lower, upper]):
         raise ValueError("Either lower or upper triangle must be returned")
 
-    if not isinstance(a, DataFrame):
-        a = np.array(a, dtype = np.float)
+    if not isinstance(p_values, DataFrame):
+        p_values = np.array(p_values, dtype=np.float)
 
-    ns = a > 0.05
-    three = (a < 0.001) & (a >= 0)
-    two = (a < 0.01) & (a >= 0.001)
-    one = (a < 0.05) & (a >= 0.01)
+    ns = p_values > 0.05
+    three = (p_values < 0.001) & (p_values >= 0)
+    two = (p_values < 0.01) & (p_values >= 0.001)
+    one = (p_values < 0.05) & (p_values >= 0.01)
 
-    a = a.astype(object)
-    a[ns] = 'NS'
-    a[three] = '***'
-    a[two] = '**'
-    a[one] = '*'
+    p_values = p_values.astype(object)
+    p_values[ns] = 'NS'
+    p_values[three] = '***'
+    p_values[two] = '**'
+    p_values[one] = '*'
 
-    if not isinstance(a, DataFrame):
-        np.fill_diagonal(a, '-')
+    if not isinstance(p_values, DataFrame):
+        np.fill_diagonal(p_values, '-')
         if not lower:
-            a[np.tril_indices(a.shape[0], -1)] = ''
+            p_values[np.tril_indices(p_values.shape[0], -1)] = ''
         elif not upper:
-            a[np.triu_indices(a.shape[0], 1)] = ''
+            p_values[np.triu_indices(p_values.shape[0], 1)] = ''
     else:
-        np.fill_diagonal(a.values, '-')
+        np.fill_diagonal(p_values.values, '-')
         if not lower:
-            a.values[np.tril_indices(a.shape[0], -1)] = ''
+            p_values.values[np.tril_indices(p_values.shape[0], -1)] = ''
         elif not upper:
-            a.values[np.triu_indices(a.shape[0], 1)] = ''
+            p_values.values[np.triu_indices(p_values.shape[0], 1)] = ''
 
-    return a
+    return p_values
 
-def sign_plot(x, g = None, flat = False, labels = True, cmap = None,\
-    cbar_ax_bbox = None, ax = None, **kwargs):
 
-    '''Significance plot, a heatmap of p values (based on Seaborn).
+def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
+              cbar_ax_bbox=None, ax=None, **kwargs):
+    """Significance plot, a heatmap of p values (based on Seaborn).
 
         Parameters
         ----------
@@ -159,6 +158,9 @@ def sign_plot(x, g = None, flat = False, labels = True, cmap = None,\
             Refer to `matplotlib.figure.Figure.add_axes` for more information.
             Default is [0.95, 0.35, 0.04, 0.3].
 
+        ax : matplotlib Axes, optional
+            Axes in which to draw the plot, otherwise use the currently-active Axes.
+
         kwargs : other keyword arguments
             Keyword arguments to be passed to seaborn heatmap method. These
             keyword args cannot be used: cbar, vmin, vmax, center.
@@ -175,7 +177,7 @@ def sign_plot(x, g = None, flat = False, labels = True, cmap = None,\
                           [ 1, -1,  0],
                           [ 1,  0, -1]])
         >>> ph.sign_plot(x, flat = True)
-    '''
+    """
     try:
         del kwargs['cbar'], kwargs['vmin'], kwargs['vmax'], kwargs['center']
     except:
@@ -200,10 +202,11 @@ def sign_plot(x, g = None, flat = False, labels = True, cmap = None,\
         cmap = ['1', '#d73027', '#1a9641']
     elif not cmap and not flat:
         # format: diagonal, non-significant, p<0.001, p<0.01, p<0.05
-        cmap = ['1', '#ef3b2c',  '#005a32',  '#238b45', '#a1d99b']
+        cmap = ['1', '#ef3b2c', '#005a32', '#238b45', '#a1d99b']
 
     if flat:
-        g = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax, **kwargs)
+        g = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax,
+                    **kwargs)
         if not labels:
             g.set_xlabel('')
             g.set_ylabel('')
@@ -211,21 +214,23 @@ def sign_plot(x, g = None, flat = False, labels = True, cmap = None,\
 
     else:
         df[(x <= 0.001) & (x >= 0)] = 1
-        df[(x <= 0.01)  & (x > 0.001)] = 2
-        df[(x <= 0.05)  & (x > 0.01)] = 3
+        df[(x <= 0.01) & (x > 0.001)] = 2
+        df[(x <= 0.05) & (x > 0.01)] = 3
         df[(x > 0.05)] = 0
         np.fill_diagonal(df.values, -1)
 
         if len(cmap) != 5:
             raise ValueError("Cmap list must contain 5 items")
 
-        g = heatmap(df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1, cbar=False, ax=ax, **kwargs)
+        g = heatmap(df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1, cbar=False,
+                    ax=ax, **kwargs)
         if not labels:
             g.set_xlabel('')
             g.set_ylabel('')
 
         cbar_ax = g.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
-        cbar = ColorbarBase(cbar_ax, cmap=ListedColormap(cmap[1:]), boundaries=[0,1,2,3,4])
+        cbar = ColorbarBase(cbar_ax, cmap=ListedColormap(cmap[1:]),
+                            boundaries=[0, 1, 2, 3, 4])
         cbar.set_ticks(np.linspace(0.5, 3.5, 4))
         cbar.set_ticklabels(['NS', 'p < 0.001', 'p < 0.01', 'p < 0.05'])
 
