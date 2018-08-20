@@ -2358,3 +2358,110 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
 
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
+
+
+def posthoc_dscf(a, val_col = None, group_col = None, sort = False):
+
+    '''Dwass, Steel, Critchlow and Fligner all-pairs comparison test for a
+    one-factorial layout with non-normally distributed residuals. As opposed to
+    the all-pairs comparison procedures that depend on Kruskal ranks, the DSCF
+    test is basically an extension of the U-test as re-ranking is conducted for
+    each pairwise test.
+
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
+
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
+
+    sort : bool, optional
+        If True, sort data by block and group columns.
+
+    Returns
+    -------
+    Pandas DataFrame containing p values.
+
+    Notes
+    -----
+    The p-values are computed from the Tukey-distribution.
+
+    References
+    ----------
+    Douglas, C. E., Fligner, A. M. (1991) On distribution-free multiple
+    comparisons in the one-way analysis of variance, Communications in
+    Statistics - Theory and Methods, 20, 127-139.
+
+    Dwass, M. (1960) Some k-sample rank-order tests. In Contributions to
+    Probability and Statistics, Edited by: I. Olkin, Stanford: Stanford
+    University Press.
+
+    Steel, R. G. D. (1960) A rank sum test for comparing all pairs of
+    treatments, Technometrics, 2, 197-207.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_dscf(x, val_col='values', group_col='groups')
+
+    '''
+
+    x = __convert_to_df(a, val_col, group_col)
+    x_groups_unique = x[group_col].unique()
+
+    if not sort:
+        x[group_col] = Categorical(x[group_col], categories=x_groups_unique,
+                                   ordered=True)
+
+    x.sort_values(by=[group_col], ascending=True, inplace=True)
+    x_grouped = x.groupby(group_col)[val_col]
+
+    n = x_grouped.count()
+    k = x_groups_unique.size
+    groups = x_groups_unique
+
+    def get_ties(x):
+        t = x.value_counts().values
+        c = np.sum((t ** 3 - t) / 12)
+        return c
+
+    def compare(i, j):
+        ni = n[i]
+        nj = n[j]
+        x_raw = x[(x[group_col] == groups[i]) | (x[group_col] == groups[j])]
+        x_raw['ranks'] = x_raw[val_col].rank()
+        r = x_raw['ranks'].groupby(group_col).sum()
+        u = np.array([nj * ni + (nj * (nj + 1) / 2),
+                      nj * ni + (ni * (ni + 1) / 2)]) - r
+        u_min = np.min(u)
+        s = ni + nj
+        var = (nj*ni/(s*(s-1)))*((s**3-s)/12 - get_ties(x_raw['ranks']))
+        p = np.sqrt(2) * (u_min - nj * ni / 2) / np.sqrt(var)
+
+        return p
+
+    vs = np.zeros((x_groups_unique.size, x_groups_unique.size), dtype=np.float)
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:,:] = 0
+
+    combs = it.combinations(range(x_groups_unique.size), 2)
+
+    for i,j in combs:
+        vs[i, j] = compare(x_groups_unique[i], x_groups_unique[j])
+
+    vs[tri_upper] = psturng(np.abs(vs[tri_upper]), x_groups_unique.size, np.inf)
+    vs[tri_lower] = vs.T[tri_lower]
+
+    np.fill_diagonal(vs, -1)
+    return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
