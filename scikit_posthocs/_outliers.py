@@ -2,6 +2,7 @@
 
 import numpy as np
 from scipy.stats import t
+import
 
 def outliers_iqr(x, return_='filtered', coef = 1.5):
 
@@ -99,7 +100,8 @@ def outliers_grubbs(x, hypo = False, alpha = 0.05):
     val = np.max(np.abs(x - np.mean(x)))
     ind = np.argmax(np.abs(x - np.mean(x)))
     G = val / np.std(x, ddof=1)
-    result = G > (N - 1)/np.sqrt(N) * np.sqrt((ss.t.ppf(1-alpha/(2*N), N-2) ** 2) / (N - 2 + ss.t.ppf(1-alpha/(2*N), N-2) ** 2 ))
+    N = len(x)
+    result = G > (N - 1)/np.sqrt(N) * np.sqrt((t.ppf(1-alpha/(2*N), N-2) ** 2) / (N - 2 + t.ppf(1-alpha/(2*N), N-2) ** 2 ))
 
     if hypo:
         return result
@@ -108,7 +110,6 @@ def outliers_grubbs(x, hypo = False, alpha = 0.05):
             return np.delete(x, ind)
         else:
             return x
-
 
 def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
