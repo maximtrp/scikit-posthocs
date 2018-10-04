@@ -2,7 +2,6 @@
 
 import numpy as np
 from scipy.stats import t
-import
 
 def outliers_iqr(x, return_='filtered', coef = 1.5):
 
