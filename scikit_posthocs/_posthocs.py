@@ -71,65 +71,66 @@ def __convert_to_block_df(a, y_col, group_col, block_col, melted):
 
 def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort = True):
 
-    '''Post-hoc pairwise test for multiple comparisons of mean rank sums
+    '''
+    Post-hoc pairwise test for multiple comparisons of mean rank sums
     (Conover's test). May be used after Kruskal-Wallis one-way analysis of
-    variance by ranks to do pairwise comparisons.
+    variance by ranks to do pairwise comparisons [1]_.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas DataFrame.
-            Array must be two-dimensional. Second dimension may vary,
-            i.e. groups may have different lengths.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas DataFrame.
+        Array must be two-dimensional. Second dimension may vary,
+        i.e. groups may have different lengths.
 
-        val_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains values.
+    val_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains values.
 
-        group_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
-            for details. Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
+        for details. Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        sort : bool, optional
-            Specifies whether to sort DataFrame by group_col or not. Recommended
-            unless you sort your data manually.
+    sort : bool, optional
+        Specifies whether to sort DataFrame by group_col or not. Recommended
+        unless you sort your data manually.
 
-        Returns
-        -------
-        Numpy ndarray or pandas DataFrame of p values depending on input
-        data type.
+    Returns
+    -------
+    Numpy ndarray or pandas DataFrame of p values depending on input
+    data type.
 
-        Notes
-        -----
-        A tie correction are employed according to Conover (1979).
+    Notes
+    -----
+    A tie correction are employed according to Conover (1979).
 
-        References
-        ----------
-        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures, Tech.
+    References
+    ----------
+    .. [1] W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures, Tech.
         Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
 
-        Examples
-        --------
+    Examples
+    --------
 
-        >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> sp.posthoc_conover(x, p_adjust = 'holm')
-        array([[-1.        ,  0.00119517,  0.00278329],
-               [ 0.00119517, -1.        ,  0.18672227],
-               [ 0.00278329,  0.18672227, -1.        ]])
+    >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
+    >>> sp.posthoc_conover(x, p_adjust = 'holm')
+    array([ [-1.        ,  0.00119517,  0.00278329],
+            [ 0.00119517, -1.        ,  0.18672227],
+            [ 0.00278329,  0.18672227, -1.        ]])
 
     '''
 
@@ -212,65 +213,66 @@ def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort =
 
 def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = True):
 
-    '''Post-hoc pairwise test for multiple comparisons of mean rank sums
+    '''
+    Post-hoc pairwise test for multiple comparisons of mean rank sums
     (Dunn's test). May be used after Kruskal-Wallis one-way analysis of
     variance by ranks to do pairwise comparisons.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas DataFrame.
-            Array must be two-dimensional. Second dimension may vary,
-            i.e. groups may have different lengths.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas DataFrame.
+        Array must be two-dimensional. Second dimension may vary,
+        i.e. groups may have different lengths.
 
-        val_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains values.
+    val_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains values.
 
-        group_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
-            for details. Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
+        for details. Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        sort : bool, optional
-            Specifies whether to sort DataFrame by group_col or not. Recommended
-            unless you sort your data manually.
+    sort : bool, optional
+        Specifies whether to sort DataFrame by group_col or not. Recommended
+        unless you sort your data manually.
 
-        Returns
-        -------
-        Numpy ndarray or pandas DataFrame of p values depending on input
-        data type.
+    Returns
+    -------
+    Numpy ndarray or pandas DataFrame of p values depending on input
+    data type.
 
-        Notes
-        -----
-        A tie correction will be employed according to Glantz (2012).
+    Notes
+    -----
+    A tie correction will be employed according to Glantz (2012).
 
-        References
-        ----------
-        O.J. Dunn (1964). Multiple comparisons using rank sums. Technometrics, 6, 241-252.
-        S.A. Glantz (2012), Primer of Biostatistics. New York: McGraw Hill.
+    References
+    ----------
+    O.J. Dunn (1964). Multiple comparisons using rank sums. Technometrics, 6, 241-252.
+    S.A. Glantz (2012), Primer of Biostatistics. New York: McGraw Hill.
 
-        Examples
-        --------
+    Examples
+    --------
 
-        >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> sp.posthoc_dunn(x, p_adjust = 'holm')
-        array([[-1.          0.01764845  0.04131415]
-               [ 0.01764845 -1.          0.45319956]
-               [ 0.04131415  0.45319956 -1.        ]])
+    >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
+    >>> sp.posthoc_dunn(x, p_adjust = 'holm')
+    array([[-1.          0.01764845  0.04131415]
+           [ 0.01764845 -1.          0.45319956]
+           [ 0.04131415  0.45319956 -1.        ]])
 
     '''
 
@@ -346,54 +348,54 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
 
 def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = True):
 
-    '''Post-hoc pairwise test for multiple comparisons of mean rank sums
+    '''
+    Post-hoc pairwise test for multiple comparisons of mean rank sums
     (Nemenyi's test). May be used after Kruskal-Wallis one-way analysis of
-    variance by ranks to do pairwise comparisons.
+    variance by ranks to do pairwise comparisons [1]_.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame. Array must be two-dimensional. Second dimension may vary,
-            i.e. groups may have different lengths.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame. Array must be two-dimensional. Second dimension may vary,
+        i.e. groups may have different lengths.
 
-        val_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains values.
+    val_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains values.
 
-        group_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        dist : str, optional
-            Method for determining the p value. The default distribution is "chi"
-            (chi-squared), else "tukey" (studentized range).
+    dist : str, optional
+        Method for determining the p value. The default distribution is "chi"
+        (chi-squared), else "tukey" (studentized range).
 
-        sort : bool, optional
-            Specifies whether to sort DataFrame by group_col or not. Recommended
-            unless you sort your data manually.
+    sort : bool, optional
+        Specifies whether to sort DataFrame by group_col or not. Recommended
+        unless you sort your data manually.
 
-        Returns
-        -------
-        Numpy ndarray or pandas DataFrame of p values depending on input
-        data type.
+    Returns
+    -------
+    Numpy ndarray or pandas DataFrame of p values depending on input
+    data type.
 
-        Notes
-        -----
-        A tie correction will be employed according to Glantz (2012).
+    Notes
+    -----
+    A tie correction will be employed according to Glantz (2012).
 
-        References
-        ----------
-        Lothar Sachs (1997), Angewandte Statistik. Berlin: Springer. Pages: 395-397, 662-664.
+    References
+    ----------
+    .. [1] Lothar Sachs (1997), Angewandte Statistik. Berlin: Springer. Pages: 395-397, 662-664.
 
-        Examples
-        --------
-
-        >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> sp.posthoc_nemenyi(x)
-        array([[-1.        ,  0.02206238,  0.06770864],
-               [ 0.02206238, -1.        ,  0.75361555],
-               [ 0.06770864,  0.75361555, -1.        ]])
+    Examples
+    --------
+    >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
+    >>> sp.posthoc_nemenyi(x)
+    array([[-1.        ,  0.02206238,  0.06770864],
+           [ 0.02206238, -1.        ,  0.75361555],
+           [ 0.06770864,  0.75361555, -1.        ]])
 
     '''
 
@@ -492,76 +494,78 @@ def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = T
 
 def posthoc_nemenyi_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False):
 
-    '''Calculate pairwise comparisons using Nemenyi post-hoc test for
-    unreplicated blocked data. This test is usually conducted post-hoc after
+    '''
+    Calculate pairwise comparisons using Nemenyi post-hoc test for unreplicated
+    blocked data. This test is usually conducted post-hoc after
     significant results of the Friedman's test. The statistics refer to upper
-    quantiles of the studentized range distribution (Tukey).
+    quantiles of the studentized range distribution (Tukey) [1]_, [2]_, [3]_.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
 
-            If `melted` is set to False (default), `a` is a typical matrix of
-            block design, i.e. rows are blocks, and columns are groups. In this
-            case you do not need to specify col arguments.
+        If `melted` is set to False (default), `a` is a typical matrix of
+        block design, i.e. rows are blocks, and columns are groups. In this
+        case you do not need to specify col arguments.
 
-            If `a` is an array and `melted` is set to True,
-            y_col, block_col and group_col must specify the indices of columns
-            containing elements of correspondary type.
+        If `a` is an array and `melted` is set to True,
+        y_col, block_col and group_col must specify the indices of columns
+        containing elements of correspondary type.
 
-            If `a` is a Pandas DataFrame and `melted` is set to True,
-            y_col, block_col and group_col must specify columns names (strings).
+        If `a` is a Pandas DataFrame and `melted` is set to True,
+        y_col, block_col and group_col must specify columns names (strings).
 
-        y_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains y data.
+    y_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
 
-        block_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains block names.
+    block_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains block names.
 
-        group_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        melted : bool, optional
-            Specifies if data are given as melted columns "y", "blocks", and
-            "groups".
+    melted : bool, optional
+        Specifies if data are given as melted columns "y", "blocks", and
+        "groups".
 
-        sort : bool, optional
-            If True, sort data by block and group columns.
+    sort : bool, optional
+        If True, sort data by block and group columns.
 
-        Returns
-        -------
-        Pandas DataFrame containing p values.
+    Returns
+    -------
+    Pandas DataFrame containing p values.
 
-        Notes
-        -----
-        A one-way ANOVA with repeated measures that is also referred to as ANOVA with
-        unreplicated block design can also be conducted via Friedman's test. The
-        consequent post-hoc pairwise multiple comparison test according to Nemenyi is
-        conducted with this function.
+    Notes
+    -----
+    A one-way ANOVA with repeated measures that is also referred to as ANOVA
+    with unreplicated block design can also be conducted via Friedman's
+    test. The consequent post-hoc pairwise multiple comparison test
+    according to Nemenyi is conducted with this function.
 
-        This function does not test for ties.
+    This function does not test for ties.
 
-        References
-        ----------
-        Janez Demsar (2006), Statistical comparisons of classifiers over
+    References
+    ----------
+    .. [1] J. Demsar (2006), Statistical comparisons of classifiers over
         multiple data sets, Journal of Machine Learning Research, 7, 1-30.
 
-        P. Nemenyi (1963) Distribution-free Multiple Comparisons. Ph.D. thesis,
-        Princeton University.
+    .. [2] P. Nemenyi (1963) Distribution-free Multiple Comparisons. Ph.D.
+        thesis, Princeton University.
 
-        Lothar Sachs (1997), Angewandte Statistik. Berlin: Springer. Pages: 668-675.
+    .. [3] L. Sachs (1997), Angewandte Statistik. Berlin: Springer.
+        Pages: 668-675.
 
-        Examples
-        --------
-        >>> # Non-melted case, x is a block design matrix, i.e. rows are blocks
-        >>> # and columns are groups.
-        >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
-        >>> sp.posthoc_nemenyi_friedman(x)
+    Examples
+    --------
+    >>> # Non-melted case, x is a block design matrix, i.e. rows are blocks
+    >>> # and columns are groups.
+    >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
+    >>> sp.posthoc_nemenyi_friedman(x)
 
     '''
 
@@ -605,85 +609,88 @@ def posthoc_nemenyi_friedman(a, y_col = None, block_col = None, group_col = None
 
 def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
-    '''Calculate pairwise comparisons using Conover post-hoc test for unreplicated
-        blocked data. This test is usually conducted post-hoc after significant results
-        of the Friedman test. The statistics refer to the Student t distribution.
+    '''
+    Calculate pairwise comparisons using Conover post-hoc test for unreplicated
+    blocked data. This test is usually conducted post-hoc after
+    significant results of the Friedman test. The statistics refer to
+    the Student t distribution [1]_, [2]_.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
 
-            If `melted` is set to False (default), `a` is a typical matrix of
-            block design, i.e. rows are blocks, and columns are groups. In this
-            case you do not need to specify col arguments.
+        If `melted` is set to False (default), `a` is a typical matrix of
+        block design, i.e. rows are blocks, and columns are groups. In this
+        case you do not need to specify col arguments.
 
-            If `a` is an array and `melted` is set to True,
-            y_col, block_col and group_col must specify the indices of columns
-            containing elements of correspondary type.
+        If `a` is an array and `melted` is set to True,
+        y_col, block_col and group_col must specify the indices of columns
+        containing elements of correspondary type.
 
-            If `a` is a Pandas DataFrame and `melted` is set to True,
-            y_col, block_col and group_col must specify columns names (strings).
+        If `a` is a Pandas DataFrame and `melted` is set to True,
+        y_col, block_col and group_col must specify columns names (strings).
 
-        y_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains y data.
+    y_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
 
-        block_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains block names.
+    block_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains block names.
 
-        group_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        melted : bool, optional
-            Specifies if data are given as melted columns "y", "blocks", and
-            "groups".
+    melted : bool, optional
+        Specifies if data are given as melted columns "y", "blocks", and
+        "groups".
 
-        sort : bool, optional
-            If True, sort data by block and group columns.
+    sort : bool, optional
+        If True, sort data by block and group columns.
 
-        p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
+        for details. Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        Returns
-        -------
-        Pandas DataFrame containing p values.
+    Returns
+    -------
+    Pandas DataFrame containing p values.
 
-        Notes
-        -----
-        A one-way ANOVA with repeated measures that is also referred to as ANOVA
-        with unreplicated block design can also be conducted via the
-        friedman.test. The consequent post-hoc pairwise multiple comparison test
-        according to Conover is conducted with this function.
+    Notes
+    -----
+    A one-way ANOVA with repeated measures that is also referred to as ANOVA
+    with unreplicated block design can also be conducted via the
+    friedman.test. The consequent post-hoc pairwise multiple comparison test
+    according to Conover is conducted with this function.
 
-        If y is a matrix, than the columns refer to the treatment and the rows
-        indicate the block.
+    If y is a matrix, than the columns refer to the treatment and the rows
+    indicate the block.
 
-        References
-        ----------
-        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
+    References
+    ----------
+    .. [1] W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
         Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
 
-        W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition,
+    .. [2] W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition,
         Wiley.
 
-        Examples
-        --------
-        >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
-        >>> sp.posthoc_conover_friedman(x)
+    Examples
+    --------
+    >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
+    >>> sp.posthoc_conover_friedman(x)
 
     '''
 
@@ -736,62 +743,65 @@ def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None
 
 def posthoc_npm_test(a, y_col = None, group_col = None, sort = False, p_adjust = None):
 
-    '''Calculate pairwise comparisons using Nashimoto and Wright's all-pairs comparison
-        procedure (NPM test) for simply ordered mean ranksums. NPM test is basically an
-        extension of Nemenyi's procedure for testing increasingly ordered alternatives.
+    '''
+    Calculate pairwise comparisons using Nashimoto and Wright's all-pairs comparison
+    procedure (NPM test) for simply ordered mean ranksums. NPM test is
+    basically an extension of Nemenyi's procedure for testing increasingly
+    ordered alternatives [1]_.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
 
-        val_col : str
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains y data.
+    val_col : str
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
 
-        group_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        sort : bool, optional
-            If True, sort data by block and group columns.
+    sort : bool, optional
+        If True, sort data by block and group columns.
 
-        p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values. See `statsmodels.sandbox.stats.multicomp`
+        for details. Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        Returns
-        -------
-        Pandas DataFrame containing p values.
+    Returns
+    -------
+    Pandas DataFrame containing p values.
 
-        Notes
-        -----
-        The p-values are estimated from the studentized range distribution. If
-        the medians are already increasingly ordered, than the NPM-test
-        simplifies to the ordinary Nemenyi test
+    Notes
+    -----
+    The p-values are estimated from the studentized range distribution. If
+    the medians are already increasingly ordered, than the NPM-test
+    simplifies to the ordinary Nemenyi test
 
-        References
-        ----------
-        Nashimoto, K., Wright, F.T., (2005), Multiple comparison procedures for
+    References
+    ----------
+    .. [1] Nashimoto, K., Wright, F.T., (2005), Multiple comparison procedures for
         detecting differences in simply ordered means. Comput. Statist. Data
         Anal. 48, 291--306.
 
-        Examples
-        --------
-        >>> x = np.array([[102,109,114,120,124],
-                          [110,112,123,130,145],
-                          [132,141,156,160,172]])
-        >>> sp.posthoc_npm_test(x)
+    Examples
+    --------
+    >>> x = np.array([[102,109,114,120,124],
+                      [110,112,123,130,145],
+                      [132,141,156,160,172]])
+    >>> sp.posthoc_npm_test(x)
 
     '''
 
@@ -834,76 +844,78 @@ def posthoc_npm_test(a, y_col = None, group_col = None, sort = False, p_adjust =
 
 def posthoc_siegel_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
-    '''Siegel and Castellan's All-Pairs Comparisons Test for Unreplicated Blocked Data.
+    '''
+    Siegel and Castellan's All-Pairs Comparisons Test for Unreplicated Blocked
+    Data [1]_.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
 
-            If `melted` is set to False (default), `a` is a typical matrix of
-            block design, i.e. rows are blocks, and columns are groups. In this
-            case you do not need to specify col arguments.
+        If `melted` is set to False (default), `a` is a typical matrix of
+        block design, i.e. rows are blocks, and columns are groups. In this
+        case you do not need to specify col arguments.
 
-            If `a` is an array and `melted` is set to True,
-            y_col, block_col and group_col must specify the indices of columns
-            containing elements of correspondary type.
+        If `a` is an array and `melted` is set to True,
+        y_col, block_col and group_col must specify the indices of columns
+        containing elements of correspondary type.
 
-            If `a` is a Pandas DataFrame and `melted` is set to True,
-            y_col, block_col and group_col must specify columns names (strings).
+        If `a` is a Pandas DataFrame and `melted` is set to True,
+        y_col, block_col and group_col must specify columns names (strings).
 
-        y_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains y data.
+    y_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
 
-        block_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains block names.
+    block_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains block names.
 
-        group_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        melted : bool, optional
-            Specifies if data are given as melted columns "y", "blocks", and
-            "groups".
+    melted : bool, optional
+        Specifies if data are given as melted columns "y", "blocks", and
+        "groups".
 
-        sort : bool, optional
-            If True, sort data by block and group columns.
+    sort : bool, optional
+        If True, sort data by block and group columns.
 
-        p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        Returns
-        -------
-        Pandas DataFrame containing p values.
+    Returns
+    -------
+    Pandas DataFrame containing p values.
 
-        Notes
-        -----
-        For all-pairs comparisons in a two factorial unreplicated complete block design
-        with non-normally distributed residuals, Siegel and Castellan's test can be
-        performed on Friedman-type ranked data.
+    Notes
+    -----
+    For all-pairs comparisons in a two factorial unreplicated complete block design
+    with non-normally distributed residuals, Siegel and Castellan's test can be
+    performed on Friedman-type ranked data.
 
-        References
-        ----------
-        S. Siegel, N. J. Castellan Jr. (1988), Nonparametric Statistics for the
-            Behavioral Sciences. 2nd ed. New York: McGraw-Hill.
+    References
+    ----------
+    .. [1] S. Siegel, N. J. Castellan Jr. (1988), Nonparametric Statistics for the
+        Behavioral Sciences. 2nd ed. New York: McGraw-Hill.
 
-        Examples
-        --------
-        >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
-        >>> sp.posthoc_siegel_friedman(x)
+    Examples
+    --------
+    >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
+    >>> sp.posthoc_siegel_friedman(x)
 
     '''
 
@@ -952,69 +964,71 @@ def posthoc_siegel_friedman(a, y_col = None, block_col = None, group_col = None,
 
 def posthoc_miller_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False):
 
-    '''Miller's All-Pairs Comparisons Test for Unreplicated Blocked Data.
-        The p-values are computed from the chi-square distribution.
+    '''
+    Miller's All-Pairs Comparisons Test for Unreplicated Blocked Data [1]_, [2]_,
+    [3]_. The p-values are computed from the chi-square distribution.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
 
-            If `melted` is set to False (default), `a` is a typical matrix of
-            block design, i.e. rows are blocks, and columns are groups. In this
-            case you do not need to specify col arguments.
+        If `melted` is set to False (default), `a` is a typical matrix of
+        block design, i.e. rows are blocks, and columns are groups. In this
+        case you do not need to specify col arguments.
 
-            If `a` is an array and `melted` is set to True,
-            y_col, block_col and group_col must specify the indices of columns
-            containing elements of correspondary type.
+        If `a` is an array and `melted` is set to True,
+        y_col, block_col and group_col must specify the indices of columns
+        containing elements of correspondary type.
 
-            If `a` is a Pandas DataFrame and `melted` is set to True,
-            y_col, block_col and group_col must specify columns names (strings).
+        If `a` is a Pandas DataFrame and `melted` is set to True,
+        y_col, block_col and group_col must specify columns names (strings).
 
-        y_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains y data.
+    y_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
 
-        block_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains block names.
+    block_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains block names.
 
-        group_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        melted : bool, optional
-            Specifies if data are given as melted columns "y", "blocks", and
-            "groups".
+    melted : bool, optional
+        Specifies if data are given as melted columns "y", "blocks", and
+        "groups".
 
-        sort : bool, optional
-            If True, sort data by block and group columns.
+    sort : bool, optional
+        If True, sort data by block and group columns.
 
-        Returns
-        -------
-        Pandas DataFrame containing p values.
+    Returns
+    -------
+    Pandas DataFrame containing p values.
 
-        Notes
-        -----
-        For all-pairs comparisons in a two factorial unreplicated complete block design
-        with non-normally distributed residuals, Miller's test can be performed on
-        Friedman-type ranked data.
+    Notes
+    -----
+    For all-pairs comparisons in a two factorial unreplicated complete block
+    design with non-normally distributed residuals, Miller's test can be
+    performed on Friedman-type ranked data.
 
-        References
-        ----------
-        J. Bortz J, G. A. Lienert, K. Boehnke (1990), Verteilungsfreie Methoden
-        in der Biostatistik. Berlin: Springerself.
+    References
+    ----------
+    .. [1] J. Bortz J, G. A. Lienert, K. Boehnke (1990), Verteilungsfreie
+        Methoden in der Biostatistik. Berlin: Springerself.
 
-        R. G. Miller Jr. (1996), Simultaneous statistical inference. New York: McGraw-Hill.
+    .. [2] R. G. Miller Jr. (1996), Simultaneous statistical inference. New
+        York: McGraw-Hill.
 
-        E. L. Wike (2006), Data Analysis. A Statistical Primer for Psychology Students.
-        New Brunswick: Aldine Transaction.
+    .. [3] E. L. Wike (2006), Data Analysis. A Statistical Primer for Psychology
+        Students. New Brunswick: Aldine Transaction.
 
-        Examples
-        --------
-        >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
-        >>> sp.posthoc_miller_friedman(x)
+    Examples
+    --------
+    >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
+    >>> sp.posthoc_miller_friedman(x)
 
     '''
 
@@ -1060,72 +1074,75 @@ def posthoc_miller_friedman(a, y_col = None, block_col = None, group_col = None,
 
 def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
-    '''Pairwise post-hoc test for multiple comparisons of rank sums according to
+    '''
+    Pairwise post-hoc test for multiple comparisons of rank sums according to
     Durbin and Conover for a two-way balanced incomplete block design (BIBD).
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
 
-            If `melted` is set to False (default), `a` is a typical matrix of block design,
-            i.e. rows are blocks, and columns are groups. In this case you do
-            not need to specify col arguments.
+        If `melted` is set to False (default), `a` is a typical matrix of block design,
+        i.e. rows are blocks, and columns are groups. In this case you do
+        not need to specify col arguments.
 
-            If `a` is an array and `melted` is set to True,
-            y_col, block_col and group_col must specify the indices of columns
-            containing elements of correspondary type.
+        If `a` is an array and `melted` is set to True,
+        y_col, block_col and group_col must specify the indices of columns
+        containing elements of correspondary type.
 
-            If `a` is a Pandas DataFrame and `melted` is set to True,
-            y_col, block_col and group_col must specify columns names (string).
+        If `a` is a Pandas DataFrame and `melted` is set to True,
+        y_col, block_col and group_col must specify columns names (string).
 
-        y_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains y data.
+    y_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
 
-        block_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains block names.
+    block_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains block names.
 
-        group_col : str or int
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        melted : bool, optional
-            Specifies if data are given as melted columns "y", "blocks", and
-            "groups".
+    melted : bool, optional
+        Specifies if data are given as melted columns "y", "blocks", and
+        "groups".
 
-        sort : bool, optional
-            If True, sort data by block and group columns.
+    sort : bool, optional
+        If True, sort data by block and group columns.
 
-        p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
+        for details. Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        Returns
-        -------
-        Pandas DataFrame containing p values.
+    Returns
+    -------
+    Pandas DataFrame containing p values.
 
-        References
-        ----------
-        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
-              Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
-        W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition, Wiley.
+    References
+    ----------
+    .. [1] W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
+        Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
+    .. [2] W. J. Conover (1999), Practical nonparametric Statistics,
+        3rd. edition, Wiley.
 
-        Examples
-        --------
-        >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
-        >>> sp.posthoc_durbin(x)
+    Examples
+    --------
+    >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
+    >>> sp.posthoc_durbin(x)
 
     '''
 
@@ -1179,58 +1196,59 @@ def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted =
 
 def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort = False, p_adjust = None):
 
-    '''Anderson-Darling Pairwise Test for k-samples. Tests the null hypothesis that
-        k-samples are drawn from the same population without having to specify the
-        distribution function of that population.
+    '''
+    Anderson-Darling Pairwise Test for k-samples [1]_. Tests the null hypothesis
+    that k-samples are drawn from the same population without having to specify
+    the distribution function of that population.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
 
-        val_col : str
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains y data.
+    val_col : str
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
 
-        group_col : str
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        midrank : bool, optional
-            Type of Anderson-Darling test which is computed. If set to True (default), the
-            midrank test applicable to continuous and discrete populations is performed. If
-            False, the right side empirical distribution is used.
+    midrank : bool, optional
+        Type of Anderson-Darling test which is computed. If set to True (default), the
+        midrank test applicable to continuous and discrete populations is performed. If
+        False, the right side empirical distribution is used.
 
-        sort : bool, optional
-            If True, sort data by block and group columns.
+    sort : bool, optional
+        If True, sort data by block and group columns.
 
-        p_adjust : str, optional
-            Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values. See statsmodels.sandbox.stats.multicomp for details. Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        Returns
-        -------
-        Pandas DataFrame containing p values.
+    Returns
+    -------
+    Pandas DataFrame containing p values.
 
-        References
-        ----------
-        Scholz, F. W and Stephens, M. A. (1987), K-Sample Anderson-Darling Tests,
-            Journal of the American Statistical Association, Vol. 82, pp. 918-924.
+    References
+    ----------
+    .. [1] Scholz, F. W and Stephens, M. A. (1987), K-Sample Anderson-Darling Tests,
+        Journal of the American Statistical Association, Vol. 82, pp. 918-924.
 
-        Examples
-        --------
-        >>> x = np.array([[2.9, 3.0, 2.5, 2.6, 3.2], [3.8, 2.7, 4.0, 2.4], [2.8, 3.4, 3.7, 2.2, 2.0]])
-        >>> sp.posthoc_anderson(x)
+    Examples
+    --------
+    >>> x = np.array([[2.9, 3.0, 2.5, 2.6, 3.2], [3.8, 2.7, 4.0, 2.4], [2.8, 3.4, 3.7, 2.2, 2.0]])
+    >>> sp.posthoc_anderson(x)
 
     '''
 
@@ -1261,86 +1279,87 @@ def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort =
 
 def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't', melted = False, sort = False, p_adjust = None):
 
-    '''Calculate pairwise comparisons using Quade's post-hoc test for
-    unreplicated blocked data. This test is usually conducted if significant
-    results were obtained by the omnibus test.
+    '''
+    Calculate pairwise comparisons using Quade's post-hoc test for
+    unreplicated blocked data [1]_. This test is usually conducted if significant
+    results were obtained by the omnibus test [2]_, [3]_.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
 
-            If `melted` is set to False (default), `a` is a typical matrix of
-            block design, i.e. rows are blocks, and columns are groups. In this
-            case you do not need to specify col arguments.
+        If `melted` is set to False (default), `a` is a typical matrix of
+        block design, i.e. rows are blocks, and columns are groups. In this
+        case you do not need to specify col arguments.
 
-            If `a` is an array and `melted` is set to True,
-            y_col, block_col and group_col must specify the indices of columns
-            containing elements of correspondary type.
+        If `a` is an array and `melted` is set to True,
+        y_col, block_col and group_col must specify the indices of columns
+        containing elements of correspondary type.
 
-            If `a` is a Pandas DataFrame and `melted` is set to True,
-            y_col, block_col and group_col must specify columns names (string).
+        If `a` is a Pandas DataFrame and `melted` is set to True,
+        y_col, block_col and group_col must specify columns names (string).
 
-        y_col : str or int, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains y data.
+    y_col : str or int, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
 
-        block_col : str or int, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains block names.
+    block_col : str or int, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains block names.
 
-        group_col : str or int, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str or int, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        dist : str, optional
-            Method for determining p values.
-            The default distribution is "t", else "normal".
+    dist : str, optional
+        Method for determining p values.
+        The default distribution is "t", else "normal".
 
-        melted : bool, optional
-            Specifies if data are given as melted columns "y", "blocks", and
-            "groups".
+    melted : bool, optional
+        Specifies if data are given as melted columns "y", "blocks", and
+        "groups".
 
-        sort : bool, optional
-            If True, sort data by block and group columns.
+    sort : bool, optional
+        If True, sort data by block and group columns.
 
-        p_adjust : str, optional
-            Method for adjusting p values.
-            See statsmodels.sandbox.stats.multicomp for details.
-            Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values.
+        See statsmodels.sandbox.stats.multicomp for details.
+        Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        Returns
-        -------
-        Pandas DataFrame containing p values.
+    Returns
+    -------
+    Pandas DataFrame containing p values.
 
-        References
-        ----------
-        W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition,
+    References
+    ----------
+    .. [1] W. J. Conover (1999), Practical nonparametric Statistics, 3rd. Edition,
         Wiley.
 
-        N. A. Heckert and J. J. Filliben (2003). NIST Handbook 148: Dataplot
+    .. [2] N. A. Heckert and J. J. Filliben (2003). NIST Handbook 148: Dataplot
         Reference Manual, Volume 2: Let Subcommands and Library Functions.
         National Institute of Standards and Technology Handbook Series, June 2003.
 
-        D. Quade (1979), Using weighted rankings in the analysis of complete
+    .. [3] D. Quade (1979), Using weighted rankings in the analysis of complete
         blocks with additive block effects. Journal of the American Statistical
         Association, 74, 680-683.
 
-        Examples
-        --------
-        >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
-        >>> sp.posthoc_quade(x)
+    Examples
+    --------
+    >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
+    >>> sp.posthoc_quade(x)
 
     '''
 
@@ -1411,52 +1430,53 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
 
 def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = False, p_adjust = None):
 
-    '''Mack-Wolfe Test for Umbrella Alternatives.
+    '''
+    Mack-Wolfe Test for Umbrella Alternatives [1]_.
 
     In dose-finding studies one may assume an increasing treatment effect with
     increasing dose level. However, the test subject may actually succumb to
-    toxic effects at high doses, which leads to decresing treatment effects.
+    toxic effects at high doses, which leads to decresing treatment effects [2]_.
 
     The scope of the Mack-Wolfe Test is to test for umbrella alternatives for
     either a known or unknown point P (i.e. dose-level), where the peak
     (umbrella point) is present.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
 
-        val_col : str or int
-            Name (string) or index (int) of a column in a pandas DataFrame or an
-            array that contains quantitative data.
+    val_col : str or int
+        Name (string) or index (int) of a column in a pandas DataFrame or an
+        array that contains quantitative data.
 
-        group_col : str or int
-            Name (string) or index (int) of a column in a pandas DataFrame or an
-            array that contains group names.
+    group_col : str or int
+        Name (string) or index (int) of a column in a pandas DataFrame or an
+        array that contains group names.
 
-        p : int, optional
-            The a-priori known peak as an ordinal number of the treatment group
-            including the zero dose level, i.e. p = {1, …, k}. Defaults to None.
+    p : int, optional
+        The a-priori known peak as an ordinal number of the treatment group
+        including the zero dose level, i.e. p = {1, …, k}. Defaults to None.
 
-        sort : bool, optional
-            If True, sort data by block and group columns.
+    sort : bool, optional
+        If True, sort data by block and group columns.
 
-        Returns
-        -------
-        Pandas DataFrame containing p values.
+    Returns
+    -------
+    Pandas DataFrame containing p values.
 
-        References
-        ----------
-        Chen, I.Y. (1991) Notes on the Mack-Wolfe and Chen-Wolfe Tests for
-            Umbrella Alternatives. Biom. J., 33, 281-290.
-        Mack, G.A., Wolfe, D. A. (1981) K-sample rank tests for umbrella
-            alternatives. J. Amer. Statist. Assoc., 76, 175-181.
+    References
+    ----------
+    .. [1] Chen, I.Y. (1991) Notes on the Mack-Wolfe and Chen-Wolfe Tests for
+        Umbrella Alternatives. Biom. J., 33, 281-290.
+    .. [2] Mack, G.A., Wolfe, D. A. (1981) K-sample rank tests for umbrella
+        alternatives. J. Amer. Statist. Assoc., 76, 175-181.
 
-        Examples
-        --------
-        >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
-        >>> sp.posthoc_mackwolfe(x, val_col = 0, group_col = 1)
+    Examples
+    --------
+    >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
+    >>> sp.posthoc_mackwolfe(x, val_col = 0, group_col = 1)
 
     '''
 
@@ -1564,68 +1584,69 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
 
 def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 
-    '''Van der Waerden's test for pairwise multiple comparisons between group
-    levels.
+    '''
+    Van der Waerden's test for pairwise multiple comparisons between group
+    levels [1]_, [2]_.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
 
-        val_col : str or int
-            Name (string) or index (int) of a column in a pandas DataFrame or an
-            array that contains quantitative data.
+    val_col : str or int
+        Name (string) or index (int) of a column in a pandas DataFrame or an
+        array that contains quantitative data.
 
-        group_col : str or int
-            Name (string) or index (int) of a column in a pandas DataFrame or an
-            array that contains group names.
+    group_col : str or int
+        Name (string) or index (int) of a column in a pandas DataFrame or an
+        array that contains group names.
 
-        sort : bool, optional
-            If True, sort data by block and group columns.
+    sort : bool, optional
+        If True, sort data by block and group columns.
 
-        p_adjust : str, optional
-            Method for adjusting p values.
-            See statsmodels.sandbox.stats.multicomp for details.
-            Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values.
+        See statsmodels.sandbox.stats.multicomp for details.
+        Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        Returns
-        -------
-        Pandas DataFrame containing p values.
+    Returns
+    -------
+    Pandas DataFrame containing p values.
 
-        Notes
-        -----
-        For one-factorial designs with samples that do not meet the assumptions
-        for one-way-ANOVA and subsequent post-hoc tests, the van der Waerden test
-        vanWaerden.test using normal scores can be employed. Provided that
-        significant differences were detected by this global test, one may be
-        interested in applying post-hoc tests according to van der Waerden
-        for pairwise multiple comparisons of the group levels.
+    Notes
+    -----
+    For one-factorial designs with samples that do not meet the assumptions
+    for one-way-ANOVA and subsequent post-hoc tests, the van der Waerden test
+    vanWaerden.test using normal scores can be employed. Provided that
+    significant differences were detected by this global test, one may be
+    interested in applying post-hoc tests according to van der Waerden
+    for pairwise multiple comparisons of the group levels.
 
-        There is no tie correction applied in this function.
+    There is no tie correction applied in this function.
 
-        References
-        ----------
-        W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
-              Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
+    References
+    ----------
+    .. [1] W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
+        Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
 
-        B. L. van der Waerden (1952) Order tests for the two-sample problem and
+    .. [2] B. L. van der Waerden (1952) Order tests for the two-sample problem and
         their power, Indagationes Mathematicae, 14, 453-458.
 
-        Examples
-        --------
-        >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
-        >>> sp.posthoc_vanwaerden(x, val_col = 0, group_col = 1)
+    Examples
+    --------
+    >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
+    >>> sp.posthoc_vanwaerden(x, val_col = 0, group_col = 1)
 
     '''
 
@@ -1674,73 +1695,74 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 
 def posthoc_ttest(a, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None, sort = True):
 
-    '''Pairwise T test for multiple comparisons of independent groups. May be
+    '''
+    Pairwise T test for multiple comparisons of independent groups. May be
     used after an ordinary ANOVA to do pairwise comparisons.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame. Array must be two-dimensional.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame. Array must be two-dimensional.
 
-        val_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains values.
+    val_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains values.
 
-        group_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        equal_var : bool, optional
-            If True (default), perform a standard independent test
-            that assumes equal population variances [1]_.
-            If False, perform Welch's t-test, which does not assume equal
-            population variance [2]_.
+    equal_var : bool, optional
+        If True (default), perform a standard independent test
+        that assumes equal population variances [1]_.
+        If False, perform Welch's t-test, which does not assume equal
+        population variance [2]_.
 
-        pool_sd : bool, optional
-            Calculate a common SD for all groups and use that for all
-            comparisons (this can be useful if some groups are small).
-            This method does not actually call scipy ttest_ind() function,
-            so extra arguments are ignored. Default is False.
+    pool_sd : bool, optional
+        Calculate a common SD for all groups and use that for all
+        comparisons (this can be useful if some groups are small).
+        This method does not actually call scipy ttest_ind() function,
+        so extra arguments are ignored. Default is False.
 
-        p_adjust : str, optional
-            Method for adjusting p values.
-            See statsmodels.sandbox.stats.multicomp for details.
-            Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values.
+        See statsmodels.sandbox.stats.multicomp for details.
+        Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        sort : bool, optional
-            Specifies whether to sort DataFrame by group_col or not. Recommended
-            unless you sort your data manually.
+    sort : bool, optional
+        Specifies whether to sort DataFrame by group_col or not. Recommended
+        unless you sort your data manually.
 
-        Returns
-        -------
-        Numpy ndarray or pandas DataFrame of p values depending on input
-        data type.
+    Returns
+    -------
+    Numpy ndarray or pandas DataFrame of p values depending on input
+    data type.
 
-        References
-        ----------
+    References
+    ----------
 
-        .. [1] http://en.wikipedia.org/wiki/T-test#Independent_two-sample_t-test
-        .. [2] http://en.wikipedia.org/wiki/Welch%27s_t_test
+    .. [1] http://en.wikipedia.org/wiki/T-test#Independent_two-sample_t-test
+    .. [2] http://en.wikipedia.org/wiki/Welch%27s_t_test
 
-        Examples
-        --------
+    Examples
+    --------
 
-        >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-        >>> sp.posthoc_ttest(x, p_adjust = 'holm')
-        array([[-1.        ,  0.04600899,  0.31269089],
-               [ 0.04600899, -1.        ,  0.6327077 ],
-               [ 0.31269089,  0.6327077 , -1.        ]])
+    >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
+    >>> sp.posthoc_ttest(x, p_adjust = 'holm')
+    array([[-1.        ,  0.04600899,  0.31269089],
+           [ 0.04600899, -1.        ,  0.6327077 ],
+           [ 0.31269089,  0.6327077 , -1.        ]])
 
     '''
 
@@ -1805,38 +1827,39 @@ def posthoc_ttest(a, val_col = None, group_col = None, pool_sd = False, equal_va
 
 def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
-    '''Pairwise comparisons with TukeyHSD confidence intervals. This is a
+    '''
+    Pairwise comparisons with TukeyHSD confidence intervals. This is a
     convenience function to make statsmodels `pairwise_tukeyhsd` method more
     applicable for further use.
 
-        Parameters
-        ----------
-        x : array_like or pandas Series object, 1d
-            An array, any object exposing the array interface, containing
-            the response variable. NaN values will cause an error. Please
-            handle manually.
+    Parameters
+    ----------
+    x : array_like or pandas Series object, 1d
+        An array, any object exposing the array interface, containing
+        the response variable. NaN values will cause an error. Please
+        handle manually.
 
-        g : array_like or pandas Series object, 1d
-            An array, any object exposing the array interface, containing
-            groups names. Can be string or integers.
+    g : array_like or pandas Series object, 1d
+        An array, any object exposing the array interface, containing
+        groups names. Can be string or integers.
 
-        alpha : float, optional
-            Significance level for the test. Default is 0.05.
+    alpha : float, optional
+        Significance level for the test. Default is 0.05.
 
-        Returns
-        -------
-        Numpy ndarray where 0 is False (not significant), 1 is True (significant),
-        and -1 is for diagonal elements.
+    Returns
+    -------
+    Numpy ndarray where 0 is False (not significant), 1 is True (significant),
+    and -1 is for diagonal elements.
 
-        Examples
-        --------
+    Examples
+    --------
 
-        >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
-        >>> g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
-        >>> sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
-        array([[-1,  1,  0],
-               [ 1, -1,  1],
-               [ 0,  1, -1]])
+    >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
+    >>> g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
+    >>> sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
+    array([[-1,  1,  0],
+           [ 1, -1,  1],
+           [ 0,  1, -1]])
 
     '''
 
@@ -1862,66 +1885,67 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
 def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = True, alternative = 'two-sided', p_adjust = None, sort = True):
 
-    '''Pairwise comparisons with Mann-Whitney rank test.
+    '''
+    Pairwise comparisons with Mann-Whitney rank test.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame. Array must be two-dimensional.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame. Array must be two-dimensional.
 
-        val_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains values.
+    val_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains values.
 
-        group_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        use_continuity : bool, optional
-            Whether a continuity correction (1/2.) should be taken into account.
-            Default is True.
+    use_continuity : bool, optional
+        Whether a continuity correction (1/2.) should be taken into account.
+        Default is True.
 
-        alternative : ['two-sided', 'less', or 'greater'], optional
-            Whether to get the p-value for the one-sided hypothesis
-            ('less' or 'greater') or for the two-sided hypothesis ('two-sided').
-            Defaults to 'two-sided'.
+    alternative : ['two-sided', 'less', or 'greater'], optional
+        Whether to get the p-value for the one-sided hypothesis
+        ('less' or 'greater') or for the two-sided hypothesis ('two-sided').
+        Defaults to 'two-sided'.
 
-        p_adjust : str, optional
-            Method for adjusting p values.
-            See statsmodels.sandbox.stats.multicomp for details.
-            Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values.
+        See statsmodels.sandbox.stats.multicomp for details.
+        Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        sort : bool, optional
-            Specifies whether to sort DataFrame by group_col or not. Recommended
-            unless you sort your data manually.
+    sort : bool, optional
+        Specifies whether to sort DataFrame by group_col or not. Recommended
+        unless you sort your data manually.
 
-        Returns
-        -------
-        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
+    Returns
+    -------
+    Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
 
-        Notes
-        -----
-        Refer to `scipy.stats.mannwhitneyu` reference page for further details.
+    Notes
+    -----
+    Refer to `scipy.stats.mannwhitneyu` reference page for further details.
 
-        Examples
-        --------
+    Examples
+    --------
 
-        >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
-        >>> sp.posthoc_mannwhitney(x, p_adjust = 'holm')
-        array([[-1.       ,  0.0357757,  0.114961 ],
-               [ 0.0357757, -1.       ,  0.0357757],
-               [ 0.114961 ,  0.0357757, -1.       ]])
+    >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
+    >>> sp.posthoc_mannwhitney(x, p_adjust = 'holm')
+    array([[-1.       ,  0.0357757,  0.114961 ],
+           [ 0.0357757, -1.       ,  0.0357757],
+           [ 0.114961 ,  0.0357757, -1.       ]])
 
     '''
 
@@ -1969,70 +1993,70 @@ def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = Tr
 def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox',\
     correction=False, p_adjust = None, sort = False):
 
-    '''Pairwise comparisons with Wilcoxon signed-rank test. It is a non-parametric
+    '''
+    Pairwise comparisons with Wilcoxon signed-rank test. It is a non-parametric
     version of the paired T-test.
 
-        Parameters
-        ----------
-        a : array_like or pandas DataFrame object
-            An array, any object exposing the array interface or a pandas
-            DataFrame. Array must be two-dimensional.
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame. Array must be two-dimensional.
 
-        val_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains values.
+    val_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains values.
 
-        group_col : str, optional
-            Must be specified if `a` is a pandas DataFrame object.
-            Name of the column that contains group names.
+    group_col : str, optional
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains group names.
 
-        zero_method : string, {"pratt", "wilcox", "zsplit"}, optional
-            "pratt": Pratt treatment: includes zero-differences in the ranking
-                process (more conservative)
-            "wilcox": Wilcox treatment: discards all zero-differences
-            "zsplit": Zero rank split: just like Pratt, but spliting the zero rank
-                between positive and negative ones
+    zero_method : string, {"pratt", "wilcox", "zsplit"}, optional
+        "pratt": Pratt treatment, includes zero-differences in the ranking
+        process (more conservative)
+        "wilcox": Wilcox treatment, discards all zero-differences
+        "zsplit": Zero rank split, just like Pratt, but spliting the zero rank
+        between positive and negative ones
 
-        correction : bool, optional
-            If True, apply continuity correction by adjusting the Wilcoxon rank
-            statistic by 0.5 towards the mean value when computing the z-statistic.
-            Default is False.
+    correction : bool, optional
+        If True, apply continuity correction by adjusting the Wilcoxon rank
+        statistic by 0.5 towards the mean value when computing the z-statistic.
+        Default is False.
 
-        p_adjust : str, optional
-            Method for adjusting p values.
-            See statsmodels.sandbox.stats.multicomp for details.
-            Available methods are:
-                'bonferroni' : one-step correction
-                'sidak' : one-step correction
-                'holm-sidak' : step-down method using Sidak adjustments
-                'holm' : step-down method using Bonferroni adjustments
-                'simes-hochberg' : step-up method  (independent)
-                'hommel' : closed method based on Simes tests (non-negative)
-                'fdr_bh' : Benjamini/Hochberg  (non-negative)
-                'fdr_by' : Benjamini/Yekutieli (negative)
-                'fdr_tsbh' : two stage fdr correction (non-negative)
-                'fdr_tsbky' : two stage fdr correction (non-negative)
+    p_adjust : str, optional
+        Method for adjusting p values.
+        See statsmodels.sandbox.stats.multicomp for details.
+        Available methods are:
+        'bonferroni' : one-step correction
+        'sidak' : one-step correction
+        'holm-sidak' : step-down method using Sidak adjustments
+        'holm' : step-down method using Bonferroni adjustments
+        'simes-hochberg' : step-up method  (independent)
+        'hommel' : closed method based on Simes tests (non-negative)
+        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_by' : Benjamini/Yekutieli (negative)
+        'fdr_tsbh' : two stage fdr correction (non-negative)
+        'fdr_tsbky' : two stage fdr correction (non-negative)
 
-        sort : bool, optional
-            Specifies whether to sort DataFrame by group_col and val_col or not.
-            Default is False.
+    sort : bool, optional
+        Specifies whether to sort DataFrame by group_col and val_col or not.
+        Default is False.
 
-        Returns
-        -------
-        Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
+    Returns
+    -------
+    Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
 
-        Notes
-        -----
-        Refer to `scipy.stats.wilcoxon` reference page for further details.
+    Notes
+    -----
+    Refer to `scipy.stats.wilcoxon` reference page for further details.
 
-        Examples
-        --------
-
-        >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
-        >>> sp.posthoc_wilcoxon(x)
-        array([[-1.        ,  0.04311445,  0.1755543 ],
-               [ 0.04311445, -1.        ,  0.0421682 ],
-               [ 0.1755543 ,  0.0421682 , -1.        ]])
+    Examples
+    --------
+    >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
+    >>> sp.posthoc_wilcoxon(x)
+    array([[-1.        ,  0.04311445,  0.1755543 ],
+           [ 0.04311445, -1.        ,  0.0421682 ],
+           [ 0.1755543 ,  0.0421682 , -1.        ]])
 
     '''
 
@@ -2078,10 +2102,12 @@ def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox',\
 
 def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust = None):
 
-    '''Scheffe's all-pairs comparisons test for normally distributed data with equal
-    group variances. For all-pairs comparisons in an one-factorial layout with
-    normally distributed residuals and equal variances Scheffe's test can be
-    performed. A total of m = k(k-1)/2 hypotheses can be tested.
+    '''
+    Scheffe's all-pairs comparisons test for normally distributed data with equal
+    group variances [1]_, [2]_, [3]_. For all-pairs comparisons in an
+    one-factorial layout with normally distributed residuals and equal variances
+    Scheffe's test can be performed. A total of m = k(k-1)/2 hypotheses can be
+    tested.
 
     Parameters
     ----------
@@ -2110,13 +2136,13 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
 
     References
     ----------
-    J. Bortz (1993) Statistik für Sozialwissenschaftler. 4. Aufl., Berlin:
-    Springer.
+    .. [1] J. Bortz (1993) Statistik für Sozialwissenschaftler. 4. Aufl., Berlin:
+        Springer.
 
-    L. Sachs (1997) Angewandte Statistik, New York: Springer.
+    .. [2] L. Sachs (1997) Angewandte Statistik, New York: Springer.
 
-    H. Scheffe (1953) A Method for Judging all Contrasts in the Analysis of
-    Variance. Biometrika 40, 87-110.
+    .. [3] H. Scheffe (1953) A Method for Judging all Contrasts in the Analysis
+        of Variance. Biometrika 40, 87-110.
 
     Examples
     --------
@@ -2168,11 +2194,13 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
 
 def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = False):
 
-    '''Tamhane's T2 all-pairs comparison test for normally distributed data with
-    unequal variances. Tamhane's T2 test can be performed for all-pairs comparisons
-    in an one-factorial layout with normally distributed residuals but unequal
-    groups variances. A total of m = k(k-1)/2 hypotheses can be tested. The null
-    hypothesis is tested in the two-tailed test against the alternative hypothesis.
+    '''
+    Tamhane's T2 all-pairs comparison test for normally distributed data with
+    unequal variances [1]_. Tamhane's T2 test can be performed for all-pairs
+    comparisons in an one-factorial layout with normally distributed residuals
+    but unequal groups variances. A total of m = k(k-1)/2 hypotheses can be
+    tested. The null hypothesis is tested in the two-tailed test against the
+    alternative hypothesis.
 
     Parameters
     ----------
@@ -2206,9 +2234,9 @@ def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = Fa
 
     References
     ----------
-    A. C. Tamhane (1979), A Comparison of Procedures for Multiple Comparisons of
-    Means with Unequal Variances. Journal of the American Statistical Association},
-    74, 471--480.
+    .. [1] A.C. Tamhane (1979), A Comparison of Procedures for Multiple Comparisons of
+        Means with Unequal Variances. Journal of the American Statistical Association,
+        74, 471-480.
 
     Examples
     --------
@@ -2274,12 +2302,13 @@ def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = Fa
 
 def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
 
-    '''Performs Tukey's all-pairs comparisons test for normally distributed data
-    with equal group variances. For all-pairs comparisons in an one-factorial
-    layout with normally distributed residuals and equal variances Tukey's test
-    can be performed. A total of m = k(k-1)/2 hypotheses can be tested. The null
-    hypothesis is tested in the two-tailed test against the alternative
-    hypothesis.
+    '''
+    Performs Tukey's all-pairs comparisons test for normally distributed data
+    with equal group variances [1]_, [2]_. For all-pairs comparisons in an
+    one-factorial layout with normally distributed residuals and equal variances
+    Tukey's test can be performed. A total of m = k(k-1)/2 hypotheses can be
+    tested. The null hypothesis is tested in the two-tailed test against
+    the alternative hypothesis.
 
     Parameters
     ----------
@@ -2308,9 +2337,9 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
 
     References
     ----------
-    L. Sachs (1997) Angewandte Statistik, New York: Springer.
-    J. Tukey (1949) Comparing Individual Means in the Analysis of Variance,
-    Biometrics 5, 99-114.
+    .. [1] L. Sachs (1997) Angewandte Statistik, New York: Springer.
+    .. [2] J. Tukey (1949) Comparing Individual Means in the Analysis of Variance,
+        Biometrics 5, 99-114.
 
     Examples
     --------
@@ -2362,7 +2391,8 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
 
 def posthoc_dscf(a, val_col = None, group_col = None, sort = False):
 
-    '''Dwass, Steel, Critchlow and Fligner all-pairs comparison test for a
+    '''
+    Dwass, Steel, Critchlow and Fligner all-pairs comparison test for a
     one-factorial layout with non-normally distributed residuals. As opposed to
     the all-pairs comparison procedures that depend on Kruskal ranks, the DSCF
     test is basically an extension of the U-test as re-ranking is conducted for
@@ -2395,16 +2425,16 @@ def posthoc_dscf(a, val_col = None, group_col = None, sort = False):
 
     References
     ----------
-    Douglas, C. E., Fligner, A. M. (1991) On distribution-free multiple
-    comparisons in the one-way analysis of variance, Communications in
-    Statistics - Theory and Methods, 20, 127-139.
+    .. [1] Douglas, C. E., Fligner, A. M. (1991) On distribution-free multiple
+        comparisons in the one-way analysis of variance, Communications in
+        Statistics - Theory and Methods, 20, 127-139.
 
-    Dwass, M. (1960) Some k-sample rank-order tests. In Contributions to
-    Probability and Statistics, Edited by: I. Olkin, Stanford: Stanford
-    University Press.
+    .. [2] Dwass, M. (1960) Some k-sample rank-order tests. In Contributions to
+        Probability and Statistics, Edited by: I. Olkin, Stanford: Stanford
+        University Press.
 
-    Steel, R. G. D. (1960) A rank sum test for comparing all pairs of
-    treatments, Technometrics, 2, 197-207.
+    .. [3] Steel, R. G. D. (1960) A rank sum test for comparing all pairs of
+        treatments, Technometrics, 2, 197-207.
 
     Examples
     --------
