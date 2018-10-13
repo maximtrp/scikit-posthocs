@@ -216,7 +216,7 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
     '''
     Post-hoc pairwise test for multiple comparisons of mean rank sums
     (Dunn's test). May be used after Kruskal-Wallis one-way analysis of
-    variance by ranks to do pairwise comparisons.
+    variance by ranks to do pairwise comparisons [1]_, [2]_.
 
     Parameters
     ----------
@@ -262,8 +262,8 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
 
     References
     ----------
-    O.J. Dunn (1964). Multiple comparisons using rank sums. Technometrics, 6, 241-252.
-    S.A. Glantz (2012), Primer of Biostatistics. New York: McGraw Hill.
+    .. [1] O.J. Dunn (1964). Multiple comparisons using rank sums. Technometrics, 6, 241-252.
+    .. [2] S.A. Glantz (2012), Primer of Biostatistics. New York: McGraw Hill.
 
     Examples
     --------
@@ -846,7 +846,7 @@ def posthoc_siegel_friedman(a, y_col = None, block_col = None, group_col = None,
 
     '''
     Siegel and Castellan's All-Pairs Comparisons Test for Unreplicated Blocked
-    Data [1]_.
+    Data. See authors' paper for additional information [1]_.
 
     Parameters
     ----------
@@ -965,8 +965,9 @@ def posthoc_siegel_friedman(a, y_col = None, block_col = None, group_col = None,
 def posthoc_miller_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False):
 
     '''
-    Miller's All-Pairs Comparisons Test for Unreplicated Blocked Data [1]_, [2]_,
-    [3]_. The p-values are computed from the chi-square distribution.
+    Miller's All-Pairs Comparisons Test for Unreplicated Blocked Data.
+    The p-values are computed from the chi-square distribution [1]_, [2]_,
+    [3]_.
 
     Parameters
     ----------
@@ -1076,7 +1077,8 @@ def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted =
 
     '''
     Pairwise post-hoc test for multiple comparisons of rank sums according to
-    Durbin and Conover for a two-way balanced incomplete block design (BIBD).
+    Durbin and Conover for a two-way balanced incomplete block design (BIBD). See
+    references for additional information [1]_, [2]_.
 
     Parameters
     ----------
@@ -1197,9 +1199,9 @@ def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted =
 def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort = False, p_adjust = None):
 
     '''
-    Anderson-Darling Pairwise Test for k-samples [1]_. Tests the null hypothesis
+    Anderson-Darling Pairwise Test for k-samples. Tests the null hypothesis
     that k-samples are drawn from the same population without having to specify
-    the distribution function of that population.
+    the distribution function of that population [1]_.
 
     Parameters
     ----------
@@ -1281,8 +1283,8 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
 
     '''
     Calculate pairwise comparisons using Quade's post-hoc test for
-    unreplicated blocked data [1]_. This test is usually conducted if significant
-    results were obtained by the omnibus test [2]_, [3]_.
+    unreplicated blocked data. This test is usually conducted if significant
+    results were obtained by the omnibus test [1]_, [2]_, [3]_.
 
     Parameters
     ----------
@@ -1431,11 +1433,12 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
 def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = False, p_adjust = None):
 
     '''
-    Mack-Wolfe Test for Umbrella Alternatives [1]_.
+    Mack-Wolfe Test for Umbrella Alternatives.
 
     In dose-finding studies one may assume an increasing treatment effect with
     increasing dose level. However, the test subject may actually succumb to
-    toxic effects at high doses, which leads to decresing treatment effects [2]_.
+    toxic effects at high doses, which leads to decresing treatment
+    effects [1]_, [2]_.
 
     The scope of the Mack-Wolfe Test is to test for umbrella alternatives for
     either a known or unknown point P (i.e. dose-level), where the peak
@@ -1586,7 +1589,7 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 
     '''
     Van der Waerden's test for pairwise multiple comparisons between group
-    levels [1]_, [2]_.
+    levels. See references for additional information [1]_, [2]_.
 
     Parameters
     ----------
@@ -2104,10 +2107,11 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
 
     '''
     Scheffe's all-pairs comparisons test for normally distributed data with equal
-    group variances [1]_, [2]_, [3]_. For all-pairs comparisons in an
+    group variances. For all-pairs comparisons in an
     one-factorial layout with normally distributed residuals and equal variances
-    Scheffe's test can be performed. A total of m = k(k-1)/2 hypotheses can be
-    tested.
+    Scheffe's test can be performed [1]_, [2]_, [3]_.
+
+    A total of m = k(k-1)/2 hypotheses can be tested.
 
     Parameters
     ----------
@@ -2196,11 +2200,11 @@ def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = Fa
 
     '''
     Tamhane's T2 all-pairs comparison test for normally distributed data with
-    unequal variances [1]_. Tamhane's T2 test can be performed for all-pairs
+    unequal variances. Tamhane's T2 test can be performed for all-pairs
     comparisons in an one-factorial layout with normally distributed residuals
     but unequal groups variances. A total of m = k(k-1)/2 hypotheses can be
     tested. The null hypothesis is tested in the two-tailed test against the
-    alternative hypothesis.
+    alternative hypothesis [1]_.
 
     Parameters
     ----------
@@ -2304,11 +2308,11 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
 
     '''
     Performs Tukey's all-pairs comparisons test for normally distributed data
-    with equal group variances [1]_, [2]_. For all-pairs comparisons in an
+    with equal group variances. For all-pairs comparisons in an
     one-factorial layout with normally distributed residuals and equal variances
     Tukey's test can be performed. A total of m = k(k-1)/2 hypotheses can be
     tested. The null hypothesis is tested in the two-tailed test against
-    the alternative hypothesis.
+    the alternative hypothesis [1]_, [2]_.
 
     Parameters
     ----------
