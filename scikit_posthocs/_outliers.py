@@ -5,41 +5,42 @@ from scipy.stats import t
 
 def outliers_iqr(x, return_='filtered', coef = 1.5):
 
-    """Simple detection of potential outliers based on interquartile range (IQR).
+    """
+    Simple detection of potential outliers based on interquartile range (IQR).
 
-        Data that lie within the lower and upper limits are considered
-        non-outliers. The lower limit is the number that lies 1.5 IQRs below
-        (coefficient may be changed with an argument, see Parameters)
-        the first quartile; the upper limit is the number that lies 1.5 IQRs
-        above the third quartile.
+    Data that lie within the lower and upper limits are considered
+    non-outliers. The lower limit is the number that lies 1.5 IQRs below
+    (coefficient may be changed with an argument, see Parameters)
+    the first quartile; the upper limit is the number that lies 1.5 IQRs
+    above the third quartile.
 
-        Parameters
-        ----------
-        x : array_like or ndarray, 1d
-            An array, any object exposing the array interface, containing
-            p values.
+    Parameters
+    ----------
+    x : array_like or ndarray, 1d
+        An array, any object exposing the array interface, containing
+        p values.
 
-        return_ : str, optional
-            Specifies object to be returned. Available options are:
-                'filtered' : return a filtered array (default)
-                'outliers' : return outliers
-                'indices' : return indices of non-outliers
-                'outliers_indices' : return indices of outliers
+    return_ : str, optional
+        Specifies object to be returned. Available options are:
+        'filtered' : return a filtered array (default)
+        'outliers' : return outliers
+        'indices' : return indices of non-outliers
+        'outliers_indices' : return indices of outliers
 
-        coef : float, optional
-            Coefficient by which IQR is multiplied. Default is 1.5.
+    coef : float, optional
+        Coefficient by which IQR is multiplied. Default is 1.5.
 
-        Returns
-        -------
-        Numpy array where 0 is False (not significant), 1 is True (significant),
-        and -1 is for diagonal elements.
+    Returns
+    -------
+    Numpy array where 0 is False (not significant), 1 is True (significant),
+    and -1 is for diagonal elements.
 
-        Examples
-        --------
+    Examples
+    --------
+    >>> x = np.array([4,5,6,10,12,4,3,1,2,3,23,5,3])
+    >>> outliers_iqr(x, ret = 'outliers')
+    array([12, 23])
 
-        >>> x = np.array([4,5,6,10,12,4,3,1,2,3,23,5,3])
-        >>> ph.outliers_iqr(x, ret = 'outliers')
-        array([12, 23])
     """
 
     x = np.asarray(x)
@@ -60,40 +61,41 @@ def outliers_iqr(x, return_='filtered', coef = 1.5):
 
 def outliers_grubbs(x, hypo = False, alpha = 0.05):
 
-    """Grubbs' Test for Outliers [1]_. This is the two-sided version of the test.
+    """
+    Grubbs' Test for Outliers [1]_. This is the two-sided version of the test.
 
-        The null hypothesis implies that there are no outliers in the data set.
+    The null hypothesis implies that there are no outliers in the data set.
 
-        Parameters
-        ----------
-        x : array_like or ndarray, 1d
-            An array, any object exposing the array interface, containing
-            data to test for an outlier in.
+    Parameters
+    ----------
+    x : array_like or ndarray, 1d
+        An array, any object exposing the array interface, containing
+        data to test for an outlier in.
 
-        hypo : bool, optional
-            Specifies whether to return a bool value of a hypothesis test result.
-            Returns True when we can reject the null hypothesis. Otherwise, False.
-            Available options are:
-                True : return a hypothesis test result
-                False : return a filtered array without an outlier (default)
+    hypo : bool, optional
+        Specifies whether to return a bool value of a hypothesis test result.
+        Returns True when we can reject the null hypothesis. Otherwise, False.
+        Available options are:
+        1) True - return a hypothesis test result
+        2) False - return a filtered array without an outlier (default)
 
-        alpha : float, optional
-            Significance level for a hypothesis test. Default is 0.05.
+    alpha : float, optional
+        Significance level for a hypothesis test. Default is 0.05.
 
-        Returns
-        -------
-        Numpy array if hypo is False or a bool value of a hypothesis test result.
+    Returns
+    -------
+    Numpy array if hypo is False or a bool value of a hypothesis test result.
 
-        Notes
-        -----
-        .. [1] http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h1.htm
+    Notes
+    -----
+    .. [1] http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h1.htm
 
-        Examples
-        --------
+    Examples
+    --------
 
-        >>> x = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18,245.57])
-        >>> ph.outliers_grubbs(x)
-        array([ 199.31,  199.53,  200.19,  200.82,  201.92,  201.95,  202.18])
+    >>> x = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18,245.57])
+    >>> ph.outliers_grubbs(x)
+    array([ 199.31,  199.53,  200.19,  200.82,  201.92,  201.95,  202.18])
     """
 
     val = np.max(np.abs(x - np.mean(x)))
@@ -112,52 +114,53 @@ def outliers_grubbs(x, hypo = False, alpha = 0.05):
 
 def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
-    """Tietjen-Moore test [1]_ to detect multiple outliers in a univariate
-        data set that follows an approximately normal distribution.
-        The Tietjen-Moore test [2]_ is a generalization of the Grubbs' test to
-        the case of multiple outliers. If testing for a single outlier,
-        the Tietjen-Moore test is equivalent to the Grubbs' test.
+    """
+    Tietjen-Moore test [1]_ to detect multiple outliers in a univariate
+    data set that follows an approximately normal distribution.
+    The Tietjen-Moore test [2]_ is a generalization of the Grubbs' test to
+    the case of multiple outliers. If testing for a single outlier,
+    the Tietjen-Moore test is equivalent to the Grubbs' test.
 
-        The null hypothesis implies that there are no outliers in the data set.
+    The null hypothesis implies that there are no outliers in the data set.
 
-        Parameters
-        ----------
-        x : array_like or ndarray, 1d
-            An array, any object exposing the array interface, containing
-            data to test for an outlier in.
+    Parameters
+    ----------
+    x : array_like or ndarray, 1d
+        An array, any object exposing the array interface, containing
+        data to test for an outlier in.
 
-        k : int
-            Number of potential outliers to test for. Function tests for
-            outliers in both tails.
+    k : int
+        Number of potential outliers to test for. Function tests for
+        outliers in both tails.
 
-        hypo : bool, optional
-            Specifies whether to return a bool value of a hypothesis test result.
-            Returns True when we can reject the null hypothesis. Otherwise, False.
-            Available options are:
-                True : return a hypothesis test result
-                False : return a filtered array without outliers (default)
+    hypo : bool, optional
+        Specifies whether to return a bool value of a hypothesis test result.
+        Returns True when we can reject the null hypothesis. Otherwise, False.
+        Available options are:
+        1) True - return a hypothesis test result
+        2) False - return a filtered array without outliers (default)
 
-        alpha : float, optional
-            Significance level for a hypothesis test. Default is 0.05.
+    alpha : float, optional
+        Significance level for a hypothesis test. Default is 0.05.
 
-        Returns
-        -------
-        Numpy array if hypo is False or a bool value of a hypothesis test result.
+    Returns
+    -------
+    Numpy array if hypo is False or a bool value of a hypothesis test result.
 
-        Notes
-        -----
-        .. [1] Tietjen and Moore (August 1972), Some Grubbs-Type Statistics
+    Notes
+    -----
+    .. [1] Tietjen and Moore (August 1972), Some Grubbs-Type Statistics
         for the Detection of Outliers, Technometrics, 14(3), pp. 583-597.
-        .. [2] http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h2.htm
+    .. [2] http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h2.htm
 
-        Examples
-        --------
+    Examples
+    --------
+    >>> x = np.array([-1.40, -0.44, -0.30, -0.24, -0.22, -0.13, -0.05, 0.06,
+    0.10, 0.18, 0.20, 0.39, 0.48, 0.63, 1.01])
+    >>> outliers_tietjen(x, 2)
+    array([-0.44, -0.3 , -0.24, -0.22, -0.13, -0.05,  0.06,  0.1 ,  0.18,
+    0.2 ,  0.39,  0.48,  0.63])
 
-        >>> x = np.array([-1.40, -0.44, -0.30, -0.24, -0.22, -0.13, -0.05, 0.06,
-        0.10, 0.18, 0.20, 0.39, 0.48, 0.63, 1.01])
-        >>> ph.outliers_tietjen(x, 2)
-        array([-0.44, -0.3 , -0.24, -0.22, -0.13, -0.05,  0.06,  0.1 ,  0.18,
-        0.2 ,  0.39,  0.48,  0.63])
     """
 
     n = x.size
@@ -189,68 +192,69 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
 def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
 
-    """The generalized (Extreme Studentized Deviate) ESD test is used
+    """
+    The generalized (Extreme Studentized Deviate) ESD test is used
     to detect one or more outliers in a univariate data set that follows
     an approximately normal distribution [1]_.
 
-        Parameters
-        ----------
-        data : array_like or ndarray, 1d
-            An array, any object exposing the array interface, containing
-            data to test for outliers.
+    Parameters
+    ----------
+    data : array_like or ndarray, 1d
+        An array, any object exposing the array interface, containing
+        data to test for outliers.
 
-        outliers : int, optional
-            Number of potential outliers to test for. Test is two-tailed, i.e.
-            maximum and minimum values are checked for potential outliers.
+    outliers : int, optional
+        Number of potential outliers to test for. Test is two-tailed, i.e.
+        maximum and minimum values are checked for potential outliers.
 
-        report : bool, optional
-            Specifies whether to return a summary table of the test.
-            Available options are:
-                True : return a summary table
-                False : returns the array with outliers removed. (default)
+    report : bool, optional
+        Specifies whether to return a summary table of the test.
+        Available options are:
+        1) True - return a summary table
+        2) False - return the array with outliers removed. (default)
 
-        alpha : float, optional
-            Significance level for a hypothesis test. Default is 0.05.
+    alpha : float, optional
+        Significance level for a hypothesis test. Default is 0.05.
 
-        Returns
-        -------
-        Numpy array if hypo is False or a bool value of a hypothesis test result.
+    Returns
+    -------
+    Numpy array if hypo is False or a bool value of a hypothesis test result.
 
-        Notes
-        -----
-        .. [1] Rosner, Bernard (May 1983), Percentage Points for a Generalized
+    Notes
+    -----
+    .. [1] Rosner, Bernard (May 1983), Percentage Points for a Generalized
         ESD Many-Outlier Procedure,Technometrics, 25(2), pp. 165-172.
 
-        Examples
-        --------
+    Examples
+    --------
+    >>> data = np.array([-0.25, 0.68, 0.94, 1.15, 1.2, 1.26, 1.26, 1.34, 1.38, 1.43, 1.49, 1.49, 1.55, 1.56, 1.58, 1.65, 1.69, 1.7, 1.76, 1.77, 1.81, 1.91, 1.94, 1.96, 1.99, 2.06, 2.09, 2.1, 2.14, 2.15, 2.23, 2.24, 2.26, 2.35, 2.37, 2.4, 2.47, 2.54, 2.62, 2.64, 2.9, 2.92, 2.92, 2.93, 3.21, 3.26, 3.3, 3.59, 3.68, 4.3, 4.64, 5.34, 5.42, 6.01])
 
-        >>> data = np.array([-0.25, 0.68, 0.94, 1.15, 1.2, 1.26, 1.26, 1.34, 1.38, 1.43, 1.49, 1.49, 1.55, 1.56, 1.58, 1.65, 1.69, 1.7, 1.76, 1.77, 1.81, 1.91, 1.94, 1.96, 1.99, 2.06, 2.09, 2.1, 2.14, 2.15, 2.23, 2.24, 2.26, 2.35, 2.37, 2.4, 2.47, 2.54, 2.62, 2.64, 2.9, 2.92, 2.92, 2.93, 3.21, 3.26, 3.3, 3.59, 3.68, 4.3, 4.64, 5.34, 5.42, 6.01])
+    >>> outliers_gesd(data, 5)
+    array([-0.25,  0.68,  0.94,  1.15,  1.2 ,  1.26,  1.26,  1.34,  1.38,
+            1.43,  1.49,  1.49,  1.55,  1.56,  1.58,  1.65,  1.69,  1.7 ,
+            1.76,  1.77,  1.81,  1.91,  1.94,  1.96,  1.99,  2.06,  2.09,
+            2.1 ,  2.14,  2.15,  2.23,  2.24,  2.26,  2.35,  2.37,  2.4 ,
+            2.47,  2.54,  2.62,  2.64,  2.9 ,  2.92,  2.92,  2.93,  3.21,
+            3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
 
-        >>> ph.outliers_gesd(data, 5)
-        array([-0.25,  0.68,  0.94,  1.15,  1.2 ,  1.26,  1.26,  1.34,  1.38,
-                1.43,  1.49,  1.49,  1.55,  1.56,  1.58,  1.65,  1.69,  1.7 ,
-                1.76,  1.77,  1.81,  1.91,  1.94,  1.96,  1.99,  2.06,  2.09,
-                2.1 ,  2.14,  2.15,  2.23,  2.24,  2.26,  2.35,  2.37,  2.4 ,
-                2.47,  2.54,  2.62,  2.64,  2.9 ,  2.92,  2.92,  2.93,  3.21,
-                3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
+    >>> outliers_gesd(data, outliers = 5, report = True)
+    H0: no outliers in the data
+    Ha: up to 5 outliers in the data
+    Significance level:  α = 0.05
+    Reject H0 if Ri > Critical Value (λi)
 
-        >>> ph.outliers_gesd(data, outliers = 5, report = True)
-        H0: no outliers in the data
-        Ha: up to 5 outliers in the data
-        Significance level:  α = 0.05
-        Reject H0 if Ri > Critical Value (λi)
+    Summary Table for Two-Tailed Test
+    ---------------------------------------
+          Exact           Test     Critical
+      Number of      Statistic    Value, λi
+    Outliers, i      Value, Ri          5 %
+    ---------------------------------------
+              1          3.119        3.159
+              2          2.943        3.151
+              3          3.179        3.144 *
+              4           2.81        3.136
+              5          2.816        3.128
 
-        Summary Table for Two-Tailed Test
-        ---------------------------------------
-              Exact           Test     Critical
-          Number of      Statistic    Value, λi
-        Outliers, i      Value, Ri          5 %
-        ---------------------------------------
-                  1          3.119        3.159
-                  2          2.943        3.151
-                  3          3.179        3.144 *
-                  4           2.81        3.136
-                  5          2.816        3.128
     """
 
     Rs, ls = np.zeros(outliers, dtype = np.float), np.zeros(outliers, dtype = np.float)

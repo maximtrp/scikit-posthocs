@@ -6,36 +6,37 @@ from pandas import DataFrame
 
 
 def sign_array(p_values, alpha=0.05):
-    """Significance array
+    """
+    Significance array
 
-        Converts an array with p values to a significance array where
-        0 is False (not significant), 1 is True (significant),
-        and -1 is for diagonal elements.
+    Converts an array with p values to a significance array where
+    0 is False (not significant), 1 is True (significant),
+    and -1 is for diagonal elements.
 
-        Parameters
-        ----------
-        p_values : array_like or ndarray
-            An array, any object exposing the array interface, containing
-            p values.
+    Parameters
+    ----------
+    p_values : array_like or ndarray
+        An array, any object exposing the array interface, containing
+        p values.
 
-        alpha : float, optional
-            Significance level. Default is 0.05.
+    alpha : float, optional
+        Significance level. Default is 0.05.
 
-        Returns
-        -------
-        Numpy array where 0 is False (not significant), 1 is True (significant),
-        and -1 is for diagonal elements.
+    Returns
+    -------
+    Numpy array where 0 is False (not significant), 1 is True (significant),
+    and -1 is for diagonal elements.
 
-        Examples
-        --------
+    Examples
+    --------
 
-        >>> p_values = np.array([[ 0.        ,  0.00119517,  0.00278329],
-                          [ 0.00119517,  0.        ,  0.18672227],
-                          [ 0.00278329,  0.18672227,  0.        ]])
-        >>> ph.sign_array(p_values)
-        array([[-1,  1,  1],
-               [ 1, -1,  0],
-               [ 1,  0, -1]])
+    >>> p_values = np.array([[ 0.        ,  0.00119517,  0.00278329],
+                             [ 0.00119517,  0.        ,  0.18672227],
+                             [ 0.00278329,  0.18672227,  0.        ]])
+    >>> ph.sign_array(p_values)
+    array([[-1,  1,  1],
+           [ 1, -1,  0],
+           [ 1,  0, -1]])
 
     """
 
@@ -47,37 +48,38 @@ def sign_array(p_values, alpha=0.05):
 
 
 def sign_table(p_values, lower=True, upper=True):
-    """Significance table
+    """
+    Significance table
 
-        Returns table that can be used in a publication. P values are replaced
-        with asterisks: * - p < 0.05, ** - p < 0.01, *** - p < 0.001.
+    Returns table that can be used in a publication. P values are replaced
+    with asterisks: \* - p < 0.05, \*\* - p < 0.01, \*\*\* - p < 0.001.
 
-        Parameters
-        ----------
-        p_values : array_like, or ndarray, or pandas DataFrame
-            An array, any object exposing the array interface, containing
-            p values.
+    Parameters
+    ----------
+    p_values : array_like, or ndarray, or pandas DataFrame
+        An array, any object exposing the array interface, containing
+        p values.
 
-        lower : bool, optional
-            Defines whether to return the lower triangle.
+    lower : bool, optional
+        Defines whether to return the lower triangle.
 
-        upper : bool, optional
-            Defines whether to return the upper triangle.
+    upper : bool, optional
+        Defines whether to return the upper triangle.
 
-        Returns
-        -------
-        Numpy array or pandas DataFrame with asterisks masked p values.
+    Returns
+    -------
+    Numpy array or pandas DataFrame with asterisks masked p values.
 
-        Examples
-        --------
+    Examples
+    --------
 
-        >>> p_values = np.array([[-1.        ,  0.00119517,  0.00278329],
-                          [ 0.00119517, -1.        ,  0.18672227],
-                          [ 0.00278329,  0.18672227, -1.        ]])
-        >>> ph.sign_table(p_values)
-        array([['-', '**', '**'],
-               ['**', '-', 'NS'],
-               ['**', 'NS', '-']], dtype=object)
+    >>> p_values = np.array([[-1.        ,  0.00119517,  0.00278329],
+                      [ 0.00119517, -1.        ,  0.18672227],
+                      [ 0.00278329,  0.18672227, -1.        ]])
+    >>> ph.sign_table(p_values)
+    array([['-', '**', '**'],
+           ['**', '-', 'NS'],
+           ['**', 'NS', '-']], dtype=object)
 
     """
     if not any([lower, upper]):
@@ -115,69 +117,70 @@ def sign_table(p_values, lower=True, upper=True):
 
 def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
               cbar_ax_bbox=None, ax=None, **kwargs):
-    """Significance plot, a heatmap of p values (based on Seaborn).
-
-        Parameters
-        ----------
-        x : array_like, ndarray or DataFrame
-            If flat is False (default), x must be an array, any object exposing
-            the array interface, containing p values. If flat is True, x must be
-            a sign_array (returned by `scikit_posthocs.sign_array` function)
-
-        g : array_like or ndarray, optional
-            An array, any object exposing the array interface, containing
-            group names.
-
-        flat : bool, optional
-            If `flat` is True, plots a significance array as a heatmap using
-            seaborn. If `flat` is False (default), plots an array of p values.
-            Non-flat mode is useful if you need to  differentiate significance
-            levels visually. It is the preferred mode.
-
-        labels : bool, optional
-            Plot axes labels (default) or not.
-
-        cmap : list, optional
-            If flat is False (default):
-                List consisting of five elements, that will be exported to
-                ListedColormap method of matplotlib. First is for diagonal
-                elements, second is for non-significant elements, third is for
-                p < 0.001, fourth is for p < 0.01, fifth is for p < 0.05.
-
-            If flat is True:
-                List consisting of three elements, that will be exported to
-                ListedColormap method of matplotlib. First is for diagonal
-                elements, second is for non-significant elements, third is for
-                significant ones.
-
-            If not defined, default colormaps will be used.
-
-        cbar_ax_bbox : list, optional
-            Colorbar axes position rect [left, bottom, width, height] where
-            all quantities are in fractions of figure width and height.
-            Refer to `matplotlib.figure.Figure.add_axes` for more information.
-            Default is [0.95, 0.35, 0.04, 0.3].
-
-        ax : matplotlib Axes, optional
-            Axes in which to draw the plot, otherwise use the currently-active Axes.
-
-        kwargs : other keyword arguments
-            Keyword arguments to be passed to seaborn heatmap method. These
-            keyword args cannot be used: cbar, vmin, vmax, center.
-
-        Returns
-        -------
-        Axes object with the heatmap (and ColorBase object of cbar if `flat` is set to
-        False).
-
-        Examples
-        --------
-
-        >>> x = np.array([[-1,  1,  1],
-                          [ 1, -1,  0],
-                          [ 1,  0, -1]])
-        >>> ph.sign_plot(x, flat = True)
     """
+    Significance plot, a heatmap of p values (based on Seaborn).
+
+    Parameters
+    ----------
+    x : array_like, ndarray or DataFrame
+        If flat is False (default), x must be an array, any object exposing
+        the array interface, containing p values. If flat is True, x must be
+        a sign_array (returned by `scikit_posthocs.sign_array` function)
+
+    g : array_like or ndarray, optional
+        An array, any object exposing the array interface, containing
+        group names.
+
+    flat : bool, optional
+        If `flat` is True, plots a significance array as a heatmap using
+        seaborn. If `flat` is False (default), plots an array of p values.
+        Non-flat mode is useful if you need to  differentiate significance
+        levels visually. It is the preferred mode.
+
+    labels : bool, optional
+        Plot axes labels (default) or not.
+
+    cmap : list, optional
+        1) If flat is False (default):
+        List consisting of five elements, that will be exported to
+        ListedColormap method of matplotlib. First is for diagonal
+        elements, second is for non-significant elements, third is for
+        p < 0.001, fourth is for p < 0.01, fifth is for p < 0.05.
+
+        2) If flat is True:
+        List consisting of three elements, that will be exported to
+        ListedColormap method of matplotlib. First is for diagonal
+        elements, second is for non-significant elements, third is for
+        significant ones.
+        3) If not defined, default colormaps will be used.
+
+    cbar_ax_bbox : list, optional
+        Colorbar axes position rect [left, bottom, width, height] where
+        all quantities are in fractions of figure width and height.
+        Refer to `matplotlib.figure.Figure.add_axes` for more information.
+        Default is [0.95, 0.35, 0.04, 0.3].
+
+    ax : matplotlib Axes, optional
+        Axes in which to draw the plot, otherwise use the currently-active Axes.
+
+    kwargs : other keyword arguments
+        Keyword arguments to be passed to seaborn heatmap method. These
+        keyword args cannot be used: cbar, vmin, vmax, center.
+
+    Returns
+    -------
+    Axes object with the heatmap (and ColorBase object of cbar if `flat` is set to
+    False).
+
+    Examples
+    --------
+    >>> x = np.array([[-1,  1,  1],
+                      [ 1, -1,  0],
+                      [ 1,  0, -1]])
+    >>> ph.sign_plot(x, flat = True)
+
+    """
+
     try:
         del kwargs['cbar'], kwargs['vmin'], kwargs['vmax'], kwargs['center']
     except:

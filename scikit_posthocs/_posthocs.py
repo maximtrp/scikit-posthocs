@@ -1242,7 +1242,7 @@ def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort =
 
     References
     ----------
-    .. [1] Scholz, F. W and Stephens, M. A. (1987), K-Sample Anderson-Darling Tests,
+    .. [1] F.W. Scholz, M.A. Stephens (1987), K-Sample Anderson-Darling Tests,
         Journal of the American Statistical Association, Vol. 82, pp. 918-924.
 
     Examples
