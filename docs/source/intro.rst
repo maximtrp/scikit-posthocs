@@ -7,7 +7,6 @@ Features
 --------
 
 - Parametric and nonparametric pairwise multiple comparisons tests:
-
   - Conover, Dunn, and Nemenyi tests for use with Kruskal-Wallis test.
   - Conover, Nemenyi, Siegel, and Miller tests for use with Friedman test.
   - Quade, van Waerden, and Durbin tests.
@@ -21,7 +20,6 @@ Features
 - Plotting (significance plots).
 
 - Outliers detection algorithms:
-
   - Simple interquartile range (IQR) test.
   - Grubbs test.
   - Tietjen-Moore test.

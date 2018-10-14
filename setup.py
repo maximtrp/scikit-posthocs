@@ -2,7 +2,7 @@ from setuptools import setup
 from os.path import join, dirname
 
 setup(name='scikit-posthocs',
-      version='0.3.9',
+      version='0.4.0',
       description='Statistical post-hoc analysis and outlier detection algorithms',
       long_description=open(join(dirname(__file__), 'DESCRIPTION.rst')).read(),
       url='http://github.com/maximtrp/scikit-posthocs',
@@ -35,6 +35,7 @@ setup(name='scikit-posthocs',
 		'Programming Language :: Python :: 3.4',
 		'Programming Language :: Python :: 3.5',
 		'Programming Language :: Python :: 3.6',
+		'Programming Language :: Python :: 3.7',
 	  ],
       test_suite='tests.posthocs_suite',
       zip_safe=False)
