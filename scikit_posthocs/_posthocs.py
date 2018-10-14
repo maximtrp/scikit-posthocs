@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
 import scipy.stats as ss
 import itertools as it
@@ -262,7 +264,8 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
 
     References
     ----------
-    .. [1] O.J. Dunn (1964). Multiple comparisons using rank sums. Technometrics, 6, 241-252.
+    .. [1] O.J. Dunn (1964). Multiple comparisons using rank sums.
+        Technometrics, 6, 241-252.
     .. [2] S.A. Glantz (2012), Primer of Biostatistics. New York: McGraw Hill.
 
     Examples
@@ -700,7 +703,7 @@ def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
         tval = dif / np.sqrt(A / B)
-        pval = 2 * ss.t.sf(np.abs(tval), df = (n-1)*(k-1))
+        pval = 2. * ss.t.sf(np.abs(tval), df = (n-1)*(k-1))
         return pval
 
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
@@ -1418,7 +1421,7 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
     else:
         n = b * k
         denom = np.sqrt((k * (k + 1) * (2 * n + 1) * (k-1)) / (18 * n * (n + 1)))
-        ff = 1 / (b * (b + 1)/2)
+        ff = 1. / (b * (b + 1)/2)
 
         for i, j in combs:
             vs[i, j] = compare_stats_norm(i, j)
@@ -1460,7 +1463,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
 
     p : int, optional
         The a-priori known peak as an ordinal number of the treatment group
-        including the zero dose level, i.e. p = {1, …, k}. Defaults to None.
+        including the zero dose level, i.e. p = {1, ..., k}. Defaults to None.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -1548,7 +1551,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
 
         var = (2 * (N1**3 + N2**3) + 3 * (N1**2 + N2**2) -\
                 np.sum(n**2 * (2*n + 3)) - n.iloc[p]**2 * (2 * n.iloc[p] + 3) +\
-                12 * n.iloc[p] * N1 * N2 - 12 * n.iloc[p] ** 2 * N) / 72
+                12. * n.iloc[p] * N1 * N2 - 12. * n.iloc[p] ** 2 * N) / 72.
         return var
 
     if p:
@@ -2171,12 +2174,12 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
     n = ni.sum()
     xi = x_grouped.mean()
     si = x_grouped.var()
-    sin = 1 / (n - x_groups_unique.size) * np.sum(si * (ni - 1))
+    sin = 1. / (n - x_groups_unique.size) * np.sum(si * (ni - 1.))
 
     def compare(i, j):
         dif = xi[i] - xi[j]
-        A = sin * (1. / ni[i] + 1. / ni[j]) * (x_groups_unique.size - 1)
-        f_val = dif ** 2 / A
+        A = sin * (1. / ni[i] + 1. / ni[j]) * (x_groups_unique.size - 1.)
+        f_val = dif ** 2. / A
         return f_val
 
     vs = np.zeros((x_groups_unique.size, x_groups_unique.size), dtype=np.float)
@@ -2190,7 +2193,7 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
         vs[i, j] = compare(x_groups_unique[i], x_groups_unique[j])
 
     vs[tri_lower] = vs.T[tri_lower]
-    p_values = ss.f.sf(vs, x_groups_unique.size - 1, n - x_groups_unique.size)
+    p_values = ss.f.sf(vs, x_groups_unique.size - 1., n - x_groups_unique.size)
 
     np.fill_diagonal(p_values, -1)
     return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
@@ -2265,7 +2268,7 @@ def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = Fa
     n = ni.sum()
     xi = x_grouped.mean()
     si = x_grouped.var()
-    sin = 1 / (n - x_groups_unique.size) * np.sum(si * (ni - 1))
+    sin = 1. / (n - x_groups_unique.size) * np.sum(si * (ni - 1))
 
     def compare(i, j):
         dif = xi[i] - xi[j]
@@ -2275,10 +2278,10 @@ def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = Fa
             df = A ** 2. / (si[i] ** 2. / (ni[i] ** 2. * (ni[i] - 1.)) + si[j] ** 2. / (ni[j] ** 2. * (ni[j] - 1.)))
         else:
             ## checks according to Tamhane (1979, p. 474)
-            ok1 = (9/10. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 10/9.)
-            ok2 = (9/10. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 10/9.)
-            ok3 = (4/5. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 5/4.) and (1/2. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 2.)
-            ok4 = (2/3. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 3/2.) and (3/4. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 4/3.)
+            ok1 = (9./10. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 10./9.)
+            ok2 = (9./10. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 10./9.)
+            ok3 = (4./5. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 5./4.) and (1./2. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 2.)
+            ok4 = (2./3. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 3./2.) and (3./4. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 4./3.)
             OK = any(ok1, ok2, ok3, ok4)
             if not OK:
                 print("Sample sizes or standard errors are not balanced. T2 test is recommended.")
@@ -2368,11 +2371,11 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
     n = ni.sum()
     xi = x_grouped.mean()
     si = x_grouped.var()
-    sin = 1 / (n - x_groups_unique.size) * np.sum(si * (ni - 1))
+    sin = 1. / (n - x_groups_unique.size) * np.sum(si * (ni - 1))
 
     def compare(i, j):
         dif = xi[i] - xi[j]
-        A = sin * 0.5 * (1 / ni[i] + 1 / ni[j])
+        A = sin * 0.5 * (1. / ni[i] + 1. / ni[j])
         q_val = dif / np.sqrt(A)
         return q_val
 
@@ -2466,7 +2469,7 @@ def posthoc_dscf(a, val_col = None, group_col = None, sort = False):
 
     def get_ties(x):
         t = x.value_counts().values
-        c = np.sum((t ** 3 - t) / 12)
+        c = np.sum((t ** 3 - t) / 12.)
         return c
 
     def compare(i, j):
