@@ -30,7 +30,7 @@ author = 'Maksim Terpilowski'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.3.9'
+release = '0.4.0'
 
 
 # -- General configuration ---------------------------------------------------
