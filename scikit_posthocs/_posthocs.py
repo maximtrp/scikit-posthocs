@@ -2400,7 +2400,7 @@ def posthoc_dscf(a, val_col = None, group_col = None, sort = False):
     one-factorial layout with non-normally distributed residuals. As opposed to
     the all-pairs comparison procedures that depend on Kruskal ranks, the DSCF
     test is basically an extension of the U-test as re-ranking is conducted for
-    each pairwise test.
+    each pairwise test [1]_, [2]_, [3]_.
 
     Parameters
     ----------

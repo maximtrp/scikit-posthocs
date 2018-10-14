@@ -10,6 +10,8 @@ Welcome to scikit-posthocs documentation!
    :maxdepth: 2
    :caption: Contents:
 
+
+
    Post-hocs API <posthocs_api>
    Plotting API <plotting_api>
    Outliers API <outliers_api>
