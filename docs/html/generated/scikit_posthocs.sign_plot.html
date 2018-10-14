@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>scikit_posthocs.sign_plot &#8212; scikit-posthocs 0.3.9 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Outliers API reference" href="../outliers_api.html" />
+    <link rel="prev" title="scikit_posthocs.sign_table" href="scikit_posthocs.sign_table.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          scikit-posthocs</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../posthocs_api.html">Post-hocs API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../plotting_api.html">Plotting API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../outliers_api.html">Outliers API</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">scikit_posthocs.sign_plot</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="scikit_posthocs.sign_table.html" title="Previous Chapter: scikit_posthocs.sign_table"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; scikit_postho...</span>
+    </a>
+  </li>
+  <li>
+    <a href="../outliers_api.html" title="Next Chapter: Outliers API reference"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Outliers API ... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../_sources/generated/scikit_posthocs.sign_plot.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="scikit-posthocs-sign-plot">
+<h1>scikit_posthocs.sign_plot<a class="headerlink" href="#scikit-posthocs-sign-plot" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="scikit_posthocs.sign_plot">
+<code class="descclassname">scikit_posthocs.</code><code class="descname">sign_plot</code><span class="sig-paren">(</span><em>x</em>, <em>g=None</em>, <em>flat=False</em>, <em>labels=True</em>, <em>cmap=None</em>, <em>cbar_ax_bbox=None</em>, <em>ax=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scikit_posthocs.sign_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Significance plot, a heatmap of p values (based on Seaborn).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>x</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like, ndarray or DataFrame</span></dt>
+<dd><p class="first last">If flat is False (default), x must be an array, any object exposing
+the array interface, containing p values. If flat is True, x must be
+a sign_array (returned by <cite>scikit_posthocs.sign_array</cite> function)</p>
+</dd>
+<dt><strong>g</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like or ndarray, optional</span></dt>
+<dd><p class="first last">An array, any object exposing the array interface, containing
+group names.</p>
+</dd>
+<dt><strong>flat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If <cite>flat</cite> is True, plots a significance array as a heatmap using
+seaborn. If <cite>flat</cite> is False (default), plots an array of p values.
+Non-flat mode is useful if you need to  differentiate significance
+levels visually. It is the preferred mode.</p>
+</dd>
+<dt><strong>labels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Plot axes labels (default) or not.</p>
+</dd>
+<dt><strong>cmap</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list, optional</span></dt>
+<dd><p class="first">1) If flat is False (default):
+List consisting of five elements, that will be exported to
+ListedColormap method of matplotlib. First is for diagonal
+elements, second is for non-significant elements, third is for
+p &lt; 0.001, fourth is for p &lt; 0.01, fifth is for p &lt; 0.05.</p>
+<p class="last">2) If flat is True:
+List consisting of three elements, that will be exported to
+ListedColormap method of matplotlib. First is for diagonal
+elements, second is for non-significant elements, third is for
+significant ones.
+3) If not defined, default colormaps will be used.</p>
+</dd>
+<dt><strong>cbar_ax_bbox</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list, optional</span></dt>
+<dd><p class="first last">Colorbar axes position rect [left, bottom, width, height] where
+all quantities are in fractions of figure width and height.
+Refer to <cite>matplotlib.figure.Figure.add_axes</cite> for more information.
+Default is [0.95, 0.35, 0.04, 0.3].</p>
+</dd>
+<dt><strong>ax</strong> <span class="classifier-delimiter">:</span> <span class="classifier">matplotlib Axes, optional</span></dt>
+<dd><p class="first last">Axes in which to draw the plot, otherwise use the currently-active Axes.</p>
+</dd>
+<dt><strong>kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">other keyword arguments</span></dt>
+<dd><p class="first last">Keyword arguments to be passed to seaborn heatmap method. These
+keyword args cannot be used: cbar, vmin, vmax, center.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Axes object with the heatmap (and ColorBase object of cbar if `flat` is set to</strong></dt>
+<dd></dd>
+<dt><strong>False).</strong></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>  <span class="mi">1</span><span class="p">,</span>  <span class="mi">1</span><span class="p">],</span>
+<span class="go">                  [ 1, -1,  0],</span>
+<span class="go">                  [ 1,  0, -1]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ph</span><span class="o">.</span><span class="n">sign_plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">flat</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Maksim Terpilowski.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

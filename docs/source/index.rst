@@ -10,7 +10,8 @@ Welcome to scikit-posthocs documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   Introduction <intro>
+   Installation <installation>
 
    Post-hocs API <posthocs_api>
    Plotting API <plotting_api>
