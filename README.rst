@@ -4,6 +4,8 @@ scikit-posthocs
 
 .. image:: https://travis-ci.org/maximtrp/scikit-posthocs.svg?branch=master
     :target: https://travis-ci.org/maximtrp/scikit-posthocs
+.. image:: https://img.shields.io/readthedocs/scikit-posthocs.svg
+    :target: https://scikit-posthocs.readthedocs.io
 .. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg
     :target: https://github.com/maximtrp/scikit-posthocs/issues
 .. image:: https://img.shields.io/pypi/v/scikit-posthocs.svg
