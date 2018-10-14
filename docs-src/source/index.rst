@@ -8,7 +8,6 @@ Welcome to scikit-posthocs documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    Introduction <intro>
    Installation <installation>
