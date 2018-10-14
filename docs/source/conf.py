@@ -5,7 +5,6 @@
 # This file does only contain a selection of the most common options. For a
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
-import sphinx_rtd_theme
 
 
 # -- Path setup --------------------------------------------------------------
@@ -16,7 +15,10 @@ import sphinx_rtd_theme
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../'))
+import scikit_posthocs
+import sphinx_rtd_theme
+
+#sys.path.insert(0, os.path.abspath('../../'))
 
 
 # -- Project information -----------------------------------------------------
