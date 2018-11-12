@@ -159,7 +159,7 @@ def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort =
     if isinstance(a, DataFrame):
         x = a.copy()
         if not sort:
-            x[group_col] = Categorical(x[group_col], ordered=True)
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
         x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_groups_unique = x[group_col].unique()
         x_len = x_groups_unique.size
@@ -443,7 +443,7 @@ def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = T
     if isinstance(a, DataFrame):
         x = a.copy()
         if not sort:
-            x[group_col] = Categorical(x[group_col], ordered=True)
+            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
         x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
         x_groups_unique = x[group_col].unique()
@@ -813,7 +813,7 @@ def posthoc_npm_test(a, y_col = None, group_col = None, sort = False, p_adjust =
     x = __convert_to_df(a, y_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
     x.sort_values(by=[group_col], ascending=True, inplace=True)
     x_groups_unique = x[group_col].unique()
@@ -1165,8 +1165,8 @@ def posthoc_durbin(a, y_col = None, block_col = None, group_col = None, melted =
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
-        x[block_col] = Categorical(x[block_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
     x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
 
@@ -1262,7 +1262,7 @@ def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort =
     x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     x.sort_values(by=[group_col], ascending=True, inplace=True)
 
     groups = x[group_col].unique()
@@ -1388,8 +1388,8 @@ def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
-        x[block_col] = Categorical(x[block_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
     x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
 
@@ -1491,7 +1491,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
     x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     x.sort_values(by=[group_col], ascending=True, inplace=True)
 
     k = x[group_col].unique().size
@@ -1661,7 +1661,7 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
     x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     x.sort_values(by=[group_col], ascending=True, inplace=True)
 
     groups = x[group_col].unique()
@@ -2166,7 +2166,7 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
     x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
     x.sort_values(by=[group_col], ascending=True, inplace=True)
     groups = x[group_col].unique()
@@ -2261,7 +2261,7 @@ def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = Fa
     x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
     x.sort_values(by=[group_col], ascending=True, inplace=True)
     groups = x[group_col].unique()
@@ -2365,7 +2365,7 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
     x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
     x.sort_values(by=[group_col], ascending=True, inplace=True)
     groups = x[group_col].unique()
@@ -2460,7 +2460,7 @@ def posthoc_dscf(a, val_col = None, group_col = None, sort = False):
     x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
     x.sort_values(by=[group_col], ascending=True, inplace=True)
     groups = x[group_col].unique()
@@ -2556,7 +2556,7 @@ def posthoc_osrt(a, val_col = None, group_col = None, sort = False):
     x = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col],  ordered=True)
+        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
 
     x.sort_values(by=[group_col], ascending=True, inplace=True)
     groups = x[group_col].unique()
