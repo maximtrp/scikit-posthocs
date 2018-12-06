@@ -1,0 +1,23 @@
+{
+  "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+    {
+      "@id": "https://orcid.org/0000-0003-2586-4633",
+      "@type": "Person",
+      "email": "maximtrp@gmail.com",
+      "name": "Maksim A. Terpilowski",
+      "affiliation": "Institute of Evolutionary Physiology and Biochemistry, Saint Petersburg, Russia"
+    }
+  ],
+  "identifier": "",
+  "codeRepository": "https://github.com/maximtrp/scikit-posthocs",
+  "datePublished": "2018-12-06",
+  "dateModified": "2018-12-06",
+  "dateCreated": "2018-12-06",
+  "description": "A Python package for pairwise multiple comparison post hoc tests and outliers detection",
+  "keywords": "python,statistics,posthoc",
+  "license": "BSD 3-Clause License",
+  "title": "scikit-posthocs: Pairwise multiple comparison tests in Python",
+  "version": "v0.4.0"
+}
