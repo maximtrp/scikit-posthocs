@@ -260,7 +260,7 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
     Rs, ls = np.zeros(outliers, dtype = np.float), np.zeros(outliers, dtype = np.float)
     ms = []
 
-    data = np.array(data)
+    data = np.sort(np.array(data))
     data_proc = np.copy(data)
     n = data_proc.size
     mean = np.mean(data_proc)
