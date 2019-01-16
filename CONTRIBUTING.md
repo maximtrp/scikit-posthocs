@@ -4,7 +4,7 @@ Currently, all support is provided on GitHub. Please open an issue with your bug
 
 # Bugs
 
-If you have found a bug, open a GitHub issue containing the following information:
+If you have found a bug, open a GitHub issue using `Bug report` template. Ensure that you have included the following information:
 
 * Full error traceback.
 * Steps to reproduce a bug.
