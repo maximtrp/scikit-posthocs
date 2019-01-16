@@ -10,6 +10,9 @@ assignees: maximtrp
 **Describe the bug**
 A clear and concise description of what the bug is.
 
+**Dataset**
+Please provide a link to the dataset you get the bug with.
+
 **To Reproduce**
 Steps to reproduce the behavior:
 1. Go to '...'
