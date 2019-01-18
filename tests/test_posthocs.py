@@ -2,6 +2,10 @@ import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import unittest
+import matplotlib as mpl
+if os.environ.get('DISPLAY','') == '':
+    print('No display found. Using non-interactive Agg backend')
+    mpl.use('Agg')
 import scikit_posthocs._posthocs as sp
 import scikit_posthocs._outliers as so
 import scikit_posthocs._plotting as splt
