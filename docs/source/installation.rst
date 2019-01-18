@@ -12,7 +12,7 @@ You can also use ``pip`` to install the development version from GitHub::
 Dependencies
 ------------
 
-Package is compatible with both major versions of Python and have the following dependencies:
+Package is compatible with both major versions of Python and has the following dependencies:
 
 * `numpy <http://www.numpy.org/>`_
 * `scipy <https://www.scipy.org/>`_

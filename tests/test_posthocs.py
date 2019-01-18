@@ -3,11 +3,83 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import unittest
 import scikit_posthocs._posthocs as sp
+import scikit_posthocs._outliers as so
+import scikit_posthocs._plotting as splt
 import seaborn as sb
 import numpy as np
+import matplotlib.axes as ma
 
 class TestPosthocs(unittest.TestCase):
 
+    # Plotting tests
+    def test_sign_array(self):
+
+        p_values = np.array([[0., 0.00119517, 0.00278329],
+                             [0.00119517, 0. , 0.18672227],
+                             [0.00278329, 0.18672227, 0.]])
+        test_results = splt.sign_array(p_values)
+        correct_results = np.array([[-1,1,1],[1,-1,0],[1,0,-1]])
+        self.assertTrue(np.all(test_results == correct_results))
+
+    def test_sign_table(self):
+
+        p_values = np.array([[-1.,0.00119517,0.00278329],
+                             [0.00119517,-1.,0.18672227],
+                             [0.00278329,0.18672227,-1.]])
+        test_results = splt.sign_table(p_values)
+        correct_results = np.array([['-','**','**'],
+                                    ['**','-','NS'],
+                                    ['**','NS','-']], dtype=object)
+        self.assertTrue(np.all(test_results == correct_results))
+
+    def test_sign_plot(self):
+
+        x = np.array([[-1,  1,  1],
+                      [ 1, -1,  0],
+                      [ 1,  0, -1]])
+        a = splt.sign_plot(x, flat = True)
+        self.assertTrue(isinstance(a, ma._subplots.Axes))
+
+    # Outliers tests
+    def test_outliers_iqr(self):
+
+        x = np.array([4,5,6,10,12,4,3,1,2,3,23,5,3])
+        correct_results = np.array([12, 23])
+        test_results = so.outliers_iqr(x, ret = 'outliers')
+        self.assertTrue(np.all(test_results == correct_results))
+
+    def test_outliers_grubbs(self):
+
+        x = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18,245.57])
+        test_results = so.outliers_grubbs(x)
+        correct_results = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18])
+        self.assertTrue(np.all(test_results == correct_results))
+
+    def test_outliers_tietjen(self):
+
+        x = np.array([-1.40,-0.44,-0.30,-0.24,-0.22,-0.13,-0.05,0.06,0.10,
+                      0.18,0.20,0.39,0.48,0.63,1.01])
+        test_results = so.outliers_tietjen(x, 2)
+        correct_results = np.array([-0.44,-0.3,-0.24,-0.22,-0.13,-0.05,0.06,
+                                    0.1,0.18,0.2,0.39,0.48,0.63])
+        self.assertTrue(np.all(test_results == correct_results))
+
+    def test_outliers_gesd(self):
+
+        x = np.array([-0.25, 0.68, 0.94, 1.15, 1.2, 1.26, 1.26, 1.34, 1.38, 1.43, 1.49, 1.49, 1.55, 1.56, 1.58, 1.65, 1.69, 1.7, 1.76, 1.77, 1.81, 1.91, 1.94, 1.96, 1.99, 2.06, 2.09, 2.1, 2.14, 2.15, 2.23, 2.24, 2.26, 2.35, 2.37, 2.4, 2.47, 2.54, 2.62, 2.64, 2.9, 2.92, 2.92, 2.93, 3.21, 3.26, 3.3, 3.59, 3.68, 4.3, 4.64, 5.34, 5.42, 6.01])
+
+        test_results = so.outliers_gesd(x, 5)
+        correct_results = np.array([-0.25,  0.68,  0.94,  1.15,  1.2 ,  1.26,
+                1.26,  1.34,  1.38,  1.43,  1.49,  1.49,  1.55,  1.56,  1.58,
+                1.65,  1.69,  1.7 ,  1.76,  1.77,  1.81,  1.91,  1.94,  1.96,
+                1.99,  2.06,  2.09,  2.1 ,  2.14,  2.15,  2.23,  2.24,  2.26,
+                2.35,  2.37,  2.4 ,  2.47,  2.54,  2.62,  2.64,  2.9 ,  2.92,
+                2.92,  2.93,  3.21,  3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
+
+        self.assertTrue(np.all(test_results == correct_results))
+
+
+    # Post hocs tests
     df = sb.load_dataset("exercise")
     df_bn = np.array([[4,3,4,4,5,6,3],
                       [1,2,3,5,6,7,7],

@@ -24,11 +24,11 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 'scikit-posthocs'
-copyright = '2018, Maksim Terpilowski'
+copyright = '2019, Maksim Terpilowski'
 author = 'Maksim Terpilowski'
 
 # The short X.Y version
-version = ''
+version = '0.4.0'
 # The full version, including alpha/beta/rc tags
 release = '0.4.0'
 

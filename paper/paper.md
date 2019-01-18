@@ -17,9 +17,9 @@ bibliography: paper.bib
 
 # Summary
 
-Python currently lacks implementation of many multiple pairwise (post hoc) comparison tests that are routinely performed following a statistically significant result of a parametric or nonparametric analysis of variance (ANOVA) test to assess the differences between group levels.
+Post hoc tests are routinely performed as a step of statistical data analysis to assess the differences between group levels if a statistically significant result of a parametric or nonparametric analysis of variance (ANOVA) test has been obtained. Currently, Python lacks implementation of many multiple pairwise comparison tests. The ``scikit-posthocs`` package is aimed at filling this gap by providing a number of nonparametric and parametric pairwise comparisons tests as well as outlier detection algorithms implemented in Python. It can be useful for data scientists and researchers as a part of data analysis routine or a pipeline.
 
-The ``scikit-posthocs`` package is aimed at filling this gap by providing a number of nonparametric and parametric pairwise comparisons tests as well as outlier detection algorithms implemented in Python:
+The following post hoc tests are implemented in this package:
 
 1. Conover, Dunn, and Nemenyi tests (for use with Kruskal-Wallis test).
 2. Conover, Nemenyi, Siegel, and Miller tests (for use with Friedman test).

@@ -11,6 +11,7 @@ Welcome to scikit-posthocs documentation!
 
    Introduction <intro>
    Installation <installation>
+   Examples <examples>
 
    Post-hocs API <posthocs_api>
    Plotting API <plotting_api>

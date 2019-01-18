@@ -3,7 +3,7 @@
 import numpy as np
 from scipy.stats import t
 
-def outliers_iqr(x, return_='filtered', coef = 1.5):
+def outliers_iqr(x, ret='filtered', coef = 1.5):
 
     """
     Simple detection of potential outliers based on interquartile range (IQR).
@@ -20,7 +20,7 @@ def outliers_iqr(x, return_='filtered', coef = 1.5):
         An array, any object exposing the array interface, containing
         p values.
 
-    return_ : str, optional
+    ret : str, optional
         Specifies object to be returned. Available options are:
         'filtered' : return a filtered array (default)
         'outliers' : return outliers
@@ -50,11 +50,11 @@ def outliers_iqr(x, return_='filtered', coef = 1.5):
     ll = q1 - iqr * coef
     ul = q3 + iqr * coef
 
-    if return_ == 'indices':
+    if ret == 'indices':
         return np.where((x >= ll) & (x <= ul))[0]
-    elif return_ == 'outliers':
+    elif ret == 'outliers':
         return x[(x < ll) | (x > ul)]
-    elif return_ == 'outliers_indices':
+    elif ret == 'outliers_indices':
         return np.where((x < ll) | (x > ul))[0]
     else:
         return x[(x >= ll) & (x <= ul)]

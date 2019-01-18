@@ -1849,15 +1849,15 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
     g : array_like or pandas Series object, 1d
         An array, any object exposing the array interface, containing
-        groups names. Can be string or integers.
+        groups names. Can be strings or integers.
 
     alpha : float, optional
         Significance level for the test. Default is 0.05.
 
     Returns
     -------
-    Numpy ndarray where 0 is False (not significant), 1 is True (significant),
-    and -1 is for diagonal elements.
+    Numpy ndarray with 0, 1, and -1 values, where 0 is False (not significant),
+    1 is True (significant), and -1 is for diagonal elements.
 
     Examples
     --------
