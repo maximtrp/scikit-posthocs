@@ -13,8 +13,7 @@ scikit-posthocs
 .. image:: https://img.shields.io/badge/donate-PayPal-blue.svg
     :target: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K5J3W3WUQ754U&lc=US&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 
-This Python package provides statistical post-hoc tests for pairwise multiple
-comparisons and outlier detection algorithms.
+This Python package provides statistical post-hoc tests for pairwise multiple comparisons that are usually performed within statistical data analysis to assess the differences between group levels if a statistically significant result of analysis of variance (ANOVA) test has been obtained. Package also features basic plotting methods and outlier detection algorithms. It can be useful for data scientists and researchers as a tool in data analysis routine or a pipeline.
 
 .. contents:: Contents:
 
