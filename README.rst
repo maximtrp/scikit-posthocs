@@ -13,7 +13,7 @@ scikit-posthocs
 .. image:: https://img.shields.io/badge/donate-PayPal-blue.svg
     :target: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K5J3W3WUQ754U&lc=US&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 
-`scikit-posthocs` is a Python package which provides post hoc tests for pairwise multiple comparisons that are usually performed in statistical data analysis to assess the differences between group levels if a statistically significant result of ANOVA test has been obtained. `scikit-posthocs` is tightly integrated with Pandas DataFrames and NumPy arrays to ensure fast computations and convenient data import and storage.
+``scikit-posthocs`` is a Python package which provides post hoc tests for pairwise multiple comparisons that are usually performed in statistical data analysis to assess the differences between group levels if a statistically significant result of ANOVA test has been obtained. ``scikit-posthocs`` is tightly integrated with Pandas DataFrames and NumPy arrays to ensure fast computations and convenient data import and storage.
 
 .. contents:: Contents:
 
@@ -22,9 +22,9 @@ Background
 
 Python statistical ecosystem is comprised of multiple packages. However, it still has numerous gaps and is surpassed by R packages and capabilities.
 
-`SciPy <https://www.scipy.org/>`_ (version 1.2.0) offers *Student*, *Wilcoxon*, and *Mann-Whitney* tests which are not adapted to multiple pairwise comparisons. `Statsmodels <http://statsmodels.sourceforge.net/>`_ (version 0.9.0) features *TukeyHSD* test which needs some extra actions to be fluently integrated into a data analysis pipeline. It also has a good helper method ``statsmodels.sandbox.stats.multicomp.MultiComparison.allpairtest`` which requires an external function (such as `scipy.stats.ttest_ind`) to make multiple pairwise comparisons. It includes ``statsmodels.stats.multitest.multipletests`` method which makes *p* values corrections for multiple tests. `PMCMRplus <https://rdrr.io/cran/PMCMRplus/>`_ is a very good R package which has no rivals in Python as it offers more than 40 various tests (including post hoc tests) for factorial and block design data. PMCMRplus was an inspiration and a reference for `scikit-posthocs`.
+`SciPy <https://www.scipy.org/>`_ (version 1.2.0) offers *Student*, *Wilcoxon*, and *Mann-Whitney* tests which are not adapted to multiple pairwise comparisons. `Statsmodels <http://statsmodels.sourceforge.net/>`_ (version 0.9.0) features *TukeyHSD* test which needs some extra actions to be fluently integrated into a data analysis pipeline. It also has a good helper method ``statsmodels.sandbox.stats.multicomp.MultiComparison.allpairtest`` which requires an external function (such as ``scipy.stats.ttest_ind``) to make multiple pairwise comparisons. It includes ``statsmodels.stats.multitest.multipletests`` method which makes *p* values corrections for multiple tests. `PMCMRplus <https://rdrr.io/cran/PMCMRplus/>`_ is a very good R package which has no rivals in Python as it offers more than 40 various tests (including post hoc tests) for factorial and block design data. PMCMRplus was an inspiration and a reference for ``scikit-posthocs``.
 
-`scikit-posthocs` attempts to improve Python statistical capabilities by offering a lot of parametric and nonparametric post hoc tests along with outliers detection and basic plotting methods.
+``scikit-posthocs`` attempts to improve Python statistical capabilities by offering a lot of parametric and nonparametric post hoc tests along with outliers detection and basic plotting methods.
 
 
 Features
