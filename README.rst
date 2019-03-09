@@ -13,9 +13,17 @@ scikit-posthocs
 .. image:: https://img.shields.io/badge/donate-PayPal-blue.svg
     :target: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K5J3W3WUQ754U&lc=US&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 
-This Python package provides statistical post-hoc tests for pairwise multiple comparisons that are usually performed within statistical data analysis to assess the differences between group levels if a statistically significant result of analysis of variance (ANOVA) test has been obtained. Package also features basic plotting methods and outlier detection algorithms. It can be useful for data scientists and researchers as a tool in data analysis routine or a pipeline.
+`scikit-posthocs` is a Python package which provides post hoc tests for pairwise multiple comparisons that are usually performed in statistical data analysis to assess the differences between group levels if a statistically significant result of ANOVA test has been obtained. `scikit-posthocs` is tightly integrated with Pandas DataFrames and NumPy arrays to ensure fast computations and convenient data import and storage.
 
 .. contents:: Contents:
+
+Background
+----------
+
+Python statistical ecosystem is comprised of multiple packages. However, it still has numerous gaps and is surpassed by R packages and capabilities. `SciPy <https://www.scipy.org/>`_ (version 1.2.0) offers *Student*, *Wilcoxon*, and *Mann-Whitney* tests which are not adapted to multiple pairwise comparisons. `Statsmodels <http://statsmodels.sourceforge.net/>`_ (version 0.9.0) features *TukeyHSD* test which needs some extra actions to be fluently integrated into a data analysis pipeline. It also has a good helper method `statsmodels.sandbox.stats.multicomp.MultiComparison.allpairtest` which requires an external function (such as `scipy.stats.ttest_ind`) to make multiple pairwise comparisons. It includes `statsmodels.stats.multitest.multipletests` method which makes *p* values corrections for multiple tests. `PMCMRplus <https://rdrr.io/cran/PMCMRplus/>`_ is a very good R package which has no rivals in Python as it offers more than 40 various tests (including post hoc tests) for factorial and block design data. PMCMRplus was an inspiration and a reference for `scikit-posthocs`.
+
+`scikit-posthocs` attempts to improve Python statistical capabilities by offering a lot of parametric and nonparametric post hoc tests along with outliers detection and basic plotting methods.
+
 
 Features
 --------
@@ -32,16 +40,16 @@ Features
   - Scheffe test.
   - Tamhane T2 test.
 
-- Plotting functionality (e.g. significance plots).
-
-- Outlier detection algorithms:
+- Outliers detection tests:
 
   - Simple test based on interquartile range (IQR).
   - Grubbs test.
   - Tietjen-Moore test.
   - Generalized Extreme Studentized Deviate test (ESD test).
 
-  All tests are capable of p adjustments for multiple pairwise comparisons.
+- Plotting functionality (e.g. significance plots).
+
+All post hoc tests are capable of p adjustments for multiple pairwise comparisons.
 
 Dependencies
 ------------
@@ -72,7 +80,7 @@ List or NumPy array
 .. code:: python
 
   import scikit_posthocs as sp
-  x = [[1,2,3,5,1], [12,31,54], [10,12,6,74,11]]
+  x = [[1,2,3,4,5], [10,11,12], [21,22,23,24,25]]
   sp.posthoc_conover(x, p_adjust = 'holm')
 
 ::
@@ -148,7 +156,7 @@ Custom colormap applied to a plot:
 
 .. image:: images/plot-conover-custom-cmap.png
 
-Credits
--------
+Acknowledgement
+---------------
 
 Thorsten Pohlert, PMCMR author and maintainer
