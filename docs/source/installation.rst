@@ -5,7 +5,7 @@ The latest version can be installed from PyPi using ``pip``::
 
   pip install scikit-posthocs
 
-You can also use ``pip`` to install the development version from GitHub::
+You can also use ``pip`` to install the development version from GitHub (not recommended for general users)::
 
   pip install git+https://github.com/maximtrp/scikit-posthocs.git
 
@@ -24,4 +24,4 @@ Package is compatible with both major versions of Python and has the following d
 Bugs
 ----
 
-Please report any bugs using issues tracker on `GitHub <https://github.com/maximtrp/scikit-posthocs>`_.
+Please report any bugs using issues tracker on `GitHub <https://github.com/maximtrp/scikit-posthocs/issues>`_.
