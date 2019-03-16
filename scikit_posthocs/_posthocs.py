@@ -8,32 +8,96 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame, Categorical, Series
 
-def __convert_to_df(a, val_col, group_col):
+def __convert_to_df(a, val_col = 'val', group_col = 'groups', val_id = None, group_id = None):
+
+    '''
+    Hidden helper method to create a DataFrame with input data for further
+    processing.
+
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas DataFrame.
+        Array must be two-dimensional. Second dimension may vary,
+        i.e. groups may have different lengths.
+
+    val_col : str, optional
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
+
+    group_col : str, optional
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
+
+    val_id : int, optional
+        Index of a column that contains numerical values (test variable).
+        Should be specified if a NumPy ndarray is used as an input. It will be
+        inferred from data, if not specified.
+
+    group_id : int, optional
+        Index of a column that contains categorical values (grouping variable).
+        Should be specified if a NumPy ndarray is used as an input. It will be
+        inferred from data, if not specified.
+
+    Returns
+    -------
+    x : pandas DataFrame
+        DataFrame with input data, `val_col` column contains numerical values and
+        `group_col` column contains categorical values.
+
+    val_col : str
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
+
+    group_col : str
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
+
+    Notes
+    -----
+    Inferrence algorithm for determining `val_id` and `group_id` args is rather
+    simple, therefore it is better to specify them explicitly to prevent errors.
+
+    '''
 
     if isinstance(a, DataFrame):
         x = a.copy()
-        if not all([group_col, val_col]):
-            raise ValueError('group_col, val_col must be explicitly specified')
-    else:
-        x = np.array(a)
+        if not {group_col, val_col}.issubset(a.columns):
+            raise ValueError('Specify correct column names using `group_col` and `val_col` args')
+        return x, val_col, group_col
 
-        if not all([group_col, val_col]):
-            try:
-                groups = np.array([len(a) * [i + 1] for i, a in enumerate(x)])
-                groups = sum(groups.tolist(), [])
-                x = sum(x.tolist(), [])
-                x = np.column_stack([x, groups])
-                val_col = 0
-                group_col = 1
-            except:
-                raise ValueError('array cannot be processed, provide val_col and group_col args')
+    elif isinstance(a, list) or (isinstance(a, np.ndarray) and not a.shape.count(2)):
+        grps_len = map(len, a)
+        grps = list(it.chain(*[[i+1] * l for i, l in enumerate(grps_len)]))
+        vals = list(it.chain(*a))
+        return pd.DataFrame({val_col: vals, group_col: grps}), val_col, group_col
 
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
-        x.rename(columns={group_col: 'groups', val_col: 'y'}, inplace=True)
-        group_col = 'groups'
-        val_col = 'y'
+    elif isinstance(a, np.ndarray):
 
-    return x
+        # cols ids not defined
+        # trying to infer
+        if not(all([val_id, group_id])):
+
+            if np.argmax(a.shape):
+                a = a.T
+
+            ax = [np.unique(a[:, 0]).size, np.unique(a[:, 1]).size]
+
+            if np.asscalar(np.diff(ax)):
+                __val_col = np.argmax(ax)
+                __group_col = np.argmin(ax)
+            else:
+                raise ValueError('Cannot infer input format.\nPlease specify `val_id` and `group_id` args')
+
+            cols = {__val_col: val_col,
+                    __group_col: group_col}
+        else:
+            cols = {val_id: val_col,
+                    group_id: group_col}
+
+        cols_vals = dict(sorted(cols.items())).values()
+        return pd.DataFrame(a, columns=cols_vals), val_col, group_col
+
 
 def __convert_to_block_df(a, y_col, group_col, block_col, melted):
 
@@ -86,12 +150,12 @@ def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort =
         i.e. groups may have different lengths.
 
     val_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains values.
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     p_adjust : str, optional
         Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
@@ -108,13 +172,13 @@ def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort =
         'fdr_tsbky' : two stage fdr correction (non-negative)
 
     sort : bool, optional
-        Specifies whether to sort DataFrame by group_col or not. Recommended
+        Specifies whether to sort DataFrame by `group_col` or not. Recommended
         unless you sort your data manually.
 
     Returns
     -------
-    Numpy ndarray or pandas DataFrame of p values depending on input
-    data type.
+    Numpy ndarray or pandas DataFrame (depending on input data type) with p
+    values.
 
     Notes
     -----
@@ -137,81 +201,59 @@ def posthoc_conover(a, val_col = None, group_col = None, p_adjust = None, sort =
     '''
 
     def compare_conover(i, j):
-        diff = np.abs(x_ranks_avg[i] - x_ranks_avg[j])
-        B = (1. / x_lens[i] + 1. / x_lens[j])
-        D = (x_len_overall - 1. - H) / (x_len_overall - x_len)
+        diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
+        B = (1. / x_lens.loc[i] + 1. / x_lens.loc[j])
+        D = (n - 1. - H_cor) / (n - x_len)
         t_value = diff / np.sqrt(S2 * B * D)
-        p_value = 2. * ss.t.sf(np.abs(t_value), df = x_len_overall - x_len)
+        p_value = 2. * ss.t.sf(np.abs(t_value), df = n - x_len)
         return p_value
 
-    def get_ties(x):
-        x_sorted = np.array(np.sort(x))
-        tie_sum = 0
-        pos = 0
-        while pos < x_len_overall:
-            n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
-            pos = pos + n_ties
-            if n_ties > 1:
-                tie_sum += n_ties ** 3. - n_ties
-        c = np.min([1., 1. - tie_sum / (x_len_overall ** 3. - x_len_overall)])
-        return c
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
-    if isinstance(a, DataFrame):
-        x = a.copy()
-        if not sort:
-            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
-        x_groups_unique = x[group_col].unique()
-        x_len = x_groups_unique.size
-        x_lens = x.groupby(by=group_col)[val_col].count().values
-        x_flat = x[val_col].values
-        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
-        x_grouped = np.array([x_flat[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
+    if not sort:
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
-    else:
-        x = np.array(a)
-        x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
-        x_flat = np.concatenate(x_grouped)
-        x_len = len(x_grouped)
-        x_lens = np.asarray([len(a) for a in x_grouped])
-        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
+    x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
+    n = len(x.index)
+    x_groups_unique = np.unique(x[_group_col])
+    x_len = x_groups_unique.size
+    x_lens = x.groupby(_group_col)[_val_col].count()
 
-    x_len_overall = len(x_flat)
+    x['ranks'] = x[_val_col].rank()
+    x_ranks_avg = x.groupby(_group_col)['ranks'].mean()
+    x_ranks_sum = x.groupby(_group_col)['ranks'].sum()
 
-    if any(x_lens == 0):
-        raise ValueError("All groups must contain data")
+    # ties
+    vals = x.groupby('ranks').count()[_val_col].values
+    tie_sum = np.sum(vals[vals != 1] ** 3 - vals[vals != 1])
+    tie_sum = 0 if not tie_sum else tie_sum
+    x_ties = np.min([1., 1. - tie_sum / (n ** 3. - n)])
 
-    x_ranks = ss.rankdata(x_flat)
-    x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
-    x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
-    x_ties = get_ties(x_ranks) #ss.tiecorrect(x_ranks)
-
-    H = ss.kruskal(*x_grouped)[0]
+    H = (12. / (n * (n + 1.))) * np.sum(x_ranks_sum**2 / x_lens) - 3. * (n + 1.)
+    H_cor = H / x_ties
 
     if x_ties == 1:
-        S2 = x_len_overall * (x_len_overall + 1.) / 12.
+        S2 = n * (n + 1.) / 12.
     else:
-        S2 = (1. / (x_len_overall - 1.)) * (np.sum(x_ranks ** 2.) - (x_len_overall * (((x_len_overall + 1.)**2.) / 4.)))
+        S2 = (1. / (n - 1.)) * (np.sum(x['ranks'] ** 2.) - (n * (((n + 1.)**2.) / 4.)))
 
-    vs = np.zeros((x_len, x_len), dtype=np.float)
+    vs = np.zeros((x_len, x_len))
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
     combs = it.combinations(range(x_len), 2)
 
-    for i,j in combs:
-        vs[i, j] = compare_conover(i, j)
+    for i, j in combs:
+        vs[i, j] = compare_conover(x_groups_unique[i], x_groups_unique[j])
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
 
-    if isinstance(x, DataFrame):
-        return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
-    else:
-        return vs
+    return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
+
 
 def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = True):
 
@@ -228,12 +270,12 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
         i.e. groups may have different lengths.
 
     val_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains values.
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     p_adjust : str, optional
         Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
@@ -280,55 +322,34 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
     '''
 
     def compare_dunn(i, j):
-        diff = np.abs(x_ranks_avg[i] - x_ranks_avg[j])
-        A = x_len_overall * (x_len_overall + 1.) / 12.
-        B = (1. / x_lens[i] + 1. / x_lens[j])
+        diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
+        A = n * (n + 1.) / 12.
+        B = (1. / x_lens.loc[i] + 1. / x_lens.loc[j])
         z_value = diff / np.sqrt((A - x_ties) * B)
         p_value = 2. * ss.norm.sf(np.abs(z_value))
         return p_value
 
-    def get_ties(x):
-        x_sorted = np.array(np.sort(x))
-        tie_sum = 0
-        pos = 0
-        while pos < x_len_overall:
-            n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
-            pos = pos + n_ties
-            if n_ties > 1:
-                tie_sum += n_ties ** 3. - n_ties
-        c = tie_sum / (12. * (x_len_overall - 1))
-        return c
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
-    if isinstance(a, DataFrame):
-        x = a.copy()
-        if not sort:
-            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+    if not sort:
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
-        x_groups_unique = x[group_col].unique()
-        x_len = x_groups_unique.size
-        x_lens = x.groupby(by=group_col)[val_col].count().values
-        x_flat = x[val_col].values
+    x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
+    n = len(x.index)
+    x_groups_unique = np.unique(x[_group_col])
+    x_len = x_groups_unique.size
+    x_lens = x.groupby(_group_col)[_val_col].count()
 
-    else:
-        x = np.array(a)
-        x = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
-        x_flat = np.concatenate(x)
-        x_len = len(x)
-        x_lens = np.asarray([len(a) for a in x])
+    x['ranks'] = x[_val_col].rank()
+    x_ranks_avg = x.groupby(_group_col)['ranks'].mean()
 
-    x_len_overall = len(x_flat)
+    # ties
+    vals = x.groupby('ranks').count()[_val_col].values
+    tie_sum = np.sum(vals[vals != 1] ** 3 - vals[vals != 1])
+    tie_sum = 0 if not tie_sum else tie_sum
+    x_ties = tie_sum / (12. * (n - 1))
 
-    if any(x_lens == 0):
-        raise ValueError("All groups must contain data")
-
-    x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
-    x_ranks = ss.rankdata(x_flat)
-    x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
-    x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
-    x_ties = get_ties(x_ranks)
-
-    vs = np.zeros((x_len, x_len), dtype=np.float)
+    vs = np.zeros((x_len, x_len))
     combs = it.combinations(range(x_len), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -336,7 +357,7 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
     vs[:,:] = 0
 
     for i,j in combs:
-        vs[i, j] = compare_dunn(i, j)
+        vs[i, j] = compare_dunn(x_groups_unique[i], x_groups_unique[j])
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
@@ -344,10 +365,8 @@ def posthoc_dunn(a, val_col = None, group_col = None, p_adjust = None, sort = Tr
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
 
-    if isinstance(x, DataFrame):
-        return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
-    else:
-        return vs
+    return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
+
 
 def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = True):
 
@@ -364,12 +383,12 @@ def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = T
         i.e. groups may have different lengths.
 
     val_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains values.
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     dist : str, optional
         Method for determining the p value. The default distribution is "chi"
@@ -404,72 +423,39 @@ def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = T
     '''
 
     def compare_stats_chi(i, j):
-        diff = np.abs(x_ranks_avg[i] - x_ranks_avg[j])
-        A = x_len_overall * (x_len_overall + 1.) / 12.
-        B = (1. / x_lens[i] + 1. / x_lens[j])
+        diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
+        A = n * (n + 1.) / 12.
+        B = (1. / x_lens.loc[i] + 1. / x_lens.loc[j])
         chi = diff ** 2. / (A * B)
         return chi
 
     def compare_stats_tukey(i, j):
-        diff = np.abs(x_ranks_avg[i] - x_ranks_avg[j])
-        B = (1. / x_lens[i] + 1. / x_lens[j])
-        q = diff / np.sqrt((x_len_overall * (x_len_overall + 1.) / 12.) * B)
+        diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
+        B = (1. / x_lens.loc[i] + 1. / x_lens.loc[j])
+        q = diff / np.sqrt((n * (n + 1.) / 12.) * B)
         return q
 
-    def get_ties(x):
-        x_sorted = np.array(np.sort(x))
-        tie_sum = 0
-        pos = 0
-        while pos < x_len_overall:
-            n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
-            pos = pos + n_ties
-            if n_ties > 1:
-                tie_sum += n_ties ** 3. - n_ties
-        c = np.min([1., 1. - tie_sum / (x_len_overall ** 3. - x_len_overall)])
-        return c
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
-    def get_ties_conover(x):
-        x_sorted = np.array(np.sort(x))
-        tie_sum = 0
-        pos = 0
-        while pos < x_len_overall:
-            n_ties = len(x_sorted[x_sorted == x_sorted[pos]])
-            pos = pos + n_ties
-            if n_ties > 1:
-                tie_sum += n_ties ** 3. - n_ties
-        c = np.min([1., 1. - tie_sum / (x_len_overall ** 3. - x_len_overall)])
-        return c
+    if not sort:
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
-    if isinstance(a, DataFrame):
-        x = a.copy()
-        if not sort:
-            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+    x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
+    n = len(x.index)
+    x_groups_unique = np.unique(x[_group_col])
+    x_len = x_groups_unique.size
+    x_lens = x.groupby(_group_col)[_val_col].count()
 
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
-        x_groups_unique = x[group_col].unique()
-        x_len = x_groups_unique.size
-        x_lens = x.groupby(by=group_col)[val_col].count().values
-        x_flat = x[val_col].values
+    x['ranks'] = x[_val_col].rank()
+    x_ranks_avg = x.groupby(_group_col)['ranks'].mean()
 
-    else:
-        x = np.array(a)
-        x = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
-        x_flat = np.concatenate(x)
-        x_len = len(x)
-        x_lens = np.asarray([len(a) for a in x])
+    # ties
+    vals = x.groupby('ranks').count()[_val_col].values
+    tie_sum = np.sum(vals[vals != 1] ** 3 - vals[vals != 1])
+    tie_sum = 0 if not tie_sum else tie_sum
+    x_ties = np.min([1., 1. - tie_sum / (n ** 3. - n)])
 
-    x_len_overall = len(x_flat)
-
-    if any(x_lens == 0):
-        raise ValueError("All groups must contain data")
-
-    x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
-    x_ranks = ss.rankdata(x_flat)
-    x_ranks_grouped = np.array([x_ranks[j:j + x_lens[i]] for i, j in enumerate(x_lens_cumsum)])
-    x_ranks_avg = [np.mean(z) for z in x_ranks_grouped]
-    x_ties = get_ties(x_ranks)
-
-    vs = np.zeros((x_len, x_len), dtype=np.float)
+    vs = np.zeros((x_len, x_len))
     combs = it.combinations(range(x_len), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -478,23 +464,21 @@ def posthoc_nemenyi(a, val_col = None, group_col = None,  dist = 'chi', sort = T
 
     if dist == 'chi':
         for i,j in combs:
-            vs[i, j] = compare_stats_chi(i, j) / x_ties
+            vs[i, j] = compare_stats_chi(x_groups_unique[i], x_groups_unique[j]) / x_ties
 
         vs[tri_upper] = ss.chi2.sf(vs[tri_upper], x_len - 1)
 
     elif dist == 'tukey':
         for i,j in combs:
-            vs[i, j] = compare_stats_tukey(i, j) * np.sqrt(2.)
+            vs[i, j] = compare_stats_tukey(x_groups_unique[i], x_groups_unique[j]) * np.sqrt(2.)
 
         vs[tri_upper] = psturng(vs[tri_upper], x_len, np.inf)
 
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
 
-    if isinstance(x, DataFrame):
-        return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
-    else:
-        return vs
+    return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
+
 
 def posthoc_nemenyi_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False):
 
@@ -581,21 +565,21 @@ def posthoc_nemenyi_friedman(a, y_col = None, block_col = None, group_col = None
         qval = dif / np.sqrt(k * (k + 1.) / (6. * n))
         return qval
 
-    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
+    x, _y_col, _group_col, _block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     #if not sort:
     #    x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     #    x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
-    x.sort_values(by=[group_col, block_col], ascending=True, inplace=True)
+    x.sort_values(by=[_group_col, _block_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
 
-    groups = x[group_col].unique()
+    groups = x[_group_col].unique()
     k = groups.size
-    n = x[block_col].unique().size
+    n = x[_block_col].unique().size
 
-    x['mat'] = x.groupby(block_col)[y_col].rank()
-    R = x.groupby(group_col)['mat'].mean()
-    vs = np.zeros((k, k), dtype=np.float)
+    x['mat'] = x.groupby(_block_col)[_y_col].rank()
+    R = x.groupby(_group_col)['mat'].mean()
+    vs = np.zeros((k, k))
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -707,20 +691,20 @@ def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None
         pval = 2. * ss.t.sf(np.abs(tval), df = (n-1)*(k-1))
         return pval
 
-    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
+    x, _y_col, _group_col, _block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     #if not sort:
     #    x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
     #    x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
-    x.sort_values(by=[group_col,block_col], ascending=True, inplace=True)
+    x.sort_values(by=[_group_col,_block_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
 
-    groups = x[group_col].unique()
+    groups = x[_group_col].unique()
     k = groups.size
-    n = x[block_col].unique().size
+    n = x[_block_col].unique().size
 
-    x['mat'] = x.groupby(block_col)[y_col].rank()
-    R = x.groupby(group_col)['mat'].sum()
+    x['mat'] = x.groupby(_block_col)[_y_col].rank()
+    R = x.groupby(_group_col)['mat'].sum()
     A1 = (x['mat'] ** 2).sum()
     C1 = (n * k * (k + 1) ** 2) / 4
     TT = np.sum([((R[g] - ((n * (k + 1))/2)) ** 2) for g in groups])
@@ -728,7 +712,7 @@ def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None
     A = 2 * k * (1 - T1 / (k * (n-1))) * ( A1 - C1)
     B = (n - 1) * (k - 1)
 
-    vs = np.zeros((k, k), dtype=np.float)
+    vs = np.zeros((k, k))
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -745,7 +729,7 @@ def posthoc_conover_friedman(a, y_col = None, block_col = None, group_col = None
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_npm_test(a, y_col = None, group_col = None, sort = False, p_adjust = None):
+def posthoc_npm_test(a, val_col = None, group_col = None, sort = False, p_adjust = None):
 
     '''
     Calculate pairwise comparisons using Nashimoto and Wright's all-pairs
@@ -760,13 +744,13 @@ def posthoc_npm_test(a, y_col = None, group_col = None, sort = False, p_adjust =
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains y data.
+    val_col : str, optional
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
-    group_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+    group_col : str, optional
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -810,17 +794,17 @@ def posthoc_npm_test(a, y_col = None, group_col = None, sort = False, p_adjust =
 
     '''
 
-    x = __convert_to_df(a, y_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
-    x.sort_values(by=[group_col], ascending=True, inplace=True)
-    x_groups_unique = x[group_col].unique()
+    x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    x_groups_unique = x[_group_col].unique()
     x['ranks'] = x.rank()
-    Ri = x.groupby(group_col)[val_col].mean()
-    ni = x.groupby(group_col)[val_col].count()
-    k = x[group_col].unique().size
+    Ri = x.groupby(_group_col)[_val_col].mean()
+    ni = x.groupby(_group_col)[_val_col].count()
+    k = x[_group_col].unique().size
     n = x.shape[0]
     sigma = np.sqrt(n * (n + 1) / 12.)
     df = np.inf
@@ -846,6 +830,7 @@ def posthoc_npm_test(a, y_col = None, group_col = None, sort = False, p_adjust =
     np.fill_diagonal(p_values, -1)
 
     return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
+
 
 def posthoc_siegel_friedman(a, y_col = None, block_col = None, group_col = None, melted = False, sort = False, p_adjust = None):
 
@@ -1214,13 +1199,13 @@ def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort =
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains y data.
+    val_col : str, optional
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
-    group_col : str
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+    group_col : str, optional
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     midrank : bool, optional
         Type of Anderson-Darling test which is computed. If set to True (default), the
@@ -1259,13 +1244,13 @@ def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort =
 
     '''
 
-    x = __convert_to_df(a, val_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-    x.sort_values(by=[group_col], ascending=True, inplace=True)
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
+    x.sort_values(by=[_group_col], ascending=True, inplace=True)
 
-    groups = x[group_col].unique()
+    groups = x[_group_col].unique()
     k = groups.size
     vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
@@ -1275,7 +1260,7 @@ def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort =
     vs[:,:] = 0
 
     for i, j in combs:
-        vs[i, j] = ss.anderson_ksamp([x.loc[x[group_col] == groups[i], val_col], x.loc[x[group_col] == groups[j], val_col]])[2]
+        vs[i, j] = ss.anderson_ksamp([x.loc[x[_group_col] == groups[i], _val_col], x.loc[x[_group_col] == groups[j], _val_col]])[2]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
@@ -1283,6 +1268,7 @@ def posthoc_anderson(a, val_col = None, group_col = None, midrank = True, sort =
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
+
 
 def posthoc_quade(a, y_col = None, block_col = None, group_col = None, dist = 't', melted = False, sort = False, p_adjust = None):
 
@@ -1455,13 +1441,13 @@ def posthoc_mackwolfe(a, val_col, group_col, p = None, n_perm = 100, sort = Fals
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str or int
-        Name (string) or index (int) of a column in a pandas DataFrame or an
-        array that contains quantitative data.
+    val_col : str, optional
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
-    group_col : str or int
-        Name (string) or index (int) of a column in a pandas DataFrame or an
-        array that contains group names.
+    group_col : str, optional
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     p : int, optional
         The a-priori known peak as an ordinal number of the treatment group
@@ -1602,13 +1588,15 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str or int
-        Name (string) or index (int) of a column in a pandas DataFrame or an
-        array that contains quantitative data.
+    val_col : str, optional
+        Name of a DataFrame column or index of an array column that contains
+        numerical values (test variable). Must be specified if `a` is a pandas
+        DataFrame object.
 
-    group_col : str or int
-        Name (string) or index (int) of a column in a pandas DataFrame or an
-        array that contains group names.
+    group_col : str, optional
+        Name of a DataFrame column or index of an array column  that contains
+        categorical values (grouping variable). Must be specified if `a` is a
+        pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -1658,20 +1646,20 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
 
     '''
 
-    x = __convert_to_df(a, val_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-    x.sort_values(by=[group_col], ascending=True, inplace=True)
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
+    x.sort_values(by=[_group_col], ascending=True, inplace=True)
 
-    groups = x[group_col].unique()
-    n = x[val_col].size
+    groups = x[_group_col].unique()
+    n = x[_val_col].size
     k = groups.size
-    r = ss.rankdata(x[val_col])
+    r = ss.rankdata(x[_val_col])
     x['z_scores'] = ss.norm.ppf(r / (n + 1))
 
-    aj = x.groupby(group_col)['z_scores'].sum()
-    nj = x.groupby(group_col)['z_scores'].count()
+    aj = x.groupby(_group_col)['z_scores'].sum()
+    nj = x.groupby(_group_col)['z_scores'].count()
     s2 = (1. / (n - 1.)) * (x['z_scores'] ** 2.).sum()
     sts = (1. / s2) * np.sum(aj ** 2. / nj)
     param = k - 1
@@ -1701,6 +1689,7 @@ def posthoc_vanwaerden(a, val_col, group_col, sort = False, p_adjust = None):
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
+
 def posthoc_ttest(a, val_col = None, group_col = None, pool_sd = False, equal_var = True, p_adjust = None, sort = True):
 
     '''
@@ -1714,12 +1703,12 @@ def posthoc_ttest(a, val_col = None, group_col = None, pool_sd = False, equal_va
         DataFrame. Array must be two-dimensional.
 
     val_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains values.
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     equal_var : bool, optional
         If True (default), perform a standard independent test
@@ -1843,13 +1832,14 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
     Parameters
     ----------
     x : array_like or pandas Series object, 1d
-        An array, any object exposing the array interface, containing
-        the response variable. NaN values will cause an error. Please
-        handle manually.
+        An array, any object exposing the array interface, containing numerical
+        values (test variable). NaN values will cause an error (please handle
+        manually).
 
     g : array_like or pandas Series object, 1d
         An array, any object exposing the array interface, containing
-        groups names. Can be strings or integers.
+        categorical values (grouping variable). Values can be strings or
+        integers.
 
     alpha : float, optional
         Significance level for the test. Default is 0.05.
@@ -1891,6 +1881,7 @@ def posthoc_tukey_hsd(x, g, alpha = 0.05):
 
     return vs
 
+
 def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = True, alternative = 'two-sided', p_adjust = None, sort = True):
 
     '''
@@ -1903,12 +1894,12 @@ def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = Tr
         DataFrame. Array must be two-dimensional.
 
     val_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains values.
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     use_continuity : bool, optional
         Whether a continuity correction (1/2.) should be taken into account.
@@ -1957,27 +1948,16 @@ def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = Tr
 
     '''
 
-    if isinstance(a, DataFrame):
-        x = a.copy()
-        if not sort:
-            x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
-        x.sort_values(by=[group_col, val_col], ascending=True, inplace=True)
-        x_lens = x.groupby(by=group_col)[val_col].count().values
-        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
-        x_grouped = np.array([x[val_col][j:(j + x_lens[i])] for i, j in enumerate(x_lens_cumsum)])
+    if not sort:
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
-    else:
-        x = np.array(a)
-        x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
-        x_lens = np.asarray([len(a) for a in x_grouped])
-        x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
+    x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
 
-    if any(x_lens == 0):
-        raise ValueError("All groups must contain data")
-
-    x_len = len(x_grouped)
-    vs = np.zeros((x_len, x_len), dtype=np.float)
+    groups = np.unique(x[_group_col])
+    x_len = groups.size
+    vs = np.zeros((x_len, x_len))
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
@@ -1985,18 +1965,19 @@ def posthoc_mannwhitney(a, val_col = None, group_col = None, use_continuity = Tr
     combs = it.combinations(range(x_len), 2)
 
     for i,j in combs:
-        vs[i, j] = ss.mannwhitneyu(x_grouped[i], x_grouped[j], use_continuity=use_continuity, alternative=alternative)[1]
+        vs[i, j] = ss.mannwhitneyu(x.loc[x[_group_col] == groups[i], _val_col],
+                                    x.loc[x[_group_col] == groups[j], _val_col],
+                                    use_continuity=use_continuity,
+                                    alternative=alternative)[1]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
 
-    if isinstance(x, DataFrame):
-        groups_unique = x[group_col].unique()
-        return DataFrame(vs, index=groups_unique, columns=groups_unique)
-    else:
-        return vs
+    return DataFrame(vs, index=groups, columns=groups)
+
 
 def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox',\
     correction=False, p_adjust = None, sort = False):
@@ -2012,12 +1993,12 @@ def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox',\
         DataFrame. Array must be two-dimensional.
 
     val_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains values.
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     zero_method : string, {"pratt", "wilcox", "zsplit"}, optional
         "pratt": Pratt treatment, includes zero-differences in the ranking
@@ -2068,26 +2049,16 @@ def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox',\
 
     '''
 
-    if isinstance(a, DataFrame):
-        x = a.copy()
-        if sort:
-            x = x.sort_values(by=[group_col, val_col])
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    groups = np.unique(x[_group_col])
 
-        groups = x.groupby(group_col).groups
-        groups_names = x[group_col].unique()
-        x_lens = x.groupby(group_col)[val_col].count().values
-        x_grouped = np.array([x.loc[groups[g].values, val_col].values for g in groups_names])
+    if not sort:
+        x[_group_col] = Categorical(x[_group_col], categories=groups, ordered=True)
 
-    else:
-        x = np.array(a)
-        x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
-        x_lens = np.asarray([len(a) for a in x_grouped])
+    #x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
 
-    if any(x_lens == 0):
-        raise ValueError("All groups must contain data")
-
-    x_len = len(x_grouped)
-    vs = np.zeros((x_len, x_len), dtype=np.float)
+    x_len = groups.size
+    vs = np.zeros((x_len, x_len))
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
@@ -2095,18 +2066,17 @@ def posthoc_wilcoxon(a, val_col = None, group_col = None, zero_method='wilcox',\
     combs = it.combinations(range(x_len), 2)
 
     for i,j in combs:
-        vs[i, j] = ss.wilcoxon(x_grouped[i], x_grouped[j], zero_method=zero_method, correction=correction)[1]
+        vs[i, j] = ss.wilcoxon(x.loc[x[_group_col] == groups[i], _val_col],
+                               x.loc[x[_group_col] == groups[j], _val_col],
+                               zero_method=zero_method, correction=correction)[1]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
 
-    if isinstance(x, DataFrame):
-        groups_unique = x[group_col].unique()
-        return DataFrame(vs, index=groups_unique, columns=groups_unique)
-    else:
-        return vs
+    return DataFrame(vs, index=groups, columns=groups)
+
 
 def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust = None):
 
@@ -2124,13 +2094,13 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains y data.
+    val_col : str, optional
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
-    group_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+    group_col : str, optional
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -2141,7 +2111,7 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
 
     Notes
     -----
-    The p-values are computed from the F-distribution.
+    The p values are computed from the F-distribution.
 
     References
     ----------
@@ -2163,15 +2133,15 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
 
     '''
 
-    x = __convert_to_df(a, val_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
-    x.sort_values(by=[group_col], ascending=True, inplace=True)
-    groups = x[group_col].unique()
+    x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    groups = np.unique(x[_group_col])
 
-    x_grouped = x.groupby(group_col)[val_col]
+    x_grouped = x.groupby(_group_col)[_val_col]
 
     ni = x_grouped.count()
     n = ni.sum()
@@ -2180,7 +2150,7 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
     sin = 1. / (n - groups.size) * np.sum(si * (ni - 1.))
 
     def compare(i, j):
-        dif = xi[i] - xi[j]
+        dif = xi.loc[i] - xi.loc[j]
         A = sin * (1. / ni[i] + 1. / ni[j]) * (groups.size - 1.)
         f_val = dif ** 2. / A
         return f_val
@@ -2199,6 +2169,7 @@ def posthoc_scheffe(a, val_col = None, group_col = None, sort = False, p_adjust 
     p_values = ss.f.sf(vs, groups.size - 1., n - groups.size)
 
     np.fill_diagonal(p_values, -1)
+
     return DataFrame(p_values, index=groups, columns=groups)
 
 
@@ -2218,13 +2189,13 @@ def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = Fa
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains y data.
+    val_col : str, optional
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
-    group_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+    group_col : str, optional
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     welch : bool, optional
         If True, use Welch's approximate solution for calculating the degree of
@@ -2258,15 +2229,15 @@ def posthoc_tamhane(a, val_col = None, group_col = None, welch = True, sort = Fa
 
     '''
 
-    x = __convert_to_df(a, val_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
-    x.sort_values(by=[group_col], ascending=True, inplace=True)
-    groups = x[group_col].unique()
+    x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    groups = x[_group_col].unique()
 
-    x_grouped = x.groupby(group_col)[val_col]
+    x_grouped = x.groupby(_group_col)[_val_col]
 
     ni = x_grouped.count()
     n = ni.sum()
@@ -2327,13 +2298,13 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains y data.
+    val_col : str, optional
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
-    group_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+    group_col : str, optional
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -2362,14 +2333,14 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
 
     '''
 
-    x = __convert_to_df(a, val_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
-    x.sort_values(by=[group_col], ascending=True, inplace=True)
-    groups = x[group_col].unique()
-    x_grouped = x.groupby(group_col)[val_col]
+    x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    groups = np.unique(x[_group_col])
+    x_grouped = x.groupby(_group_col)[_val_col]
 
     ni = x_grouped.count()
     n = ni.sum()
@@ -2379,7 +2350,7 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
 
     def compare(i, j):
         dif = xi[i] - xi[j]
-        A = sin * 0.5 * (1. / ni[i] + 1. / ni[j])
+        A = sin * 0.5 * (1. / ni.loc[i] + 1. / ni.loc[j])
         q_val = dif / np.sqrt(A)
         return q_val
 
@@ -2415,13 +2386,13 @@ def posthoc_dscf(a, val_col = None, group_col = None, sort = False):
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains y data.
+    val_col : str, optional
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
-    group_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+    group_col : str, optional
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -2457,14 +2428,14 @@ def posthoc_dscf(a, val_col = None, group_col = None, sort = False):
 
     '''
 
-    x = __convert_to_df(a, val_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
-    x.sort_values(by=[group_col], ascending=True, inplace=True)
-    groups = x[group_col].unique()
-    x_grouped = x.groupby(group_col)[val_col]
+    x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    groups = x[_group_col].unique()
+    x_grouped = x.groupby(_group_col)[_val_col]
 
     n = x_grouped.count()
     k = groups.size
@@ -2477,9 +2448,9 @@ def posthoc_dscf(a, val_col = None, group_col = None, sort = False):
     def compare(i, j):
         ni = n[i]
         nj = n[j]
-        x_raw = x[(x[group_col] == groups[i]) | (x[group_col] == groups[j])]
-        x_raw['ranks'] = x_raw[val_col].rank()
-        r = x_raw['ranks'].groupby(group_col).sum()
+        x_raw = x[(x[_group_col] == groups[i]) | (x[_group_col] == groups[j])]
+        x_raw['ranks'] = x_raw[_val_col].rank()
+        r = x_raw['ranks'].groupby(_group_col).sum()
         u = np.array([nj * ni + (nj * (nj + 1) / 2),
                       nj * ni + (ni * (ni + 1) / 2)]) - r
         u_min = np.min(u)
@@ -2505,7 +2476,8 @@ def posthoc_dscf(a, val_col = None, group_col = None, sort = False):
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_osrt(a, val_col = None, group_col = None, sort = False):
+
+def osr_test(a, val_col = None, group_col = None, sort = False):
 
     '''
     One-Sided Studentised Range Test. Performs Hayter's one-sided studentised
@@ -2518,13 +2490,13 @@ def posthoc_osrt(a, val_col = None, group_col = None, sort = False):
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains y data.
+    val_col : str, optional
+        Name of a DataFrame column that contains numerical values (test
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
-    group_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+    group_col : str, optional
+        Name of a DataFrame column that contains categorical values (grouping
+        variable). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -2535,7 +2507,7 @@ def posthoc_osrt(a, val_col = None, group_col = None, sort = False):
 
     Notes
     -----
-    The p-values are computed from the Tukey-distribution.
+    P values are computed from the Tukey distribution.
 
     References
     ----------
@@ -2549,18 +2521,18 @@ def posthoc_osrt(a, val_col = None, group_col = None, sort = False):
     >>> import pandas as pd
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
-    >>> sp.posthoc_osrt(x, val_col='values', group_col='groups')
+    >>> sp.osr_test(x, val_col='values', group_col='groups')
 
     '''
 
-    x = __convert_to_df(a, val_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
-    x.sort_values(by=[group_col], ascending=True, inplace=True)
-    groups = x[group_col].unique()
-    x_grouped = x.groupby(group_col)[val_col]
+    x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    groups = np.unique(x[_group_col])
+    x_grouped = x.groupby(_group_col)[_val_col]
 
     xi = x_grouped.mean()
     ni = x_grouped.count()
@@ -2574,12 +2546,12 @@ def posthoc_osrt(a, val_col = None, group_col = None, sort = False):
     for i in range(k):
         for j in range(ni[i]):
             c += 1
-            sigma2 += (x[val_col].iat[c] - xi[i])**2 /df
+            sigma2 += (x[_val_col].iat[c] - xi[i])**2 /df
 
     sigma = np.sqrt(sigma2)
 
     def compare(i, j):
-        dif = xi[groups[j]] - xi[groups[i]]
+        dif = xi.loc[groups[j]] - xi.loc[groups[i]]
         A = sigma / np.sqrt(2) * np.sqrt(1 / ni[groups[j]] + 1 / ni[groups[i]])
         qval = np.abs(dif) / A
         return p
