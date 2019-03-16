@@ -229,9 +229,9 @@ class TestPosthocs(unittest.TestCase):
 
     def test_posthoc_wilcoxon(self):
 
-        r_results = np.array([[-1, 2.337133e-03, 2.857818e-06],
-                              [2.337133e-03, -1, 1.230888e-05],
-                              [2.857818e-06, 1.230888e-05, -1]])
+        r_results = np.array([[-1, 2.857818e-06, 2.337133e-03],
+                              [2.857818e-06, -1, 1.230888e-05],
+                              [2.337133e-03, 1.230888e-05, -1]])
 
         results = sp.posthoc_wilcoxon(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))

@@ -182,7 +182,7 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
     Returns
     -------
     result : pandas DataFrame
-        DataFrame with P values.
+        P values.
 
     Notes
     -----
@@ -198,10 +198,6 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
 
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_conover(x, p_adjust = 'holm')
-    array([ [-1.        ,  0.00119517,  0.00278329],
-            [ 0.00119517, -1.        ,  0.18672227],
-            [ 0.00278329,  0.18672227, -1.        ]])
-
     '''
 
     def compare_conover(i, j):
@@ -300,8 +296,8 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
 
     Returns
     -------
-    Numpy ndarray or pandas DataFrame of p values depending on input
-    data type.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -318,10 +314,6 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
 
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_dunn(x, p_adjust = 'holm')
-    array([[-1.          0.01764845  0.04131415]
-           [ 0.01764845 -1.          0.45319956]
-           [ 0.04131415  0.45319956 -1.        ]])
-
     '''
 
     def compare_dunn(i, j):
@@ -367,7 +359,6 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
 
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
-
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
 
 
@@ -402,8 +393,8 @@ def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
 
     Returns
     -------
-    Numpy ndarray or pandas DataFrame of p values depending on input
-    data type.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -418,10 +409,6 @@ def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
     --------
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_nemenyi(x)
-    array([[-1.        ,  0.02206238,  0.06770864],
-           [ 0.02206238, -1.        ,  0.75361555],
-           [ 0.06770864,  0.75361555, -1.        ]])
-
     '''
 
     def compare_stats_chi(i, j):
@@ -527,7 +514,8 @@ def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
     Returns
     -------
-    Pandas DataFrame containing p values.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -655,7 +643,8 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
     Returns
     -------
-    Pandas DataFrame containing p values.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -770,7 +759,8 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
 
     Returns
     -------
-    Pandas DataFrame containing p values.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -790,7 +780,6 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
                       [110,112,123,130,145],
                       [132,141,156,160,172]])
     >>> sp.posthoc_npm_test(x)
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -827,7 +816,6 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
         p_values[tri_upper] = multipletests(p_values[tri_upper], method = p_adjust)[1]
 
     np.fill_diagonal(p_values, -1)
-
     return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
 
 
@@ -887,7 +875,8 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
 
     Returns
     -------
-    Pandas DataFrame containing p values.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -1225,7 +1214,8 @@ def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, 
 
     Returns
     -------
-    Pandas DataFrame containing p values.
+    result : pandas DataFrame
+        P values.
 
     References
     ----------
@@ -1347,7 +1337,6 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_quade(x)
-
     '''
 
     if melted and not all([block_col, group_col, y_col]):
@@ -1451,7 +1440,10 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
 
     Returns
     -------
-    Pandas DataFrame containing p values.
+    p : float
+        P value.
+    stat : float
+        Statistic.
 
     References
     ----------
@@ -1569,7 +1561,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
     return p_value, stat
 
 
-def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=None):
+def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=True, p_adjust=None):
 
     '''Van der Waerden's test for pairwise multiple comparisons between group
     levels. See references for additional information [1]_, [2]_.
@@ -1610,7 +1602,8 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=Non
 
     Returns
     -------
-    Pandas DataFrame containing p values.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -1836,8 +1829,9 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
 
     Returns
     -------
-    Numpy ndarray with 0, 1, and -1 values, where 0 is False (not significant),
-    1 is True (significant), and -1 is for diagonal elements.
+    result : pandas DataFrame
+        DataFrame with 0, 1, and -1 values, where 0 is False (not significant),
+        1 is True (significant), and -1 is for diagonal elements.
 
     Examples
     --------
@@ -1845,10 +1839,6 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
     >>> sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
-    array([[-1,  1,  0],
-           [ 1, -1,  1],
-           [ 0,  1, -1]])
-
     '''
 
     result = pairwise_tukeyhsd(x, g, alpha=0.05)
@@ -1868,8 +1858,7 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
     np.fill_diagonal(vs, -1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[tri_lower] = vs.T[tri_lower]
-
-    return vs
+    return DataFrame(vs, index=groups, columns=groups)
 
 
 def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, alternative='two-sided', p_adjust=None, sort=True):
@@ -1920,7 +1909,8 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
 
     Returns
     -------
-    Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -1928,12 +1918,8 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
 
     Examples
     --------
-
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> sp.posthoc_mannwhitney(x, p_adjust = 'holm')
-    array([[-1.       ,  0.0357757,  0.114961 ],
-           [ 0.0357757, -1.       ,  0.0357757],
-           [ 0.114961 ,  0.0357757, -1.       ]])
 
     '''
 
@@ -1964,7 +1950,6 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
 
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
-
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -2020,7 +2005,8 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
 
     Returns
     -------
-    Numpy ndarray if `a` is an array-like object else pandas DataFrame of p values.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -2030,20 +2016,16 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
     --------
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> sp.posthoc_wilcoxon(x)
-    array([[-1.        ,  0.04311445,  0.1755543 ],
-           [ 0.04311445, -1.        ,  0.0421682 ],
-           [ 0.1755543 ,  0.0421682 , -1.        ]])
 
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-    groups = np.unique(x[_group_col])
 
     if not sort:
-        x[_group_col] = Categorical(x[_group_col], categories=groups, ordered=True)
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
     #x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
-
+    groups = np.unique(x[_group_col])
     x_len = groups.size
     vs = np.zeros((x_len, x_len))
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -2061,7 +2043,6 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
-
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -2093,7 +2074,8 @@ def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
 
     Returns
     -------
-    Pandas DataFrame containing p values.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -2191,7 +2173,8 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
 
     Returns
     -------
-    Pandas DataFrame containing p values.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
@@ -2295,11 +2278,12 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
 
     Returns
     -------
-    Pandas DataFrame containing p values.
+    result : pandas DataFrame
+        P values.
 
     Notes
     -----
-    The p-values are computed from the Tukey-distribution.
+    The p values are computed from the Tukey-distribution.
 
     References
     ----------
@@ -2386,7 +2370,7 @@ def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
 
     Notes
     -----
-    The p-values are computed from the Tukey-distribution.
+    The p values are computed from the Tukey-distribution.
 
     References
     ----------
