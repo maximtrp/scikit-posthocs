@@ -70,7 +70,7 @@ def __convert_to_df(a, val_col = 'val', group_col = 'groups', val_id = None, gro
         grps_len = map(len, a)
         grps = list(it.chain(*[[i+1] * l for i, l in enumerate(grps_len)]))
         vals = list(it.chain(*a))
-        return pd.DataFrame({val_col: vals, group_col: grps}), val_col, group_col
+        return DataFrame({val_col: vals, group_col: grps}), val_col, group_col
 
     elif isinstance(a, np.ndarray):
 
@@ -96,7 +96,7 @@ def __convert_to_df(a, val_col = 'val', group_col = 'groups', val_id = None, gro
                     group_id: group_col}
 
         cols_vals = dict(sorted(cols.items())).values()
-        return pd.DataFrame(a, columns=cols_vals), val_col, group_col
+        return DataFrame(a, columns=cols_vals), val_col, group_col
 
 
 def __convert_to_block_df(a, y_col, group_col, block_col, melted):

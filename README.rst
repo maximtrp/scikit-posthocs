@@ -100,7 +100,7 @@ Columns specified with ``val_col`` and ``group_col`` args must be melted prior t
   >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
   >>> x = x.melt(var_name='groups', value_name='values')
   >>> x
-    groups  values
+     groups  values
   0       a       1
   1       a       2
   2       a       3
