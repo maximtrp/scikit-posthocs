@@ -70,7 +70,7 @@ Package is compatible with Python 2 and Python 3.
 Install
 -------
 
-You can install the package with:
+You can install the package ``pip`` :
 ``pip install scikit-posthocs``
 
 Examples
