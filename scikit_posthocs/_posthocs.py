@@ -2426,8 +2426,8 @@ def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
                       nj * ni + (ni * (ni + 1) / 2)]) - r
         u_min = np.min(u)
         s = ni + nj
-        var = (nj*ni/(s*(s - 1))) * ((s**3 - s)/12 - get_ties(x_raw['ranks']))
-        p = np.sqrt(2) * (u_min - nj * ni / 2) / np.sqrt(var)
+        var = (nj*ni/(s*(s - 1.))) * ((s**3 - s)/12. - get_ties(x_raw['ranks']))
+        p = np.sqrt(2.) * (u_min - nj * ni / 2.) / np.sqrt(var)
         return p
 
     vs = np.zeros((k, k))
