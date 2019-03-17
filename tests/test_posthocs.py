@@ -89,6 +89,7 @@ class TestPosthocs(unittest.TestCase):
                       [1,2,3,5,6,7,7],
                       [1,2,6,4,1,5,1]])
 
+
     def test_posthoc_conover(self):
 
         r_results = np.array([[-1, 9.354690e-11, 1.131263e-02],
@@ -98,6 +99,7 @@ class TestPosthocs(unittest.TestCase):
         results = sp.posthoc_conover(self.df, val_col = 'pulse', group_col = 'kind', p_adjust = 'holm').values
         self.assertTrue(np.allclose(results, r_results))
 
+
     def test_posthoc_dunn(self):
 
         r_results = np.array([[-1, 9.570998e-09, 4.390066e-02],
@@ -106,6 +108,7 @@ class TestPosthocs(unittest.TestCase):
 
         results = sp.posthoc_dunn(self.df, val_col = 'pulse', group_col = 'kind', p_adjust = 'holm').values
         self.assertTrue(np.allclose(results, r_results, atol=1.e-4))
+
 
     def test_posthoc_nemenyi(self):
 
@@ -127,6 +130,7 @@ class TestPosthocs(unittest.TestCase):
                               [0.9, 0.9, 0.9, 0.9, 0.9, 0.54381888, -1.]])
         results = sp.posthoc_nemenyi_friedman(self.df_bn)
         self.assertTrue(np.allclose(results, p_results, atol=1.e-4))
+
 
     def test_posthoc_conover_friedman(self):
 
@@ -169,6 +173,7 @@ class TestPosthocs(unittest.TestCase):
 
         self.assertTrue(np.allclose(results, p_results))
 
+
     def test_posthoc_durbin(self):
         results = sp.posthoc_durbin(self.df_bn, p_adjust = 'holm')
 
@@ -193,6 +198,17 @@ class TestPosthocs(unittest.TestCase):
                               [ 0.2081421 , 0.38443835, 0.85245022, 0.92586499, 1.00000000, 0.22378308,-1.00000000]])
         self.assertTrue(np.allclose(results, p_results))
 
+
+    def test_posthoc_npm_test(self):
+        results = sp.posthoc_npm_test(self.df_bn)
+
+        p_results = np.array([[-1, .9, .9],
+                              [.9, -1, .9],
+                              [.9, .9, -1]])
+
+        self.assertTrue(np.allclose(results, p_results))
+
+
     def test_posthoc_vanwaerden(self):
         r_results = np.array([[-1, 1.054709e-02, 6.476665e-11],
                               [1.054709e-02, -1, 4.433141e-06],
@@ -200,6 +216,16 @@ class TestPosthocs(unittest.TestCase):
 
         results = sp.posthoc_vanwaerden(self.df, val_col = 'pulse', group_col = 'kind', p_adjust='holm')
         self.assertTrue(np.allclose(results, r_results))
+
+
+    def test_posthoc_dscf(self):
+        r_results = np.array([[-1, 9.828003e-08, 4.430682e-02],
+                              [9.828003e-08, -1, 5.655274e-05],
+                              [4.430682e-02, 5.655274e-05, -1]])
+
+        results = sp.posthoc_dscf(self.df, val_col = 'pulse', group_col = 'kind')
+        self.assertTrue(np.allclose(results, r_results, atol=0.001))
+
 
     def test_posthoc_ttest(self):
 
@@ -218,6 +244,7 @@ class TestPosthocs(unittest.TestCase):
         n_results = np.array([[-1,  1,  0],[ 1, -1,  1],[ 0,  1, -1]])
         self.assertTrue(np.allclose(n_results, results))
 
+
     def test_posthoc_mannwhitney(self):
 
         r_results = np.array([[-1, 3.420508e-08, 1.714393e-02],
@@ -226,6 +253,7 @@ class TestPosthocs(unittest.TestCase):
 
         results = sp.posthoc_mannwhitney(self.df, val_col = 'pulse', group_col = 'kind').values
         self.assertTrue(np.allclose(results, r_results))
+
 
     def test_posthoc_wilcoxon(self):
 
@@ -236,6 +264,7 @@ class TestPosthocs(unittest.TestCase):
         results = sp.posthoc_wilcoxon(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
 
+
     def test_posthoc_scheffe(self):
 
         r_results = np.array([[-1, 3.047472e-10, 3.378449e-01],
@@ -245,6 +274,7 @@ class TestPosthocs(unittest.TestCase):
         results = sp.posthoc_scheffe(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
 
+
     def test_posthoc_tamhane(self):
 
         r_results = np.array([[-1, 2.898653e-02, 4.100954e-07],
@@ -253,6 +283,7 @@ class TestPosthocs(unittest.TestCase):
 
         results = sp.posthoc_tamhane(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
+
 
     def test_posthoc_tukey(self):
         r_results = np.array([[-1, 4.308631e-10, 3.042955e-01],

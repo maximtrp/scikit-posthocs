@@ -1,4 +1,4 @@
-__version__ = '0.4.0'
+__version__ = '0.5.0'
 
 from scikit_posthocs._posthocs \
     import posthoc_anderson, posthoc_conover, posthoc_conover_friedman,\
@@ -7,7 +7,8 @@ from scikit_posthocs._posthocs \
             posthoc_nemenyi_friedman, posthoc_npm_test, posthoc_quade,\
             posthoc_scheffe, posthoc_siegel_friedman, posthoc_tamhane,\
             posthoc_ttest, posthoc_tukey, posthoc_tukey_hsd,\
-            posthoc_vanwaerden, posthoc_wilcoxon
+            posthoc_vanwaerden, posthoc_wilcoxon, __convert_to_df,\
+            __convert_to_block_df
 
 from scikit_posthocs._plotting \
     import sign_array, sign_plot, sign_table

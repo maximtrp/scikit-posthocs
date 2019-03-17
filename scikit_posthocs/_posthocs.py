@@ -784,39 +784,44 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
-    if not sort:
-        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
+    #if not sort:
+    #    x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
     x.sort_values(by=[_group_col], ascending=True, inplace=True)
-    x_groups_unique = x[_group_col].unique()
-    x['ranks'] = x.rank()
-    Ri = x.groupby(_group_col)[_val_col].mean()
+    groups = np.unique(x[_group_col])
+    x['ranks'] = x[_val_col].rank()
+    Ri = x.groupby(_group_col)['ranks'].mean()
     ni = x.groupby(_group_col)[_val_col].count()
-    k = x[_group_col].unique().size
+    k = groups.size
     n = x.shape[0]
     sigma = np.sqrt(n * (n + 1) / 12.)
     df = np.inf
 
     def compare(m, u):
-        return (Ri[u] - Ri[m]) / (sigma / np.sqrt(2) * np.sqrt(1. / ni[m] + 1. / ni[u]))
+        a = [(Ri.loc[groups[u]]-Ri.loc[groups[_mi]])/(sigma/np.sqrt(2)*np.sqrt(1./ni.loc[groups[_mi]] + 1./ni.loc[groups[u]])) for _mi in m]
+        return np.array(a)
 
-    stat = np.empty((k-1, k-1))
-    for i, j in it.combinations(range(k), 2):
+    stat = np.zeros((k, k))
+
+    for i in range(k-1):
+      for j in range(i+1, k):
         u = j
-        m = np.arange(i, u-1)
+        m = np.arange(i, u)
         tmp = compare(m, u)
-        stat[j-1, i] = np.max(tmp)
+        stat[j, i] = np.max(tmp)
+
+    stat[stat < 0] = 0
 
     p_values = psturng(stat, k, np.inf)
     tri_upper = np.triu_indices(p_values.shape[0], 1)
     tri_lower = np.tril_indices(p_values.shape[0], -1)
     p_values[tri_lower] = p_values.T[tri_lower]
 
-    if p_adjust:
-        p_values[tri_upper] = multipletests(p_values[tri_upper], method = p_adjust)[1]
+    #if p_adjust:
+    #    p_values[tri_upper] = multipletests(p_values[tri_upper], method = p_adjust)[1]
 
     np.fill_diagonal(p_values, -1)
-    return DataFrame(p_values, index=x_groups_unique, columns=x_groups_unique)
+    return DataFrame(p_values, index=groups, columns=groups)
 
 
 def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False, p_adjust=None):
@@ -2401,9 +2406,8 @@ def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
         x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
     x.sort_values(by=[_group_col], ascending=True, inplace=True)
-    groups = x[_group_col].unique()
+    groups = np.unique(x[_group_col])
     x_grouped = x.groupby(_group_col)[_val_col]
-
     n = x_grouped.count()
     k = groups.size
 
@@ -2413,31 +2417,30 @@ def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
         return c
 
     def compare(i, j):
-        ni = n[i]
-        nj = n[j]
-        x_raw = x[(x[_group_col] == groups[i]) | (x[_group_col] == groups[j])]
-        x_raw['ranks'] = x_raw[_val_col].rank()
-        r = x_raw['ranks'].groupby(_group_col).sum()
+        ni = n.loc[i]
+        nj = n.loc[j]
+        x_raw = x.loc[(x[_group_col] == i) | (x[_group_col] == j)].copy()
+        x_raw['ranks'] = x_raw.loc[:, _val_col].rank()
+        r = x_raw.groupby(_group_col)['ranks'].sum().loc[[i, j]]
         u = np.array([nj * ni + (nj * (nj + 1) / 2),
                       nj * ni + (ni * (ni + 1) / 2)]) - r
         u_min = np.min(u)
         s = ni + nj
-        var = (nj*ni/(s*(s-1)))*((s**3-s)/12 - get_ties(x_raw['ranks']))
+        var = (nj*ni/(s*(s - 1))) * ((s**3 - s)/12 - get_ties(x_raw['ranks']))
         p = np.sqrt(2) * (u_min - nj * ni / 2) / np.sqrt(var)
-
         return p
 
-    vs = np.zeros((groups.size, groups.size), dtype=np.float)
+    vs = np.zeros((k, k))
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
-    combs = it.combinations(range(groups.size), 2)
+    combs = it.combinations(range(k), 2)
 
-    for i,j in combs:
+    for i, j in combs:
         vs[i, j] = compare(groups[i], groups[j])
 
-    vs[tri_upper] = psturng(np.abs(vs[tri_upper]), groups.size, np.inf)
+    vs[tri_upper] = psturng(np.abs(vs[tri_upper]), k, np.inf)
     vs[tri_lower] = vs.T[tri_lower]
 
     np.fill_diagonal(vs, -1)
