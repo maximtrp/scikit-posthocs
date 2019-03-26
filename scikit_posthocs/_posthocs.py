@@ -21,22 +21,24 @@ def __convert_to_df(a, val_col=None, group_col=None, val_id=None, group_id=None)
         i.e. groups may have different lengths.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     val_id : int, optional
-        Index of a column that contains numerical values (test variable).
-        Should be specified if a NumPy ndarray is used as an input. It will be
-        inferred from data, if not specified.
+        Index of a column that contains dependent variable values (test or
+        response variable). Should be specified if a NumPy ndarray is used as an
+        input. It will be inferred from data, if not specified.
 
     group_id : int, optional
-        Index of a column that contains categorical values (grouping variable).
-        Should be specified if a NumPy ndarray is used as an input. It will be
-        inferred from data, if not specified.
+        Index of a column that contains independent variable values (grouping or
+        predictor variable). Should be specified if a NumPy ndarray is used as
+        an input. It will be inferred from data, if not specified.
 
     Returns
     -------
@@ -45,17 +47,17 @@ def __convert_to_df(a, val_col=None, group_col=None, val_id=None, group_id=None)
         `group_col` column contains categorical values.
 
     val_col : str
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable).
 
     group_col : str
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable).
 
     Notes
     -----
     Inferrence algorithm for determining `val_id` and `group_id` args is rather
-    simple, therefore it is better to specify them explicitly to prevent errors.
+    simple, so it is better to specify them explicitly to prevent errors.
 
     '''
 
@@ -154,15 +156,17 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
         i.e. groups may have different lengths.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     p_adjust : str, optional
-        Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
+        Method for adjusting p values. See `statsmodels.sandbox.stats.multicomp`
         for details. Available methods are:
         'bonferroni' : one-step correction
         'sidak' : one-step correction
@@ -269,15 +273,17 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
         i.e. groups may have different lengths.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     p_adjust : str, optional
-        Method for adjusting p values. See statsmodels.sandbox.stats.multicomp
+        Method for adjusting p values. See `statsmodels.sandbox.stats.multicomp`
         for details. Available methods are:
         'bonferroni' : one-step correction
         'sidak' : one-step correction
@@ -376,12 +382,14 @@ def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
         i.e. groups may have different lengths.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     dist : str, optional
         Method for determining the p value. The default distribution is "chi"
@@ -471,10 +479,11 @@ def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
 
 def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False):
 
-    '''Calculate pairwise comparisons using Nemenyi post hoc test for unreplicated
-    blocked data. This test is usually conducted post hoc after
-    significant results of the Friedman's test. The statistics refer to upper
-    quantiles of the studentized range distribution (Tukey) [1]_, [2]_, [3]_.
+    '''Calculate pairwise comparisons using Nemenyi post hoc test for
+    unreplicated blocked data. This test is usually conducted post hoc if
+    significant results of the Friedman's test are obtained. The statistics
+    refer to upper quantiles of the studentized range distribution (Tukey) [1]_,
+    [2]_, [3]_.
 
     Parameters
     ----------
@@ -733,12 +742,14 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -764,7 +775,7 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
 
     Notes
     -----
-    The p-values are estimated from the studentized range distribution. If
+    The p values are estimated from the studentized range distribution. If
     the medians are already increasingly ordered, than the NPM-test
     simplifies to the ordinary Nemenyi test
 
@@ -1189,12 +1200,14 @@ def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, 
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     midrank : bool, optional
         Type of Anderson-Darling test which is computed. If set to True (default), the
@@ -1429,12 +1442,14 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     p : int, optional
         The a-priori known peak as an ordinal number of the treatment group
@@ -1578,14 +1593,14 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=True, p_adjust=None
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column or index of an array column that contains
-        numerical values (test variable). Must be specified if `a` is a pandas
-        DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column or index of an array column  that contains
-        categorical values (grouping variable). Must be specified if `a` is a
-        pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -1692,12 +1707,14 @@ def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True
         DataFrame. Array must be two-dimensional.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     equal_var : bool, optional
         If True (default), perform a standard independent test
@@ -1820,14 +1837,15 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
     Parameters
     ----------
     x : array_like or pandas Series object, 1d
-        An array, any object exposing the array interface, containing numerical
-        values (test variable). NaN values will cause an error (please handle
+        An array, any object exposing the array interface, containing dependent
+        variable values (test or response variable). Values should have a
+        non-nominal scale. NaN values will cause an error (please handle
         manually).
 
     g : array_like or pandas Series object, 1d
         An array, any object exposing the array interface, containing
-        categorical values (grouping variable). Values can be strings or
-        integers.
+        independent variable values (grouping or predictor variable). Values
+        should have a nominal scale (categorical).
 
     alpha : float, optional
         Significance level for the test. Default is 0.05.
@@ -1840,7 +1858,6 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
 
     Examples
     --------
-
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
     >>> sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
@@ -1877,12 +1894,14 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
         DataFrame. Array must be two-dimensional.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     use_continuity : bool, optional
         Whether a continuity correction (1/2.) should be taken into account.
@@ -1970,12 +1989,14 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
         DataFrame. Array must be two-dimensional.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     zero_method : string, {"pratt", "wilcox", "zsplit"}, optional
         "pratt": Pratt treatment, includes zero-differences in the ranking
@@ -2067,12 +2088,14 @@ def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -2162,12 +2185,14 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     welch : bool, optional
         If True, use Welch's approximate solution for calculating the degree of
@@ -2271,12 +2296,14 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -2359,12 +2386,14 @@ def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -2460,12 +2489,14 @@ def osr_test(a, val_col=None, group_col=None, sort=False):
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column that contains numerical values (test
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
-        Name of a DataFrame column that contains categorical values (grouping
-        variable). Must be specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
 
     sort : bool, optional
         If True, sort data by block and group columns.

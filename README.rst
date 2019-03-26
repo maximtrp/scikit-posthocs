@@ -76,60 +76,67 @@ You can install the package using ``pip`` :
 
   pip install scikit-posthocs
 
+Input data types
+----------------
+
+Python lists, NumPy ndarrays and pandas DataFrames are supported as input data types.
 
 Examples
 --------
 
-Input data must be 
+Parametric ANOVA and post hoc test
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-List or NumPy array
-~~~~~~~~~~~~~~~~~~~
+Here is a simple example of the one-way analysis of variance (ANOVA) with post hoc tests used to compare *sepal length* means of three groups (three iris species) in *iris* dataset.
 
-.. code:: python
-
-  >>> import scikit_posthocs as sp
-  >>> x = [[1,2,3,4,5], [10,11,12], [21,22,23,24,25]]
-  >>> sp.posthoc_conover(x, p_adjust = 'holm')
-  array([[-1.        ,  0.00119517,  0.00278329],
-         [ 0.00119517, -1.        ,  0.18672227],
-         [ 0.00278329,  0.18672227, -1.        ]])
-
-Pandas DataFrame
-~~~~~~~~~~~~~~~~
-
-Columns specified with ``val_col`` and ``group_col`` args must be melted prior to making comparisons.
+To begin, we will import the dataset using statsmodels ``get_rdataset()`` method.
 
 .. code:: python
 
+  >>> import statsmodels.api as sa
+  >>> import statsmodels.formula.api as sfa
   >>> import scikit_posthocs as sp
-  >>> import pandas as pd
-  >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
-  >>> x = x.melt(var_name='groups', value_name='values')
-  >>> x
-     groups  values
-  0       a       1
-  1       a       2
-  2       a       3
-  3       a       5
-  4       a       1
-  5       b      12
-  6       b      31
-  7       b      54
-  8       b      62
-  9       b      12
-  10      c      10
-  11      c      12
-  12      c       6
-  13      c      74
-  14      c      11
-  >>> sp.posthoc_conover(x, val_col='values', group_col='groups', p_adjust = 'fdr_bh')
-            a         b         c
-  a -1.000000  0.000328  0.002780
-  b  0.000328 -1.000000  0.121659
-  c  0.002780  0.121659 -1.000000
+  >>> df = sm.datasets.get_rdataset('iris').data
+  >>> df.head()
+     sepal_length  sepal_width  petal_length  petal_width species
+  0           5.1          3.5           1.4          0.2  setosa
+  1           4.9          3.0           1.4          0.2  setosa
+  2           4.7          3.2           1.3          0.2  setosa
+  3           4.6          3.1           1.5          0.2  setosa
+  4           5.0          3.6           1.4          0.2  setosa
+
+Now, we will build a model and run ANOVA using statsmodels ``ols()`` and ``anova_lm()`` methods. Columns ``species`` and ``sepal_length`` contain independent (predictor) and dependent (response) variable values, correspondingly.
+
+.. code:: python
+
+  >>> lm = sfa.ols('sepal_width ~ C(species)', data=df).fit()
+  >>> anova = sm.stats.anova_lm(lm)
+  >>> print(anova)
+                 df     sum_sq   mean_sq         F        PR(>F)
+  C(species)    2.0  11.344933  5.672467  49.16004  4.492017e-17
+  Residual    147.0  16.962000  0.115388       NaN           NaN
+
+The results tell us that there is a significant difference between groups means (p = 4.49e-17), but does not tell us the exact group pairs which are different by means. To obtain pairwise group differences, we will carry out a posteriori (post hoc) analysis using ``scikits-posthocs`` package. Student T test applied pairwisely gives us the following p values:
+
+.. code:: python
+
+  >>> sp.posthoc_ttest(df, val_col='sepal_length', group_col='species')
+                    setosa    versicolor     virginica
+  setosa     -1.000000e+00  8.985235e-18  6.892546e-28
+  versicolor  8.985235e-18 -1.000000e+00  1.724856e-07
+  virginica   6.892546e-28  1.724856e-07 -1.000000e+00
+
+As seen from this table, significant differences in group means are obtained for all group pairs.
+
+Non-parametric ANOVA and post hoc test
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If normality and other `assumptions <https://en.wikipedia.org/wiki/One-way_analysis_of_variance>`_ are violated, one can use a non-parametric Kruskall-Wallis H test (one-way non-parametric ANOVA) to test if samples came from the same distribution.
+
+
 
 Significance plots
-~~~~~~~~~~~~~~~~~~
+------------------
 
 P values can be plotted using a heatmap:
 
