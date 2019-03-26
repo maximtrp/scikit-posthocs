@@ -126,7 +126,7 @@ The results tell us that there is a significant difference between groups means 
   versicolor  5.535780e-15 -1.000000e+00  1.819100e-03
   virginica   8.492711e-09  1.819100e-03 -1.000000e+00
 
-As seen from this table, significant differences in group means are obtained for all group pairs.
+Remember to use a `FWER controlling procedure <https://en.wikipedia.org/wiki/Family-wise_error_rate#Controlling_procedures>`_, such as Holm procedure, when making multiple comparisons. As seen from this table, significant differences in group means are obtained for all group pairs.
 
 Non-parametric ANOVA and post hoc test
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
