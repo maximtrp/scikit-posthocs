@@ -87,7 +87,7 @@ Examples
 Parametric ANOVA and post hoc test
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here is a simple example of the one-way analysis of variance (ANOVA) with post hoc tests used to compare *sepal length* means of three groups (three iris species) in *iris* dataset.
+Here is a simple example of the one-way analysis of variance (ANOVA) with post hoc tests used to compare *sepal width* means of three groups (three iris species) in *iris* dataset.
 
 To begin, we will import the dataset using statsmodels ``get_rdataset()`` method.
 
@@ -105,7 +105,7 @@ To begin, we will import the dataset using statsmodels ``get_rdataset()`` method
   3           4.6          3.1           1.5          0.2  setosa
   4           5.0          3.6           1.4          0.2  setosa
 
-Now, we will build a model and run ANOVA using statsmodels ``ols()`` and ``anova_lm()`` methods. Columns ``species`` and ``sepal_length`` contain independent (predictor) and dependent (response) variable values, correspondingly.
+Now, we will build a model and run ANOVA using statsmodels ``ols()`` and ``anova_lm()`` methods. Columns ``species`` and ``sepal_width`` contain independent (predictor) and dependent (response) variable values, correspondingly.
 
 .. code:: python
 
@@ -120,11 +120,11 @@ The results tell us that there is a significant difference between groups means 
 
 .. code:: python
 
-  >>> sp.posthoc_ttest(df, val_col='sepal_length', group_col='species')
+  >>> sp.posthoc_ttest(df, val_col='sepal_width', group_col='species', p_adjust='holm')
                     setosa    versicolor     virginica
-  setosa     -1.000000e+00  8.985235e-18  6.892546e-28
-  versicolor  8.985235e-18 -1.000000e+00  1.724856e-07
-  virginica   6.892546e-28  1.724856e-07 -1.000000e+00
+  setosa     -1.000000e+00  5.535780e-15  8.492711e-09
+  versicolor  5.535780e-15 -1.000000e+00  1.819100e-03
+  virginica   8.492711e-09  1.819100e-03 -1.000000e+00
 
 As seen from this table, significant differences in group means are obtained for all group pairs.
 
