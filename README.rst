@@ -181,9 +181,31 @@ Lists and arrays
 
 You can check how it is processed with a hidden function ``__convert_to_df()``:
 
-.. code:: python
+  .. code:: python
 
-  >>> sp.__convert_to_df(x)
+    >>> sp.__convert_to_df(x)
+    (    vals  groups
+     0      1       1
+     1      2       1
+     2      1       1
+     3      3       1
+     4      1       1
+     5      4       1
+     6     12       2
+     7      3       2
+     8     11       2
+     9      9       2
+     10     3       2
+     11     8       2
+     12     1       2
+     13    10       3
+     14    22       3
+     15    12       3
+     16     9       3
+     17     8       3
+     18     3       3, 'vals', 'groups')
+
+It returns a tuple of a DataFrame representation and names of the columns containing dependent (``vals``) and independent (``groups``) variable values.
 
 Significance plots
 ------------------
