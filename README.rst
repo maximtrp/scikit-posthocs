@@ -154,7 +154,7 @@ Let's use the same dataset just to demonstrate the procedure. Kruskal-Wallis tes
   >>> p
   1.5692820940316782e-14
 
-P value tells us we may reject the null hypothesis that the population median of all of the groups are equal. To learn what groups (species) differ in their medians we need to run post hoc tests. ``scikit-posthocs`` provides a lot of non-parametric tests mentioned above. Let's choose Conover's test.
+P value tells us we may reject the null hypothesis that the population medians of all of the groups are equal. To learn what groups (species) differ in their medians we need to run post hoc tests. ``scikit-posthocs`` provides a lot of non-parametric tests mentioned above. Let's choose Conover's test.
 
 .. code:: python
 
