@@ -142,6 +142,7 @@ Let's use the same dataset just to demonstrate the procedure. Kruskal-Wallis tes
 
   >>> import scipy.stats as ss
   >>> import statsmodels.api as sa
+  >>> import scikit_posthocs as sp
   >>> df = sa.datasets.get_rdataset('iris').data
   >>> data = [df.loc[ids, 'sepal_width'].values for ids in df.groupby('species').groups.values()]
 
@@ -149,7 +150,6 @@ Let's use the same dataset just to demonstrate the procedure. Kruskal-Wallis tes
 
 .. code:: python
 
-  >>> import scipy.stats as ss
   >>> H, p = ss.kruskal(*data)
   >>> p
   1.5692820940316782e-14
