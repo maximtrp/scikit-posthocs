@@ -79,10 +79,6 @@ You can install the package using ``pip`` :
 
   pip install scikit-posthocs
 
-Input data types
-----------------
-
-Python lists, NumPy ndarrays and pandas DataFrames are supported as input data types.
 
 Examples
 --------
@@ -165,6 +161,29 @@ P value tells us we may reject the null hypothesis that the population medians o
   virginica   1.293888e-10  1.881294e-03 -1.000000e+00
 
 Pairwise comparisons show that we may reject the null hypothesis (p < 0.01) for each pair of species and conclude that all groups (species) differ in their sepal widths.
+
+Data types
+~~~~~~~~~~
+
+Internally, ``scikit-posthocs`` uses pandas DataFrames to store and process data, but python lists, NumPy ndarrays, and pandas DataFrames are supported as input data types. Below are usage examples of various input data structures.
+
+Lists and arrays
+^^^^^^^^^^^^^^^^
+
+.. code:: python
+
+  >>> x = [[1,2,1,3,1,4], [12,3,11,9,3,8,1], [10,22,12,9,8,3]]
+  >>> sp.posthoc_conover(x, p_adjust='holm')
+            1         2         3
+  1 -1.000000  0.057606  0.007888
+  2  0.057606 -1.000000  0.215761
+  3  0.007888  0.215761 -1.000000
+
+You can check how it is processed with a hidden function ``__convert_to_df()``:
+
+.. code:: python
+
+  >>> sp.__convert_to_df(x)
 
 Significance plots
 ------------------
