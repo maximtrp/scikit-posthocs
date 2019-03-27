@@ -19,7 +19,6 @@ scikit-posthocs
 
 This package will be useful for statisticians, data analysts, and researchers who use Python in their work.
 
-.. contents:: Contents:
 
 Background
 ----------
@@ -88,8 +87,8 @@ Python lists, NumPy ndarrays and pandas DataFrames are supported as input data t
 Examples
 --------
 
-Parametric ANOVA and post hoc test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Parametric ANOVA with post hoc tests
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Here is a simple example of the one-way analysis of variance (ANOVA) with post hoc tests used to compare *sepal width* means of three groups (three iris species) in *iris* dataset.
 
@@ -100,7 +99,7 @@ To begin, we will import the dataset using statsmodels ``get_rdataset()`` method
   >>> import statsmodels.api as sa
   >>> import statsmodels.formula.api as sfa
   >>> import scikit_posthocs as sp
-  >>> df = sm.datasets.get_rdataset('iris').data
+  >>> df = sa.datasets.get_rdataset('iris').data
   >>> df.head()
      sepal_length  sepal_width  petal_length  petal_width species
   0           5.1          3.5           1.4          0.2  setosa
@@ -114,13 +113,13 @@ Now, we will build a model and run ANOVA using statsmodels ``ols()`` and ``anova
 .. code:: python
 
   >>> lm = sfa.ols('sepal_width ~ C(species)', data=df).fit()
-  >>> anova = sm.stats.anova_lm(lm)
+  >>> anova = sa.stats.anova_lm(lm)
   >>> print(anova)
                  df     sum_sq   mean_sq         F        PR(>F)
   C(species)    2.0  11.344933  5.672467  49.16004  4.492017e-17
   Residual    147.0  16.962000  0.115388       NaN           NaN
 
-The results tell us that there is a significant difference between groups means (p = 4.49e-17), but does not tell us the exact group pairs which are different by means. To obtain pairwise group differences, we will carry out a posteriori (post hoc) analysis using ``scikits-posthocs`` package. Student T test applied pairwisely gives us the following p values:
+The results tell us that there is a significant difference between groups means (p = 4.49e-17), but does not tell us the exact group pairs which are different in means. To obtain pairwise group differences, we will carry out a posteriori (post hoc) analysis using ``scikits-posthocs`` package. Student T test applied pairwisely gives us the following p values:
 
 .. code:: python
 
@@ -132,12 +131,40 @@ The results tell us that there is a significant difference between groups means 
 
 Remember to use a `FWER controlling procedure <https://en.wikipedia.org/wiki/Family-wise_error_rate#Controlling_procedures>`_, such as Holm procedure, when making multiple comparisons. As seen from this table, significant differences in group means are obtained for all group pairs.
 
-Non-parametric ANOVA and post hoc test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Non-parametric ANOVA with post hoc tests
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If normality and other `assumptions <https://en.wikipedia.org/wiki/One-way_analysis_of_variance>`_ are violated, one can use a non-parametric Kruskall-Wallis H test (one-way non-parametric ANOVA) to test if samples came from the same distribution.
+If normality and other `assumptions <https://en.wikipedia.org/wiki/One-way_analysis_of_variance>`_ are violated, one can use a non-parametric Kruskal-Wallis H test (one-way non-parametric ANOVA) to test if samples came from the same distribution.
 
+Let's use the same dataset just to demonstrate the procedure. Kruskal-Wallis test is implemented in SciPy package. ``scipy.stats.kruskal`` method accepts array-like structures, but not DataFrames.
 
+.. code:: python
+
+  >>> import scipy.stats as ss
+  >>> import statsmodels.api as sa
+  >>> df = sa.datasets.get_rdataset('iris').data
+  >>> data = [df.loc[ids, 'sepal_width'].values for ids in df.groupby('species').groups.values()]
+
+``data`` is a list of 1D arrays containing *sepal width* values, one array per each species. Now we can run Kruskal-Wallis analysis of variance.
+
+.. code:: python
+
+  >>> import scipy.stats as ss
+  >>> H, p = ss.kruskal(*data)
+  >>> p
+  1.5692820940316782e-14
+
+P value tells us we may reject the null hypothesis that the population median of all of the groups are equal. To learn what groups (species) differ in their medians we need to run post hoc tests. ``scikit-posthocs`` provides a lot of non-parametric tests mentioned above. Let's choose Conover's test.
+
+.. code:: python
+
+  >>> print(sp.posthoc_conover(df, val_col='sepal_width', group_col='species', p_adjust = 'holm'))
+                    setosa    versicolor     virginica
+  setosa     -1.000000e+00  2.278515e-18  1.293888e-10
+  versicolor  2.278515e-18 -1.000000e+00  1.881294e-03
+  virginica   1.293888e-10  1.881294e-03 -1.000000e+00
+
+Pairwise comparisons show that we may reject the null hypothesis (p < 0.01) for each pair of species and conclude that all groups (species) differ in their sepal widths.
 
 Significance plots
 ------------------
