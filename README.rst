@@ -73,11 +73,11 @@ Package is compatible with Python 2 and Python 3.
 Install
 -------
 
-You can install the package using ``pip`` :
+You can install the package from PyPi:
 
 .. code:: bash
 
-  pip install scikit-posthocs
+  $ pip install scikit-posthocs
 
 
 Examples
@@ -97,29 +97,29 @@ To begin, we will import the dataset using statsmodels ``get_rdataset()`` method
   >>> import scikit_posthocs as sp
   >>> df = sa.datasets.get_rdataset('iris').data
   >>> df.head()
-     sepal_length  sepal_width  petal_length  petal_width species
+     Sepal.Length  Sepal.Width  Petal.Length  Petal.Width Species
   0           5.1          3.5           1.4          0.2  setosa
   1           4.9          3.0           1.4          0.2  setosa
   2           4.7          3.2           1.3          0.2  setosa
   3           4.6          3.1           1.5          0.2  setosa
   4           5.0          3.6           1.4          0.2  setosa
 
-Now, we will build a model and run ANOVA using statsmodels ``ols()`` and ``anova_lm()`` methods. Columns ``species`` and ``sepal_width`` contain independent (predictor) and dependent (response) variable values, correspondingly.
+Now, we will build a model and run ANOVA using statsmodels ``ols()`` and ``anova_lm()`` methods. Columns ``Species`` and ``Sepal.Width`` contain independent (predictor) and dependent (response) variable values, correspondingly.
 
 .. code:: python
 
-  >>> lm = sfa.ols('sepal_width ~ C(species)', data=df).fit()
+  >>> lm = sfa.ols('Sepal.Width ~ C(Species)', data=df).fit()
   >>> anova = sa.stats.anova_lm(lm)
   >>> print(anova)
                  df     sum_sq   mean_sq         F        PR(>F)
-  C(species)    2.0  11.344933  5.672467  49.16004  4.492017e-17
+  C(Species)    2.0  11.344933  5.672467  49.16004  4.492017e-17
   Residual    147.0  16.962000  0.115388       NaN           NaN
 
 The results tell us that there is a significant difference between groups means (p = 4.49e-17), but does not tell us the exact group pairs which are different in means. To obtain pairwise group differences, we will carry out a posteriori (post hoc) analysis using ``scikits-posthocs`` package. Student T test applied pairwisely gives us the following p values:
 
 .. code:: python
 
-  >>> sp.posthoc_ttest(df, val_col='sepal_width', group_col='species', p_adjust='holm')
+  >>> sp.posthoc_ttest(df, val_col='Sepal.Width', group_col='Species', p_adjust='holm')
                     setosa    versicolor     virginica
   setosa     -1.000000e+00  5.535780e-15  8.492711e-09
   versicolor  5.535780e-15 -1.000000e+00  1.819100e-03
@@ -140,7 +140,7 @@ Let's use the same dataset just to demonstrate the procedure. Kruskal-Wallis tes
   >>> import statsmodels.api as sa
   >>> import scikit_posthocs as sp
   >>> df = sa.datasets.get_rdataset('iris').data
-  >>> data = [df.loc[ids, 'sepal_width'].values for ids in df.groupby('species').groups.values()]
+  >>> data = [df.loc[ids, 'Sepal.Width'].values for ids in df.groupby('Species').groups.values()]
 
 ``data`` is a list of 1D arrays containing *sepal width* values, one array per each species. Now we can run Kruskal-Wallis analysis of variance.
 
@@ -154,7 +154,7 @@ P value tells us we may reject the null hypothesis that the population medians o
 
 .. code:: python
 
-  >>> print(sp.posthoc_conover(df, val_col='sepal_width', group_col='species', p_adjust = 'holm'))
+  >>> sp.posthoc_conover(df, val_col='Sepal.Width', group_col='Species', p_adjust = 'holm')
                     setosa    versicolor     virginica
   setosa     -1.000000e+00  2.278515e-18  1.293888e-10
   versicolor  2.278515e-18 -1.000000e+00  1.881294e-03
