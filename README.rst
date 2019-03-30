@@ -37,10 +37,10 @@ Features
 
 - *Parametric* pairwise multiple comparisons tests:
 
-- Scheffe test.
-- Student T test.
-- Tamhane T2 test.
-- TukeyHSD test.
+  - Scheffe test.
+  - Student T test.
+  - Tamhane T2 test.
+  - TukeyHSD test.
 
 - *Non-parametric* tests for factorial design:
 
@@ -54,6 +54,7 @@ Features
   - Wilcoxon test.
 
 - *Non-parametric* tests for block design:
+
   - Conover test.
   - Durbin and Conover test.
   - Miller test.
