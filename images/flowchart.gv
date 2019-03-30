@@ -1,0 +1,108 @@
+digraph {
+    graph [truecolor=true, bgcolor="#ff000000"];
+    node [fontname="Roboto", fontsize=12];
+
+    factorial [
+        label="Factorial Design",
+        shape=box,
+        style="filled",
+        fillcolor="#C7DFFF",
+        color="#2666ba",
+        fontcolor="#184074"
+    ];
+
+    anova [
+        fillcolor="#eec4c6",
+        color="#8d1e22",
+        fontcolor="#581315",
+        label="ANOVA",
+        shape=box,
+        style="filled",
+        width=1.5,
+    ];
+
+    param [
+        shape=box,
+        style="rounded,filled",
+        fontcolor="#746522",
+        color="#baa136",
+        fillcolor="#fff5cd",
+        label="Parametric\nANOVA",
+        width=0.5
+    ];
+
+    param_posthocs [
+        shape=box,
+        fontname="Iosevka",
+        label="posthoc_scheffe()\nposthoc_tamhane()\nposthoc_ttest()\nposthoc_tukey()\nposthoc_tukey_hsd()"
+    ];
+
+    nonparam [
+        shape=box,
+        style="rounded,filled",
+        fontcolor="#746522",
+        color="#baa136",
+        fillcolor="#fff5cd",
+        label="Non-parametric\nANOVA",
+        width=0.5
+    ];
+
+    nonparam_posthocs [
+        shape=box,
+        fontname="Iosevka",
+        label="posthoc_conover()\nposthoc_dscf()\nposthoc_mannwhitney()\nposthoc_nemenyi()\nposthoc_dunn()\nposthoc_npm_test()\nposthoc_vanwaerden()\nposthoc_wilcoxon()"
+    ];
+
+    blocked [
+        label="Block Design",
+        shape=box,
+        style="filled",
+        fillcolor="#C7DFFF",
+        color="#2666ba",
+        fontcolor="#184074"
+    ];
+
+    friedman [
+        fillcolor="#eec4c6",
+        color="#8d1e22",
+        fontcolor="#581315",
+        label="Friedman test\nComplete block design",
+        shape=box,
+        style="filled",
+        width=0.5,
+    ];
+
+    friedman_posthocs [
+        shape=box,
+        fontname="Iosevka"
+        label="posthoc_conover_friedman()\nposthoc_miller_friedman()\nposthoc_nemenyi_friedman()\nposthoc_siegel_friedman()\nposthoc_quade()"
+    ];
+
+    durbin [
+        fillcolor="#eec4c6",
+        color="#8d1e22",
+        fontcolor="#581315",
+        label="Durbin test\nIncomplete block design",
+        shape=box,
+        style="filled",
+        width=0.5,
+    ];
+
+    durbin_posthocs [
+        shape=box,
+        fontname="Iosevka"
+        label="posthoc_durbin()"
+    ];
+
+
+    factorial -> anova;
+    anova  -> param;
+    anova  -> nonparam;
+
+    param -> param_posthocs;
+    nonparam -> nonparam_posthocs;
+
+    blocked -> {friedman, durbin};
+    friedman -> friedman_posthocs;
+    durbin -> durbin_posthocs;
+}
