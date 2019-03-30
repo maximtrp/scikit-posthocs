@@ -1,5 +1,5 @@
-===============
-scikit-posthocs
+.. image:: images/logo.png
+
 ===============
 
 .. image:: https://travis-ci.org/maximtrp/scikit-posthocs.svg?branch=master
