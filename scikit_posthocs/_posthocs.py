@@ -1627,12 +1627,12 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=True, p_adjust=None
 
     Notes
     -----
-    For one-factorial designs with samples that do not meet the assumptions
-    for one-way-ANOVA and subsequent post hoc tests, the van der Waerden test
-    vanWaerden.test using normal scores can be employed. Provided that
-    significant differences were detected by this global test, one may be
-    interested in applying post hoc tests according to van der Waerden
-    for pairwise multiple comparisons of the group levels.
+    For one-factorial designs with samples that do not meet the assumptions for
+    one-way-ANOVA and subsequent post hoc tests, the van der Waerden test using
+    normal scores can be employed. Provided that significant differences were
+    detected by this global test, one may be interested in applying post hoc
+    tests according to van der Waerden for pairwise multiple comparisons of the
+    group levels.
 
     There is no tie correction applied in this function.
 
@@ -1698,7 +1698,7 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=True, p_adjust=None
 def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True, p_adjust=None, sort=True):
 
     '''Pairwise T test for multiple comparisons of independent groups. May be
-    used after an ordinary ANOVA to do pairwise comparisons.
+    used after a parametric ANOVA to do pairwise comparisons.
 
     Parameters
     ----------
@@ -1980,7 +1980,7 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
 def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', correction=False, p_adjust=None, sort=False):
 
     '''Pairwise comparisons with Wilcoxon signed-rank test. It is a non-parametric
-    version of the paired T-test.
+    version of the paired T-test for use with non-parametric ANOVA.
 
     Parameters
     ----------
@@ -2075,9 +2075,9 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
 def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
 
     '''Scheffe's all-pairs comparisons test for normally distributed data with equal
-    group variances. For all-pairs comparisons in an
-    one-factorial layout with normally distributed residuals and equal variances
-    Scheffe's test can be performed [1]_, [2]_, [3]_.
+    group variances. For all-pairs comparisons in an one-factorial layout with
+    normally distributed residuals and equal variances Scheffe's test can be
+    performed with parametric ANOVA [1]_, [2]_, [3]_.
 
     A total of m = k(k-1)/2 hypotheses can be tested.
 
@@ -2208,7 +2208,7 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
 
     Notes
     -----
-    The p-values are computed from the t-distribution and adjusted according to
+    The p values are computed from the t-distribution and adjusted according to
     Dunn-Sidak.
 
     References
