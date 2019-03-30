@@ -13,9 +13,9 @@ scikit-posthocs
 .. image:: https://img.shields.io/badge/donate-PayPal-blue.svg
     :target: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K5J3W3WUQ754U&lc=US&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 
-*scikit-posthocs* is a Python package which provides post hoc tests for pairwise multiple comparisons that are usually performed in statistical data analysis to assess the differences between group levels if a statistically significant result of ANOVA test has been obtained.
+**scikit-posthocs** is a Python package which provides post hoc tests for pairwise multiple comparisons that are usually performed in statistical data analysis to assess the differences between group levels if a statistically significant result of ANOVA test has been obtained.
 
-*scikit-posthocs* is tightly integrated with Pandas DataFrames and NumPy arrays to ensure fast computations and convenient data import and storage.
+**scikit-posthocs** is tightly integrated with Pandas DataFrames and NumPy arrays to ensure fast computations and convenient data import and storage.
 
 This package will be useful for statisticians, data analysts, and researchers who use Python in their work.
 
