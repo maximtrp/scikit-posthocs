@@ -28,9 +28,9 @@ copyright = '2019, Maksim Terpilowski'
 author = 'Maksim Terpilowski'
 
 # The short X.Y version
-version = '0.4.0'
+version = '0.5.0'
 # The full version, including alpha/beta/rc tags
-release = '0.4.0'
+release = '0.5.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -93,6 +93,11 @@ html_theme = 'sphinx_rtd_theme'
 # documentation.
 #
 html_theme_options = {
+    'collapse_navigation': False,
+    'sticky_navigation': False,
+    'navigation_depth': 4,
+    'includehidden': True,
+    'titles_only': False
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

@@ -14,12 +14,12 @@ Dependencies
 
 Package is compatible with both major versions of Python and has the following dependencies:
 
-* `numpy <http://www.numpy.org/>`_
-* `scipy <https://www.scipy.org/>`_
-* `statsmodels <https://www.statsmodels.org/>`_
-* `pandas <https://pandas.pydata.org/>`_
-* `seaborn <https://seaborn.pydata.org>`_
-* `matplotlib <https://matplotlib.org/>`_
+* `NumPy <http://www.numpy.org/>`_
+* `SciPy <https://www.scipy.org/>`_
+* `Statsmodels <https://www.statsmodels.org/>`_
+* `Pandas <https://pandas.pydata.org/>`_
+* `Seaborn <https://seaborn.pydata.org>`_
+* `Matplotlib <https://matplotlib.org/>`_
 
 Bugs
 ----
