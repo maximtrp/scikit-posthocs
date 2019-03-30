@@ -63,6 +63,7 @@ Features
   - Siegel test.
 
 - Other tests:
+
   - Anderson-Darling test.
   - Mack-Wolfe test.
   - Hayter (OSRT) test.
