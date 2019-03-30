@@ -10,24 +10,47 @@ Python statistical ecosystem is comprised of multiple packages. However, it stil
 Features
 --------
 
-- Pairwise multiple comparisons parametric and nonparametric tests:
+.. image:: _static/flowchart.png
 
- - Conover, Dunn, and Nemenyi tests for use with Kruskal-Wallis test.
- - Conover, Nemenyi, Siegel, and Miller tests for use with Friedman test.
- - Quade, van Waerden, and Durbin tests.
- - Student, Mann-Whitney, Wilcoxon, and TukeyHSD tests.
- - Anderson-Darling test.
- - Mack-Wolfe test.
- - Nashimoto and Wright's test (NPM test).
- - Scheffe test.
- - Tamhane T2 test.
+- *Parametric* pairwise multiple comparisons tests:
+
+  - Scheffe test.
+  - Student T test.
+  - Tamhane T2 test.
+  - TukeyHSD test.
+
+- *Non-parametric* tests for factorial design:
+
+  - Conover test.
+  - Dunn test.
+  - Dwass, Steel, Critchlow, and Fligner test.
+  - Mann-Whitney test.
+  - Nashimoto and Wright (NPM) test.
+  - Nemenyi test.
+  - van Waerden test.
+  - Wilcoxon test.
+
+- *Non-parametric* tests for block design:
+
+  - Conover test.
+  - Durbin and Conover test.
+  - Miller test.
+  - Nemenyi test.
+  - Quade test.
+  - Siegel test.
+
+- Other tests:
+
+  - Anderson-Darling test.
+  - Mack-Wolfe test.
+  - Hayter (OSRT) test.
 
 - Outliers detection tests:
 
- - Simple test based on interquartile range (IQR).
- - Grubbs test.
- - Tietjen-Moore test.
- - Generalized Extreme Studentized Deviate test (ESD test).
+  - Simple test based on interquartile range (IQR).
+  - Grubbs test.
+  - Tietjen-Moore test.
+  - Generalized Extreme Studentized Deviate test (ESD test).
 
 - Plotting functionality (e.g. significance plots).
 
