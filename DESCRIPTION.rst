@@ -2,9 +2,9 @@
 scikit-posthocs
 ===============
 
-*scikit-posthocs* is a Python package which provides post hoc tests for pairwise multiple comparisons that are usually performed in statistical data analysis to assess the differences between group levels if a statistically significant result of ANOVA test has been obtained.
+**scikit-posthocs** is a Python package which provides post hoc tests for pairwise multiple comparisons that are usually performed in statistical data analysis to assess the differences between group levels if a statistically significant result of ANOVA test has been obtained.
 
-*scikit-posthocs* is tightly integrated with Pandas DataFrames and NumPy arrays to ensure fast computations and convenient data import and storage.
+**scikit-posthocs** is tightly integrated with Pandas DataFrames and NumPy arrays to ensure fast computations and convenient data import and storage.
 
 This package will be useful for statisticians, data analysts, and researchers who use Python in their work.
 
@@ -22,17 +22,38 @@ Python statistical ecosystem is comprised of multiple packages. However, it stil
 Features
 --------
 
-- Pairwise multiple comparisons parametric and nonparametric tests:
+- *Parametric* pairwise multiple comparisons tests:
 
-  - Conover, Dunn, and Nemenyi tests for use with Kruskal-Wallis test.
-  - Conover, Nemenyi, Siegel, and Miller tests for use with Friedman test.
-  - Quade, van Waerden, and Durbin tests.
-  - Student, Mann-Whitney, Wilcoxon, and TukeyHSD tests.
+  - Scheffe test.
+  - Student T test.
+  - Tamhane T2 test.
+  - TukeyHSD test.
+
+- *Non-parametric* tests for factorial design:
+
+  - Conover test.
+  - Dunn test.
+  - Dwass, Steel, Critchlow, and Fligner test.
+  - Mann-Whitney test.
+  - Nashimoto and Wright (NPM) test.
+  - Nemenyi test.
+  - van Waerden test.
+  - Wilcoxon test.
+
+- *Non-parametric* tests for block design:
+
+  - Conover test.
+  - Durbin and Conover test.
+  - Miller test.
+  - Nemenyi test.
+  - Quade test.
+  - Siegel test.
+
+- Other tests:
+
   - Anderson-Darling test.
   - Mack-Wolfe test.
-  - Nashimoto and Wright's test (NPM test).
-  - Scheffe test.
-  - Tamhane T2 test.
+  - Hayter (OSRT) test.
 
 - Outliers detection tests:
 
@@ -216,8 +237,3 @@ Custom colormap applied to a plot:
   >>> cmap = ['1', '#fb6a4a',  '#08306b',  '#4292c6', '#c6dbef']
   >>> heatmap_args = {'cmap': cmap, 'linewidths': 0.25, 'linecolor': '0.5', 'clip_on': False, 'square': True, 'cbar_ax_bbox': [0.80, 0.35, 0.04, 0.3]}
   >>> sp.sign_plot(pc, **heatmap_args)
-
-Acknowledgement
----------------
-
-Thorsten Pohlert, PMCMR author and maintainer

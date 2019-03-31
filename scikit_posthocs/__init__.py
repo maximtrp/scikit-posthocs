@@ -1,4 +1,4 @@
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 
 from scikit_posthocs._posthocs \
     import posthoc_anderson, posthoc_conover, posthoc_conover_friedman,\
