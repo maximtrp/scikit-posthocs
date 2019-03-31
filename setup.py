@@ -14,7 +14,7 @@ setup(name='scikit-posthocs',
       install_requires=['numpy', 'scipy', 'statsmodels',
                         'pandas>=0.20.0', 'seaborn', 'matplotlib'],
 	  classifiers=[
-		'Development Status :: 4 - Beta',
+		'Development Status :: 5 - Production/Stable',
 
 		'Intended Audience :: Education',
 		'Intended Audience :: Information Technology',
