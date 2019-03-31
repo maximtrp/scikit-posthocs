@@ -649,6 +649,7 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
         'fdr_by' : Benjamini/Yekutieli (negative)
         'fdr_tsbh' : two stage fdr correction (non-negative)
         'fdr_tsbky' : two stage fdr correction (non-negative)
+        'single-step' : uses Tukey distribution for multiple comparisons
 
     Returns
     -------
@@ -684,9 +685,15 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
         raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
 
     def compare_stats(i, j):
-        dif = np.abs(R[groups[i]] - R[groups[j]])
-        tval = dif / np.sqrt(A / B)
-        pval = 2. * ss.t.sf(np.abs(tval), df = (n-1)*(k-1))
+        dif = np.abs(R.loc[groups[i]] - R.loc[groups[j]])
+        tval = dif / np.sqrt(A) / np.sqrt(B)
+        pval = 2. * ss.t.sf(np.abs(tval), df = (m*n*k - k - n + 1))
+        return pval
+
+    def compare_tukey(i, j):
+        dif = np.abs(R.loc[groups[i]] - R.loc[groups[j]])
+        qval = np.sqrt(2.) * dif / (np.sqrt(A) * np.sqrt(B))
+        pval = psturng(qval, k, np.inf)
         return pval
 
     x, _y_col, _group_col, _block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
@@ -697,18 +704,18 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
     x.sort_values(by=[_group_col,_block_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
 
-    groups = x[_group_col].unique()
+    groups = np.unique(x[_group_col])
     k = groups.size
     n = x[_block_col].unique().size
 
     x['mat'] = x.groupby(_block_col)[_y_col].rank()
     R = x.groupby(_group_col)['mat'].sum()
     A1 = (x['mat'] ** 2).sum()
-    C1 = (n * k * (k + 1) ** 2) / 4
-    TT = np.sum([((R[g] - ((n * (k + 1))/2)) ** 2) for g in groups])
-    T1 = ((k - 1) * TT) / (A1 - C1)
-    A = 2 * k * (1 - T1 / (k * (n-1))) * ( A1 - C1)
-    B = (n - 1) * (k - 1)
+    m = 1
+    S2 = m/(m*k - 1.) * (A1 - m*k*n*(m*k + 1.)**2./4.)
+    T2 = 1 / S2 * (np.sum(R) - n * m * ((m * k + 1.) / 2.)**2.)
+    A = S2 * (2. * n * (m * k - 1.)) / ( m * n * k - k - n + 1.)
+    B = 1. - T2 / (n * (m * k - 1.))
 
     vs = np.zeros((k, k))
     combs = it.combinations(range(k), 2)
@@ -717,11 +724,15 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
-    for i, j in combs:
-        vs[i, j] = compare_stats(i, j)
+    if p_adjust == 'single-step':
+        for i, j in combs:
+            vs[i, j] = compare_tukey(i, j)
+    else:
+        for i, j in combs:
+            vs[i, j] = compare_stats(i, j)
 
-    if p_adjust:
-        vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
+        if p_adjust is not None:
+            vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
     np.fill_diagonal(vs, -1)
