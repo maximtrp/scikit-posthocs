@@ -27,7 +27,7 @@ digraph {
         fontcolor="#746522",
         color="#baa136",
         fillcolor="#fff5cd",
-        label="Parametric\nANOVA",
+        label="Parametric\nANOVA\n\nscipy.stats.f_oneway()",
         width=0.5
     ];
 
@@ -43,7 +43,7 @@ digraph {
         fontcolor="#746522",
         color="#baa136",
         fillcolor="#fff5cd",
-        label="Non-parametric\nANOVA",
+        label="Non-parametric\nANOVA\n\nscipy.stats.kruskal()",
         width=0.5
     ];
 
@@ -66,7 +66,7 @@ digraph {
         fillcolor="#eec4c6",
         color="#8d1e22",
         fontcolor="#581315",
-        label="Friedman test\nComplete block design",
+        label="Friedman test\nComplete block design\n\nscipy.stats.friedmanchisquare()",
         shape=box,
         style="filled",
         width=0.5,
@@ -82,7 +82,7 @@ digraph {
         fillcolor="#eec4c6",
         color="#8d1e22",
         fontcolor="#581315",
-        label="Durbin test\nIncomplete block design",
+        label="Durbin test\nIncomplete block design\n\ntest_durbin()",
         shape=box,
         style="filled",
         width=0.5,

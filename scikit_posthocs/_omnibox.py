@@ -51,7 +51,7 @@ def test_osrt(a, val_col=None, group_col=None, sort=False):
     >>> import pandas as pd
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
-    >>> sp.osr_test(x, val_col='values', group_col='groups')
+    >>> sp.test_osrt(x, val_col='values', group_col='groups')
 
     '''
 
