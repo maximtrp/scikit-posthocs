@@ -1,5 +1,7 @@
 __version__ = '0.5.1'
 
+from scikit_posthocs._omnibox import test_osrt, test_durbin
+
 from scikit_posthocs._posthocs \
     import posthoc_anderson, posthoc_conover, posthoc_conover_friedman,\
             posthoc_dscf, posthoc_dunn, posthoc_durbin, posthoc_mackwolfe,\
