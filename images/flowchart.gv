@@ -27,7 +27,7 @@ digraph {
         fontcolor="#746522",
         color="#baa136",
         fillcolor="#fff5cd",
-        label="Parametric\nANOVA\n\nscipy.stats.f_oneway()",
+        label="Parametric\nANOVA\n\nscipy.stats.f_oneway()\ntest_osrt()",
         width=0.5
     ];
 

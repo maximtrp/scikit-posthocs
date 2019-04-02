@@ -12,6 +12,10 @@ Features
 
 .. image:: _static/flowchart.png
 
+- *Omnibox* tests:
+
+  - Durbin test (for BIBD).
+
 - *Parametric* pairwise multiple comparisons tests:
 
   - Scheffe test.
