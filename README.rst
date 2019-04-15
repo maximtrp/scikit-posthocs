@@ -6,6 +6,8 @@
     :target: https://travis-ci.org/maximtrp/scikit-posthocs
 .. image:: https://img.shields.io/readthedocs/scikit-posthocs.svg
     :target: https://scikit-posthocs.readthedocs.io
+.. image:: http://joss.theoj.org/papers/10.21105/joss.01169/status.svg
+    :target: https://doi.org/10.21105/joss.01169
 .. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg
     :target: https://github.com/maximtrp/scikit-posthocs/issues
 .. image:: https://img.shields.io/pypi/v/scikit-posthocs.svg
@@ -275,6 +277,26 @@ Custom colormap applied to a plot:
   >>> sp.sign_plot(pc, **heatmap_args)
 
 .. image:: images/plot-conover-custom-cmap.png
+
+Citing
+------
+
+If you want to cite *scikit-posthocs*, please refer to the publication in the `Journal of Open Source Software <http://joss.theoj.org>`_:
+
+Terpilowski, M. (2019). scikit-posthocs: Pairwise multiple comparison tests in Python. Journal of Open Source Software, 4(36), 1169, https://doi.org/10.21105/joss.01169
+
+.. code::
+
+  @ARTICLE{Terpilowski2019,
+    title    = {scikit-posthocs: Pairwise multiple comparison tests in Python},
+    author   = {Terpilowski, Maksim},
+    journal  = {The Journal of Open Source Software},
+    volume   = {4},
+    number   = {36},
+    pages    = {1169},
+    year     = {2019},
+    doi      = {10.21105/joss.01169}
+  }
 
 Acknowledgement
 ---------------
