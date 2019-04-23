@@ -106,13 +106,16 @@ def __convert_to_df(a, val_col=None, group_col=None, val_id=None, group_id=None)
         return DataFrame(a, columns=cols_vals), val_col, group_col
 
 
-def __convert_to_block_df(a, y_col, group_col, block_col, melted):
+def __convert_to_block_df(a, y_col=None, group_col=None, block_col=None, melted=False):
 
     if isinstance(a, DataFrame) and not melted:
+        x = a.copy(deep=True)
         group_col = 'groups'
         block_col = 'blocks'
         y_col = 'y'
-        x = a.melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+        x.columns.name = group_col
+        x.index.name = block_col
+        x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
     elif melted:
         x = DataFrame.from_dict({'groups': a[group_col],
@@ -508,11 +511,11 @@ def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
     block_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains block names.
+        Name of the column that contains blocking factor values.
 
     group_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of the column that contains treatment (group) factor values.
 
     melted : bool, optional
         Specifies if data are given as melted columns "y", "blocks", and
@@ -623,11 +626,11 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
     block_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains block names.
+        Name of the column that contains blocking factor values.
 
     group_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of the column that contains treatment (group) factor values.
 
     melted : bool, optional
         Specifies if data are given as melted columns "y", "blocks", and
@@ -874,11 +877,11 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
 
     block_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains block names.
+        Name of the column that contains blocking factor values.
 
     group_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of the column that contains treatment (group) factor values.
 
     melted : bool, optional
         Specifies if data are given as melted columns "y", "blocks", and
@@ -995,11 +998,11 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
 
     block_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains block names.
+        Name of the column that contains blocking factor values.
 
     group_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of the column that contains treatment (group) factor values.
 
     melted : bool, optional
         Specifies if data are given as melted columns "y", "blocks", and
@@ -1105,11 +1108,11 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
 
     block_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains block names.
+        Name of the column that contains blocking factor values.
 
     group_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of the column that contains treatment (group) factor values.
 
     melted : bool, optional
         Specifies if data are given as melted columns "y", "blocks", and
@@ -1311,13 +1314,13 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
         Must be specified if `a` is a pandas DataFrame object.
         Name of the column that contains y data.
 
-    block_col : str or int, optional
+    block_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains block names.
+        Name of the column that contains blocking factor values.
 
-    group_col : str or int, optional
+    group_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains group names.
+        Name of the column that contains treatment (group) factor values.
 
     dist : str, optional
         Method for determining p values.

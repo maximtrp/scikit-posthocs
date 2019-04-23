@@ -191,6 +191,83 @@ P value tells us we may reject the null hypothesis that the population medians o
 
 Pairwise comparisons show that we may reject the null hypothesis (p < 0.01) for each pair of species and conclude that all groups (species) differ in their sepal widths.
 
+Block design
+~~~~~~~~~~~~
+
+In block design case, we have a primary factor (e.g. treatment) and a blocking factor (e.g. age or gender). A blocking factor is also called a *nuisance* factor, and it is usually a source of variability that needs to be accounted for.
+
+An example scenario is testing the effect of four fertilizers on crop yield in four cornfields. We can represent the results with a matrix in which rows correspond to the blocking factor (field) and columns correspond to the primary factor (yield).
+
+The following dataset is artificial and created just for demonstration of the procedure:
+
+.. code:: python
+
+  >>> data = np.array([[ 8.82, 11.8 , 10.37, 12.08],
+                       [ 8.92,  9.58, 10.59, 11.89],
+                       [ 8.27, 11.46, 10.24, 11.6 ],
+                       [ 8.83, 13.25,  8.33, 11.51]])
+
+First, we need to perform an omnibus test — Friedman rank sum test. It is implemented in ``scipy.stats`` subpackage:
+
+.. code:: python
+
+  >>> import scipy.stats as ss
+  >>> ss.friedmanchisquare(*data.T)
+  FriedmanchisquareResult(statistic=8.700000000000003, pvalue=0.03355726870553798)
+
+We can reject the null hypothesis that our treatments have the same distribution, because p value is less than 0.05. A number of post hoc tests are available in ``scikit-posthocs`` package for unreplicated block design data. In the following example, Nemenyi's test is used:
+
+.. code:: python
+
+  >>> import scikit_posthocs as sp
+  >>> sp.posthoc_nemenyi_friedman(data)
+            0         1         2         3
+  0 -1.000000  0.220908  0.823993  0.031375
+  1  0.220908 -1.000000  0.670273  0.823993
+  2  0.823993  0.670273 -1.000000  0.220908
+  3  0.031375  0.823993  0.220908 -1.000000
+
+This function returns a DataFrame with p values obtained in pairwise comparisons between all treatments.
+One can also pass a DataFrame and specify the names of columns containing dependent variable values, blocking and primary factor values. The following code creates a DataFrame with the same data:
+
+.. code:: python
+  >>> data = pd.DataFrame.from_dict({'blocks': {0: 0, 1: 1, 2: 2, 3: 3, 4: 0, 5: 1, 6:
+  2, 7: 3, 8: 0, 9: 1, 10: 2, 11: 3, 12: 0, 13: 1, 14: 2, 15: 3}, 'groups': {0:
+  0, 1: 0, 2: 0, 3: 0, 4: 1, 5: 1, 6: 1, 7: 1, 8: 2, 9: 2, 10: 2, 11: 2, 12: 3,
+  13: 3, 14: 3, 15: 3}, 'y': {0: 8.82, 1: 8.92, 2: 8.27, 3: 8.83, 4: 11.8, 5:
+  9.58, 6: 11.46, 7: 13.25, 8: 10.37, 9: 10.59, 10: 10.24, 11: 8.33, 12: 12.08,
+  13: 11.89, 14: 11.6, 15: 11.51}})
+  >>> data
+      blocks  groups      y
+  0        0       0   8.82
+  1        1       0   8.92
+  2        2       0   8.27
+  3        3       0   8.83
+  4        0       1  11.80
+  5        1       1   9.58
+  6        2       1  11.46
+  7        3       1  13.25
+  8        0       2  10.37
+  9        1       2  10.59
+  10       2       2  10.24
+  11       3       2   8.33
+  12       0       3  12.08
+  13       1       3  11.89
+  14       2       3  11.60
+  15       3       3  11.51
+
+This is a *melted* and ready-to-use DataFrame. Do not forget to pass ``melted`` argument:
+
+.. code:: python
+
+  >>> sp.posthoc_nemenyi_friedman(x, y_col='y', block_col='blocks', group_col='groups', melted=True)
+            0         1         2         3
+  0 -1.000000  0.220908  0.823993  0.031375
+  1  0.220908 -1.000000  0.670273  0.823993
+  2  0.823993  0.670273 -1.000000  0.220908
+  3  0.031375  0.823993  0.220908 -1.000000
+
+
 Data types
 ~~~~~~~~~~
 
@@ -237,6 +314,33 @@ You can check how it is processed with a hidden function ``__convert_to_df()``:
    18     3       3, 'vals', 'groups')
 
 It returns a tuple of a DataFrame representation and names of the columns containing dependent (``vals``) and independent (``groups``) variable values.
+
+*Block design* matrix passed as a NumPy ndarray is processed with a hidden ``__convert_to_block_df()`` function:
+
+.. code:: python
+
+  >>> data = np.array([[ 8.82, 11.8 , 10.37, 12.08],
+                       [ 8.92,  9.58, 10.59, 11.89],
+                       [ 8.27, 11.46, 10.24, 11.6 ],
+                       [ 8.83, 13.25,  8.33, 11.51]])
+  >>> sp.__convert_to_block_df(data)
+  (    blocks groups      y
+   0        0      0   8.82
+   1        1      0   8.92
+   2        2      0   8.27
+   3        3      0   8.83
+   4        0      1  11.80
+   5        1      1   9.58
+   6        2      1  11.46
+   7        3      1  13.25
+   8        0      2  10.37
+   9        1      2  10.59
+   10       2      2  10.24
+   11       3      2   8.33
+   12       0      3  12.08
+   13       1      3  11.89
+   14       2      3  11.60
+   15       3      3  11.51, 'y', 'groups', 'blocks')
 
 DataFrames
 ^^^^^^^^^^
