@@ -232,10 +232,10 @@ def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
             g.set_ylabel('')
 
         cbar_ax = g.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
-        cbar = ColorbarBase(cbar_ax, cmap=ListedColormap(cmap[1:]),
+        cbar = ColorbarBase(cbar_ax, cmap=ListedColormap(cmap[2:] + [cmap[1]]),
                             boundaries=[0, 1, 2, 3, 4])
         cbar.set_ticks(np.linspace(0.5, 3.5, 4))
-        cbar.set_ticklabels(['NS', 'p < 0.001', 'p < 0.01', 'p < 0.05'])
+        cbar.set_ticklabels(['p < 0.001', 'p < 0.01', 'p < 0.05', 'NS'])
 
         cbar.outline.set_linewidth(1)
         cbar.outline.set_edgecolor('0.5')
