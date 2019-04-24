@@ -202,10 +202,10 @@ def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
 
     if not cmap and flat:
         # format: diagonal, non-significant, significant
-        cmap = ['1', '#d73027', '#1a9641']
+        cmap = ['1', '#fbd7d4', '#1a9641']
     elif not cmap and not flat:
         # format: diagonal, non-significant, p<0.001, p<0.01, p<0.05
-        cmap = ['1', '#ef3b2c', '#005a32', '#238b45', '#a1d99b']
+        cmap = ['1', '#fbd7d4', '#005a32', '#238b45', '#a1d99b']
 
     if flat:
         g = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax,
