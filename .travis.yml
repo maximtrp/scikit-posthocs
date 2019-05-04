@@ -8,10 +8,11 @@ cache: pip
 
 install:
   - pip install codecov
+  - pip install coverage
   - pip install -r requirements.txt
   - pip install -e .
 
-script: python setup.py test
+script: coverage run --source scikit_posthocs setup.py test
 
 after_success:
   - codecov
