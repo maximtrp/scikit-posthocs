@@ -8,6 +8,8 @@
     :target: https://scikit-posthocs.readthedocs.io
 .. image:: http://joss.theoj.org/papers/10.21105/joss.01169/status.svg
     :target: https://doi.org/10.21105/joss.01169
+.. image:: https://codecov.io/gh/maximtrp/scikit-posthocs/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/maximtrp/scikit-posthocs
 .. image:: https://pepy.tech/badge/scikit-posthocs
     :target: https://pepy.tech/project/scikit-posthocs
 .. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg
