@@ -4,7 +4,7 @@ import numpy as np
 import itertools as it
 import scipy.stats as ss
 from statsmodels.stats.libqsturng import psturng
-from pandas import DataFrame, Categorical
+from pandas import Categorical
 from scikit_posthocs._posthocs import __convert_to_df, __convert_to_block_df
 
 def test_osrt(a, val_col=None, group_col=None, sort=False):
