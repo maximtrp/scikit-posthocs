@@ -1064,7 +1064,7 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
     vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
 
-    tri_upper = np.triu_indices(vs.shape[0], 1)
+    #tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
@@ -2250,7 +2250,7 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
     x_grouped = x.groupby(_group_col)[_val_col]
 
     ni = x_grouped.count()
-    n = ni.sum()
+    #n = ni.sum()
     xi = x_grouped.mean()
     si = x_grouped.var()
     #sin = 1. / (n - groups.size) * np.sum(si * (ni - 1))
