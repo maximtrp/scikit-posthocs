@@ -2,7 +2,7 @@ from setuptools import setup
 from os.path import join, dirname
 
 setup(name='scikit-posthocs',
-      version='0.5.2',
+      version='0.5.3',
       description='Statistical post-hoc analysis and outlier detection algorithms',
       long_description=open(join(dirname(__file__), 'DESCRIPTION.rst')).read(),
       url='http://github.com/maximtrp/scikit-posthocs',
