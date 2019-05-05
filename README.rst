@@ -10,6 +10,8 @@
     :target: https://doi.org/10.21105/joss.01169
 .. image:: https://codecov.io/gh/maximtrp/scikit-posthocs/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/maximtrp/scikit-posthocs
+.. image:: https://api.codacy.com/project/badge/Grade/e172fecdc82d43a7b025527a3a7088e1
+    :target: https://www.codacy.com/app/maximtrp/scikit-posthocs?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=maximtrp/scikit-posthocs&amp;utm_campaign=Badge_Grade
 .. image:: https://pepy.tech/badge/scikit-posthocs
     :target: https://pepy.tech/project/scikit-posthocs
 .. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg
