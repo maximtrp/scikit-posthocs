@@ -181,10 +181,9 @@ def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
 
     """
 
-    try:
-        del kwargs['cbar'], kwargs['vmin'], kwargs['vmax'], kwargs['center']
-    except:
-        pass
+    for key in ['cbar', 'vmin', 'vmax', 'center']:
+        if key in kwargs:
+            del kwargs[key]
 
     if isinstance(x, DataFrame):
         df = x.copy()

@@ -4,7 +4,7 @@ import numpy as np
 import itertools as it
 import scipy.stats as ss
 from statsmodels.stats.libqsturng import psturng
-from pandas import DataFrame, Categorical, Series
+from pandas import DataFrame, Categorical
 from scikit_posthocs._posthocs import __convert_to_df, __convert_to_block_df
 
 def test_osrt(a, val_col=None, group_col=None, sort=False):
@@ -84,13 +84,9 @@ def test_osrt(a, val_col=None, group_col=None, sort=False):
         dif = xi.loc[groups[j]] - xi.loc[groups[i]]
         A = sigma / np.sqrt(2) * np.sqrt(1 / ni[groups[j]] + 1 / ni[groups[i]])
         qval = np.abs(dif) / A
-        return p
+        return qval
 
     vs = np.zeros((groups.size, groups.size), dtype=np.float)
-    tri_upper = np.triu_indices(vs.shape[0], 1)
-    tri_lower = np.tril_indices(vs.shape[0], -1)
-    vs[:,:] = 0
-
     combs = it.combinations(range(groups.size), 2)
 
     for i,j in combs:

@@ -837,8 +837,7 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
 
     stat[stat < 0] = 0
 
-    p_values = psturng(stat, k, np.inf)
-    tri_upper = np.triu_indices(p_values.shape[0], 1)
+    p_values = psturng(stat, k, df)
     tri_lower = np.tril_indices(p_values.shape[0], -1)
     p_values[tri_lower] = p_values.T[tri_lower]
 
@@ -1581,7 +1580,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
         est = None
 
         mt = []
-        for i in range(n_perm):
+        for _ in range(n_perm):
 
             ix = Series(np.random.permutation(Rij))
             Uix = _ustat(ix, x[group_col], k)
@@ -1681,7 +1680,7 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=True, p_adjust=None
     nj = x.groupby(_group_col)['z_scores'].count()
     s2 = (1. / (n - 1.)) * (x['z_scores'] ** 2.).sum()
     sts = (1. / s2) * np.sum(aj ** 2. / nj)
-    param = k - 1
+    #param = k - 1
     A = aj / nj
 
     vs = np.zeros((k, k), dtype=np.float)
@@ -2166,7 +2165,6 @@ def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
         return f_val
 
     vs = np.zeros((groups.size, groups.size), dtype=np.float)
-    tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
@@ -2255,7 +2253,7 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
     n = ni.sum()
     xi = x_grouped.mean()
     si = x_grouped.var()
-    sin = 1. / (n - groups.size) * np.sum(si * (ni - 1))
+    #sin = 1. / (n - groups.size) * np.sum(si * (ni - 1))
 
     def compare(i, j):
         dif = xi[i] - xi[j]
