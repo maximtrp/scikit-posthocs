@@ -44,6 +44,16 @@ class TestPosthocs(unittest.TestCase):
         a = splt.sign_plot(x, flat = True)
         self.assertTrue(isinstance(a, ma._subplots.Axes))
 
+    def test_sign_plot_nonflat(self):
+
+        x = np.array([[-1.,0.00119517,0.00278329],
+                      [0.00119517,-1.,0.18672227],
+                      [0.00278329,0.18672227,-1.]])
+        a, cbar = splt.sign_plot(x)
+        print(type(cbar))
+        self.assertTrue(isinstance(a, ma._subplots.Axes) and isinstance(cbar, mpl.colorbar.ColorbarBase))
+
+
     # Outliers tests
     def test_outliers_iqr(self):
 
