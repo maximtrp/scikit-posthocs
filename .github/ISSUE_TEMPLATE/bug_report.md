@@ -24,8 +24,8 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **System and package information (please complete the following information):**
- - OS: [e.g. Linux 4.20.0-arch1-1-ARCH x86_64 GNU/Linux]
- - Package version: [e.g. 0.4.0]
+- OS: (e.g. Linux 4.20.0-arch1-1-ARCH x86_64 GNU/Linux)
+- Package version: (e.g. 0.4.0)
 
 **Additional context**
 Add any other context about the problem here.
