@@ -8,12 +8,15 @@
     :target: https://scikit-posthocs.readthedocs.io
 .. image:: http://joss.theoj.org/papers/10.21105/joss.01169/status.svg
     :target: https://doi.org/10.21105/joss.01169
+.. image:: https://codecov.io/gh/maximtrp/scikit-posthocs/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/maximtrp/scikit-posthocs
+.. image:: https://pepy.tech/badge/scikit-posthocs
+    :target: https://pepy.tech/project/scikit-posthocs
 .. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg
     :target: https://github.com/maximtrp/scikit-posthocs/issues
 .. image:: https://img.shields.io/pypi/v/scikit-posthocs.svg
     :target: https://pypi.python.org/pypi/scikit-posthocs/
-.. image:: https://img.shields.io/badge/donate-PayPal-blue.svg
-    :target: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K5J3W3WUQ754U&lc=US&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
+
 
 **scikit-posthocs** is a Python package which provides post hoc tests for pairwise multiple comparisons that are usually performed in statistical data analysis to assess the differences between group levels if a statistically significant result of ANOVA test has been obtained.
 
