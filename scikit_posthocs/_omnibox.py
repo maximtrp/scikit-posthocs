@@ -66,15 +66,15 @@ def test_osrt(a, val_col=None, group_col=None, sort=False):
 
     xi = x_grouped.mean()
     ni = x_grouped.count()
-    k = x_groups_unique.size
+    k = groups.size
     n = len(x.index)
     df = n - k
 
     sigma2 = 0
-    c = 0
+    c = -1
 
     for i in range(k):
-        for j in range(ni[i]):
+        for j in range(ni.iloc[i]):
             c += 1
             sigma2 += (x[_val_col].iat[c] - xi[i])**2 /df
 
@@ -86,11 +86,11 @@ def test_osrt(a, val_col=None, group_col=None, sort=False):
         qval = np.abs(dif) / A
         return qval
 
-    vs = np.zeros((groups.size, groups.size), dtype=np.float)
-    combs = it.combinations(range(groups.size), 2)
+    vs = np.zeros((k, k), dtype=np.float)
+    combs = it.combinations(range(k), 2)
 
     for i,j in combs:
-        vs[i, j] = compare(groups[i], groups[j])
+        vs[i, j] = compare(i, j)
 
     stat = np.max(vs)
     pval = psturng(stat, k, df)
