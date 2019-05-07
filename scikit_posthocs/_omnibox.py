@@ -76,13 +76,13 @@ def test_osrt(a, val_col=None, group_col=None, sort=False):
     for i in range(k):
         for j in range(ni.iloc[i]):
             c += 1
-            sigma2 += (x[_val_col].iat[c] - xi[i])**2 /df
+            sigma2 += (x[_val_col].iat[c] - xi[i])**2. /df
 
     sigma = np.sqrt(sigma2)
 
     def compare(i, j):
         dif = xi.loc[groups[j]] - xi.loc[groups[i]]
-        A = sigma / np.sqrt(2) * np.sqrt(1 / ni[groups[j]] + 1 / ni[groups[i]])
+        A = sigma / np.sqrt(2.) * np.sqrt(1. / ni[groups[j]] + 1. / ni[groups[i]])
         qval = np.abs(dif) / A
         return qval
 
