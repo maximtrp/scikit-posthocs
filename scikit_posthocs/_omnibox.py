@@ -175,7 +175,7 @@ def test_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, sor
     t = len(groups)
     b = len(blocks)
     r = np.unique(x.groupby(_group_col).count())
-    k = np.unique(x.groupby(_group_col).count())
+    k = np.unique(x.groupby(_block_col).count())
     if r.size > 1 and k.size > 1:
         raise ValueError('Data appear to be unbalanced. Please correct your input data')
     else:

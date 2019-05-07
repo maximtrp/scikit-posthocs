@@ -108,6 +108,13 @@ class TestPosthocs(unittest.TestCase):
         result = 0.3157646
         self.assertTrue(np.allclose(p, result, atol=1.e-3))
 
+    def test_durbin(self):
+        r_result = np.array([0.205758, 8.468354, 6])
+        result = som.test_durbin(self.df_bn)
+        print(result, r_result)
+        self.assertTrue(np.allclose(result, r_result))
+
+
     # Post hoc tests
     def test_posthoc_conover(self):
 
