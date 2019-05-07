@@ -7,11 +7,13 @@ if os.environ.get('DISPLAY','') == '':
     print('No display found. Using non-interactive Agg backend')
     mpl.use('Agg')
 import scikit_posthocs._posthocs as sp
+import scikit_posthocs._omnibox as som
 import scikit_posthocs._outliers as so
 import scikit_posthocs._plotting as splt
 import seaborn as sb
 import numpy as np
 import matplotlib.axes as ma
+from pandas import DataFrame
 
 class TestPosthocs(unittest.TestCase):
 
@@ -93,13 +95,20 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.all(test_results == correct_results))
 
 
-    # Post hocs tests
+    # Statistical tests
     df = sb.load_dataset("exercise")
     df_bn = np.array([[4,3,4,4,5,6,3],
                       [1,2,3,5,6,7,7],
                       [1,2,6,4,1,5,1]])
 
+    # Omnibox tests
+    def test_osrt(self):
+        df = DataFrame(dict(zip(['a','b','c'], self.df_bn.tolist()))).melt()
+        p,_ = som.test_osrt(df, val_col='value', group_col='variable')
+        result = 0.3157646
+        self.assertTrue(np.allclose(p, result, atol=1.e-3))
 
+    # Post hoc tests
     def test_posthoc_conover(self):
 
         r_results = np.array([[-1, 9.354690e-11, 1.131263e-02],
