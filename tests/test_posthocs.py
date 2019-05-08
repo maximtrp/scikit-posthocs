@@ -278,6 +278,17 @@ class TestPosthocs(unittest.TestCase):
         results = sp.posthoc_ttest(self.df, val_col = 'pulse', group_col = 'kind', equal_var = False, p_adjust='holm')
         self.assertTrue(np.allclose(results, r_results))
 
+    def test_posthoc_ttest_pooled(self):
+
+        x = [[1,2,3,5,1], [12,31,54,50,40], [10,12,6,74,11]]
+        r_results = np.array([[-1, 0.04226866, 0.24706893],
+                              [0.04226866, -1, 0.2482456],
+                              [0.24706893, 0.2482456, -1]])
+
+        results = sp.posthoc_ttest(x, equal_var = False, p_adjust='holm', pool_sd=True)
+        self.assertTrue(np.allclose(results, r_results))
+
+
     def test_posthoc_tukey_hsd(self):
 
         x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]

@@ -1,4 +1,4 @@
-__version__ = '0.5.4'
+__version__ = '0.6.0'
 
 from scikit_posthocs._omnibox import test_osrt, test_durbin
 
