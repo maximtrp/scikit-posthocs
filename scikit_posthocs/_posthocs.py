@@ -1810,18 +1810,18 @@ def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True
 
     def compare_pooled(i, j):
         diff = x_means[i] - x_means[j]
-        se_diff = pooled_sd * np.sqrt(1 / x_lens[i] + 1 / x_lens[j])
+        se_diff = pooled_sd * np.sqrt(1. / x_lens[i] + 1. / x_lens[j])
         t_value = diff / se_diff
-        return 2 * ss.t.cdf(-np.abs(t_value), x_totaldegf)
+        return 2. * ss.t.cdf(-np.abs(t_value), x_totaldegf)
 
     combs = it.combinations(range(x_len), 2)
 
     if pool_sd:
         x_means = np.asarray([np.mean(xi) for xi in x_grouped])
         x_sd = np.asarray([np.std(xi, ddof=1) for xi in x_grouped])
-        x_degf = x_lens - 1
+        x_degf = x_lens - 1.
         x_totaldegf = np.sum(x_degf)
-        pooled_sd = np.sqrt(np.sum(x_sd ** 2 * x_degf) / x_totaldegf)
+        pooled_sd = np.sqrt(np.sum(x_sd ** 2. * x_degf) / x_totaldegf)
 
         for i, j in combs:
             vs[i, j] = compare_pooled(i, j)
