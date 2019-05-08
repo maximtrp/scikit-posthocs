@@ -1435,7 +1435,7 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
     np.fill_diagonal(vs, -1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_adjust=None):
+def posthoc_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=False, p_adjust=None):
 
     '''Mack-Wolfe Test for Umbrella Alternatives.
 
@@ -1466,7 +1466,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
 
     p : int, optional
         The a-priori known peak as an ordinal number of the treatment group
-        including the zero dose level, i.e. p = {1, ..., k}. Defaults to None.
+        including the zero dose level, i.e. p = {0, ..., k-1}. Defaults to None.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -1492,13 +1492,13 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
 
     '''
 
-    x = __convert_to_df(a, val_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
     if not sort:
-        x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-    x.sort_values(by=[group_col], ascending=True, inplace=True)
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
+    x.sort_values(by=[_group_col], ascending=True, inplace=True)
 
-    k = x[group_col].unique().size
+    k = x[_group_col].unique().size
 
     if p:
         if p > k:
@@ -1508,8 +1508,8 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
             print("Selected 'p' < 1: ", str(p))
             return False
 
-    Rij = x[val_col].rank()
-    n = x.groupby(group_col)[val_col].count()
+    Rij = x[_val_col].rank()
+    n = x.groupby(_group_col)[_val_col].count()
 
     def _fn(Ri, Rj):
         return np.sum(Ri.apply(lambda x: Rj[Rj > x].size))
@@ -1520,8 +1520,8 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
 
         for i in range(k):
             for j in range(i):
-                U[i,j] = _fn(Rij[x[group_col] == levels[i]], Rij[x[group_col] == levels[j]])
-                U[j,i] = _fn(Rij[x[group_col] == levels[j]], Rij[x[group_col] == levels[i]])
+                U[i,j] = _fn(Rij[x[_group_col] == levels[i]], Rij[x[_group_col] == levels[j]])
+                U[j,i] = _fn(Rij[x[_group_col] == levels[j]], Rij[x[_group_col] == levels[i]])
 
         return U
 
@@ -1561,16 +1561,16 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
         return var
 
     if p:
-        if (x.groupby(val_col).count() > 1).any().any():
-            print("Ties are present")
-        U = _ustat(Rij, x[group_col], k)
+        #if (x.groupby(_val_col).count() > 1).any().any():
+        #    print("Ties are present")
+        U = _ustat(Rij, x[_group_col], k)
         est = _ap(p, U)
         mean = _mean_at(p, n)
         sd = np.sqrt(_var_at(p, n))
         stat = (est - mean)/sd
         p_value = ss.norm.sf(stat)
     else:
-        U = _ustat(Rij, x[group_col], k)
+        U = _ustat(Rij, x[_group_col], k)
         Ap = np.array([_ap(i, U) for i in range(k)]).ravel()
         mean = np.array([_mean_at(i, n) for i in range(k)]).ravel()
         var = np.array([_var_at(i, n) for i in range(k)]).ravel()
@@ -1583,7 +1583,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
         for _ in range(n_perm):
 
             ix = Series(np.random.permutation(Rij))
-            Uix = _ustat(ix, x[group_col], k)
+            Uix = _ustat(ix, x[_group_col], k)
             Apix = np.array([_ap(i, Uix) for i in range(k)])
             Astarix = (Apix - mean) / np.sqrt(var)
             mt.append(np.max(Astarix))

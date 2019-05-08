@@ -117,6 +117,12 @@ class TestPosthocs(unittest.TestCase):
 
 
     # Post hoc tests
+    def test_posthoc_mackwolfe(self):
+        x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
+        result, _ = sp.posthoc_mackwolfe(x, p=2)
+
+        self.assertTrue(np.allclose(result, 0.0006812725))
+
     def test_posthoc_anderson(self):
 
         r_results = np.array([[-1, 1.35079e-02, 8.64418e-09],
