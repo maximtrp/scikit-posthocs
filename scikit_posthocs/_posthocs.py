@@ -1526,12 +1526,12 @@ def posthoc_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=
         return U
 
     def _ap(p, U):
-        tmp1 = 0
+        tmp1 = 0.
         if p > 0:
             for i in range(p):
                 for j in range(i+1, p+1):
                     tmp1 += U[i,j]
-        tmp2 = 0
+        tmp2 = 0.
         if p < k:
             for i in range(p, k):
                 for j in range(i+1, k):
@@ -1548,15 +1548,15 @@ def posthoc_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=
     def _mean_at(p, n):
         N1 = _n1(p, n)
         N2 = _n2(p, n)
-        return (N1**2 + N2**2 - np.sum(n**2) - n.iloc[p]**2)/4
+        return (N1**2. + N2**2. - np.sum(n**2.) - n.iloc[p]**2.)/4.
 
     def _var_at(p, n):
         N1 = _n1(p, n)
         N2 = _n2(p, n)
         N = np.sum(n)
 
-        var = (2 * (N1**3 + N2**3) + 3 * (N1**2 + N2**2) -\
-                np.sum(n**2 * (2*n + 3)) - n.iloc[p]**2 * (2 * n.iloc[p] + 3) +\
+        var = (2. * (N1**3 + N2**3) + 3. * (N1**2 + N2**2) -\
+                np.sum(n**2 * (2*n + 3.)) - n.iloc[p]**2 * (2. * n.iloc[p] + 3.) +\
                 12. * n.iloc[p] * N1 * N2 - 12. * n.iloc[p] ** 2 * N) / 72.
         return var
 
