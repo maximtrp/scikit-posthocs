@@ -99,20 +99,15 @@ def sign_table(p_values, lower=True, upper=True):
     p_values[two] = '**'
     p_values[one] = '*'
 
-    if not isinstance(p_values, DataFrame):
-        np.fill_diagonal(p_values, '-')
-        if not lower:
-            p_values[np.tril_indices(p_values.shape[0], -1)] = ''
-        elif not upper:
-            p_values[np.triu_indices(p_values.shape[0], 1)] = ''
-    else:
-        np.fill_diagonal(p_values.values, '-')
-        if not lower:
-            p_values.values[np.tril_indices(p_values.shape[0], -1)] = ''
-        elif not upper:
-            p_values.values[np.triu_indices(p_values.shape[0], 1)] = ''
+    pv = p_values.values if isinstance(p_values, DataFrame) else p_values
+    np.fill_diagonal(pv, '-')
+    if not lower:
+        pv[np.tril_indices(pv.shape[0], -1)] = ''
+    elif not upper:
+        pv[np.triu_indices(pv.shape[0], 1)] = ''
 
-    return p_values
+    return DataFrame(pv, index=p_values.index, columns=p_values.columns)\
+            if isinstance(p_values, DataFrame) else pv
 
 
 def sign_plot(x, g=None, flat=False, labels=True, cmap=None,

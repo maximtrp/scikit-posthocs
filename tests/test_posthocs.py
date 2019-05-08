@@ -43,7 +43,7 @@ class TestPosthocs(unittest.TestCase):
         x = np.array([[-1,  1,  1],
                       [ 1, -1,  0],
                       [ 1,  0, -1]])
-        a = splt.sign_plot(x, flat = True)
+        a = splt.sign_plot(x, flat = True, labels = False)
         self.assertTrue(isinstance(a, ma._subplots.Axes))
 
     def test_sign_plot_nonflat(self):
@@ -111,7 +111,6 @@ class TestPosthocs(unittest.TestCase):
     def test_durbin(self):
         r_result = np.array([0.205758, 8.468354, 6])
         result = som.test_durbin(self.df_bn)
-        print(result, r_result)
         self.assertTrue(np.allclose(result, r_result))
 
 
