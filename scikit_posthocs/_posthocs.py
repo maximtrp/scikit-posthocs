@@ -1276,7 +1276,7 @@ def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, 
     vs[:,:] = 0
 
     for i, j in combs:
-        vs[i, j] = ss.anderson_ksamp([x.loc[x[_group_col] == groups[i], _val_col], x.loc[x[_group_col] == groups[j], _val_col]])[2]
+        vs[i, j] = ss.anderson_ksamp([x.loc[x[_group_col] == groups[i], _val_col], x.loc[x[_group_col] == groups[j], _val_col]], midrank=midrank)[2]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method = p_adjust)[1]
@@ -1594,7 +1594,7 @@ def posthoc_mackwolfe(a, val_col, group_col, p=None, n_perm=100, sort=False, p_a
     return p_value, stat
 
 
-def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=True, p_adjust=None):
+def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=None):
 
     '''Van der Waerden's test for pairwise multiple comparisons between group
     levels. See references for additional information [1]_, [2]_.
@@ -1708,7 +1708,7 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=True, p_adjust=None
     return DataFrame(vs, index=groups, columns=groups)
 
 
-def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True, p_adjust=None, sort=True):
+def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True, p_adjust=None, sort=False):
 
     '''Pairwise T test for multiple comparisons of independent groups. May be
     used after a parametric ANOVA to do pairwise comparisons.

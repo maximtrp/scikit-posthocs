@@ -15,6 +15,7 @@ import numpy as np
 import matplotlib.axes as ma
 from pandas import DataFrame
 
+
 class TestPosthocs(unittest.TestCase):
 
     # Plotting tests
@@ -97,6 +98,7 @@ class TestPosthocs(unittest.TestCase):
 
     # Statistical tests
     df = sb.load_dataset("exercise")
+    df[df.columns[df.dtypes == 'category']] = df[df.columns[df.dtypes == 'category']].astype(object)
     df_bn = np.array([[4,3,4,4,5,6,3],
                       [1,2,3,5,6,7,7],
                       [1,2,6,4,1,5,1]])
@@ -115,6 +117,15 @@ class TestPosthocs(unittest.TestCase):
 
 
     # Post hoc tests
+    def test_posthoc_anderson(self):
+
+        r_results = np.array([[-1, 1.35079e-02, 8.64418e-09],
+                              [1.35079e-02, -1, 1.644534e-05],
+                              [8.64418e-09, 1.644534e-05, -1]])
+
+        results = sp.posthoc_anderson(self.df, val_col = 'pulse', group_col = 'kind', p_adjust = 'holm')
+        self.assertTrue(np.allclose(results.values, r_results, atol=3.e-3))
+
     def test_posthoc_conover(self):
 
         r_results = np.array([[-1, 9.354690e-11, 1.131263e-02],
