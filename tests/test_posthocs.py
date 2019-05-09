@@ -149,17 +149,7 @@ class TestPosthocs(unittest.TestCase):
                               [4.390066e-02, 1.873208e-04, -1]])
 
         results = sp.posthoc_dunn(self.df, val_col = 'pulse', group_col = 'kind', p_adjust = 'holm').values
-        self.assertTrue(np.allclose(results, r_results, atol=1.e-4))
-
-
-    def test_posthoc_nemenyi(self):
-
-        r_results = np.array([[-1, 2.431833e-08, 1.313107e-01],
-                              [2.431833e-08, -1, 4.855675e-04],
-                              [1.313107e-01, 4.855675e-04, -1]])
-
-        results = sp.posthoc_nemenyi(self.df, val_col = 'pulse', group_col = 'kind').values
-        self.assertTrue(np.allclose(results, r_results, atol=1.e-4))
+        self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_nemenyi(self):
 
@@ -168,7 +158,17 @@ class TestPosthocs(unittest.TestCase):
                               [1.313107e-01, 4.855675e-04, -1]])
 
         results = sp.posthoc_nemenyi(self.df, val_col = 'pulse', group_col = 'kind').values
-        self.assertTrue(np.allclose(results, r_results, atol=1.e-4))
+        self.assertTrue(np.allclose(results, r_results))
+
+    def test_posthoc_nemenyi_tukey(self):
+
+        r_results = np.array([[-1, 9.793203e-09, 1.088785e-01],
+                              [9.793203e-09, -1, 0.0002789016],
+                              [1.088785e-01, 0.0002789016, -1]])
+
+        results = sp.posthoc_nemenyi(self.df, val_col = 'pulse', group_col = 'kind', dist = 'tukey').values
+        self.assertTrue(np.allclose(results, r_results, atol=1.e-3))
+
 
     def test_posthoc_nemenyi_friedman(self):
 
@@ -180,7 +180,7 @@ class TestPosthocs(unittest.TestCase):
                               [0.21477876, 0.25967965, 0.9, 0.87719193, 0.87719193, -1., 0.54381888],
                               [0.9, 0.9, 0.9, 0.9, 0.9, 0.54381888, -1.]])
         results = sp.posthoc_nemenyi_friedman(self.df_bn)
-        self.assertTrue(np.allclose(results, p_results, atol=1.e-4))
+        self.assertTrue(np.allclose(results, p_results))
 
 
     def test_posthoc_conover_friedman(self):
