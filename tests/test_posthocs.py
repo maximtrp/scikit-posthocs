@@ -320,12 +320,11 @@ class TestPosthocs(unittest.TestCase):
 
         _x = [[1,2,3,5,1], [12,31,54,50,40], [10,12,6,74,11]]
         x = np.array(_x)
-        g = np.repeat(['a','b','c'], 5)
+        g = np.repeat([0,1,2], 5)
         nd = np.column_stack((x.ravel(), g))
         xdf = DataFrame(dict(zip(list('abc'), _x))).melt(var_name='groups', value_name='vals')
-
         results = sp.posthoc_mannwhitney(xdf, val_col = 'vals', group_col = 'groups').values
-        nd_results = sp.posthoc_mannwhitney(x, val_col=0, group_col=1).values
+        nd_results = sp.posthoc_mannwhitney(nd, val_col=0, group_col=1).values
         self.assertTrue(np.allclose(nd_results, results))
 
 

@@ -90,7 +90,7 @@ def __convert_to_df(a, val_col=None, group_col=None, val_id=None, group_id=None)
 
             ax = [np.unique(a[:, 0]).size, np.unique(a[:, 1]).size]
 
-            if np.asscalar(np.diff(ax)):
+            if np.diff(ax).item():
                 __val_col = np.argmax(ax)
                 __group_col = np.argmin(ax)
             else:
