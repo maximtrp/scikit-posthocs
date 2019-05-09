@@ -307,6 +307,16 @@ class TestPosthocs(unittest.TestCase):
         results = sp.posthoc_mannwhitney(self.df, val_col = 'pulse', group_col = 'kind').values
         self.assertTrue(np.allclose(results, r_results))
 
+    def test_posthoc_mannwhitney_ndarray(self):
+
+        _x = [[1,2,3,5,1], [12,31,54,50,40], [10,12,6,74,11]]
+        x = np.array(_x)
+        xdf = DataFrame(dict(zip(list('abc'), _x))).melt(var_name='groups', value_name='vals')
+
+        results = sp.posthoc_mannwhitney(xdf, val_col = 'vals', group_col = 'groups').values
+        nd_results = sp.posthoc_mannwhitney(x).values
+        self.assertTrue(np.allclose(nd_results, results))
+
 
     def test_posthoc_wilcoxon(self):
 
