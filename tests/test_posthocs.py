@@ -195,6 +195,20 @@ class TestPosthocs(unittest.TestCase):
                               [0.6136576, 0.67344846, 0.5026565, 0.6136576, 0.6136576, 0.1266542, -1.000000]])
         self.assertTrue(np.allclose(results, p_results))
 
+    def test_posthoc_conover_friedman_non_melted(self):
+
+        df = DataFrame(self.df_bn)
+        results = sp.posthoc_conover_friedman(df, melted=False)
+        p_results = np.array([[-1.000000, 0.9325836, 0.2497915, 0.3203414, 0.3203414, 0.0517417, 0.6136576],
+                              [0.9325836, -1.000000, 0.28339156, 0.36072942, 0.36072942, 0.06033626, 0.67344846],
+                              [0.2497915, 0.28339156, -1.000000, 0.8657092, 0.8657092, 0.3607294, 0.5026565],
+                              [0.3203414, 0.36072942, 0.8657092, -1.000000, 1.000000, 0.2833916, 0.6136576],
+                              [0.3203414, 0.36072942, 0.8657092, 1.000000, -1.000000, 0.2833916, 0.6136576],
+                              [0.0517417, 0.06033626, 0.3607294, 0.2833916, 0.2833916, -1.000000, 0.1266542],
+                              [0.6136576, 0.67344846, 0.5026565, 0.6136576, 0.6136576, 0.1266542, -1.000000]])
+        self.assertTrue(np.allclose(results, p_results))
+
+
     def test_posthoc_miller_friedman(self):
 
         results = sp.posthoc_miller_friedman(self.df_bn)
