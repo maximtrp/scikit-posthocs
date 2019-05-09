@@ -161,6 +161,15 @@ class TestPosthocs(unittest.TestCase):
         results = sp.posthoc_nemenyi(self.df, val_col = 'pulse', group_col = 'kind').values
         self.assertTrue(np.allclose(results, r_results, atol=1.e-4))
 
+    def test_posthoc_nemenyi(self):
+
+        r_results = np.array([[-1, 2.431833e-08, 1.313107e-01],
+                              [2.431833e-08, -1, 4.855675e-04],
+                              [1.313107e-01, 4.855675e-04, -1]])
+
+        results = sp.posthoc_nemenyi(self.df, val_col = 'pulse', group_col = 'kind').values
+        self.assertTrue(np.allclose(results, r_results, atol=1.e-4))
+
     def test_posthoc_nemenyi_friedman(self):
 
         p_results = np.array([[-1., 0.9, 0.82163255, 0.9, 0.9, 0.21477876, 0.9],
@@ -311,10 +320,12 @@ class TestPosthocs(unittest.TestCase):
 
         _x = [[1,2,3,5,1], [12,31,54,50,40], [10,12,6,74,11]]
         x = np.array(_x)
+        g = np.repeat(['a','b','c'], 5)
+        nd = np.column_stack((x.ravel(), g))
         xdf = DataFrame(dict(zip(list('abc'), _x))).melt(var_name='groups', value_name='vals')
 
         results = sp.posthoc_mannwhitney(xdf, val_col = 'vals', group_col = 'groups').values
-        nd_results = sp.posthoc_mannwhitney(x).values
+        nd_results = sp.posthoc_mannwhitney(x, val_col=0, group_col=1).values
         self.assertTrue(np.allclose(nd_results, results))
 
 
