@@ -108,6 +108,9 @@ def __convert_to_df(a, val_col=None, group_col=None, val_id=None, group_id=None)
 
 def __convert_to_block_df(a, y_col=None, group_col=None, block_col=None, melted=False):
 
+    if melted and not all([i is not None for i in [block_col, group_col, y_col]]):
+        raise ValueError('`block_col`, `group_col`, `y_col` should be explicitly specified if using melted data')
+
     if isinstance(a, DataFrame) and not melted:
         x = a.copy(deep=True)
         group_col = 'groups'
@@ -117,7 +120,7 @@ def __convert_to_block_df(a, y_col=None, group_col=None, block_col=None, melted=
         x.index.name = block_col
         x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
-    elif melted:
+    elif isinstance(a, DataFrame) and melted:
         x = DataFrame.from_dict({'groups': a[group_col],
                                  'blocks': a[block_col],
                                  'y': a[y_col]})
@@ -135,9 +138,7 @@ def __convert_to_block_df(a, y_col=None, group_col=None, block_col=None, melted=
             x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
         else:
-            x.columns[group_col] = 'groups'
-            x.columns[block_col] = 'blocks'
-            x.columns[y_col] = 'y'
+            x.rename(columns={group_col: 'groups', block_col: 'blocks', y_col: 'y'}, inplace=True)
             group_col = 'groups'
             block_col = 'blocks'
             y_col = 'y'
@@ -558,9 +559,6 @@ def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
     '''
 
-    if melted and not all([block_col, group_col, y_col]):
-        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
-
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
         qval = dif / np.sqrt(k * (k + 1.) / (6. * n))
@@ -683,9 +681,6 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
     >>> sp.posthoc_conover_friedman(x)
 
     '''
-
-    if melted and not all([block_col, group_col, y_col]):
-        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
 
     def compare_stats(i, j):
         dif = np.abs(R.loc[groups[i]] - R.loc[groups[j]])
@@ -925,9 +920,6 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
 
     '''
 
-    if melted and not all([block_col, group_col, y_col]):
-        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
-
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
         zval = dif / np.sqrt(k * (k + 1.) / (6. * n))
@@ -1037,9 +1029,6 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
     >>> sp.posthoc_miller_friedman(x)
 
     '''
-
-    if melted and not all([block_col, group_col, y_col]):
-        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
 
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
@@ -1152,16 +1141,13 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
 
     '''
 
-    if melted and not all([block_col, group_col, y_col]):
-        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
+    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     def compare_stats(i, j):
         dif = np.abs(Rj[groups[i]] - Rj[groups[j]])
         tval = dif / denom
         pval = 2. * ss.t.sf(np.abs(tval), df = df)
         return pval
-
-    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     if not sort:
         x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
@@ -1369,9 +1355,6 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_quade(x)
     '''
-
-    if melted and not all([block_col, group_col, y_col]):
-        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
 
     def compare_stats_t(i, j):
         dif = np.abs(S[groups[i]] - S[groups[j]])

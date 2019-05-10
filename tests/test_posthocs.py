@@ -103,6 +103,34 @@ class TestPosthocs(unittest.TestCase):
                       [1,2,3,5,6,7,7],
                       [1,2,6,4,1,5,1]])
 
+    # DataFrame conversion tests
+    def test_convert_to_block_df(self):
+        a = np.array([[0, 0, 4],
+                       [1, 0, 1],
+                       [2, 0, 1],
+                       [0, 1, 3],
+                       [1, 1, 2],
+                       [2, 1, 2],
+                       [0, 2, 4],
+                       [1, 2, 3],
+                       [2, 2, 6],
+                       [0, 3, 4],
+                       [1, 3, 5],
+                       [2, 3, 4],
+                       [0, 4, 5],
+                       [1, 4, 6],
+                       [2, 4, 1],
+                       [0, 5, 6],
+                       [1, 5, 7],
+                       [2, 5, 5],
+                       [0, 6, 3],
+                       [1, 6, 7],
+                       [2, 6, 1]], dtype=np.float)
+
+        result = sp.posthoc_nemenyi_friedman(a, y_col=2, group_col=1, block_col=0, melted=True)[0].values
+        result2 = sp.posthoc_nemenyi_friedman(self.df_bn)[0].values
+        self.assertTrue(np.allclose(result, result2))
+
     # Omnibox tests
     def test_osrt(self):
         df = DataFrame(dict(zip(['a','b','c'], self.df_bn.tolist()))).melt()
