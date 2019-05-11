@@ -1,10 +1,10 @@
 __version__ = '0.6.0'
 
-from scikit_posthocs._omnibox import test_osrt, test_durbin
+from scikit_posthocs._omnibox import test_osrt, test_durbin, test_mackwolfe
 
 from scikit_posthocs._posthocs \
     import posthoc_anderson, posthoc_conover, posthoc_conover_friedman,\
-            posthoc_dscf, posthoc_dunn, posthoc_durbin, posthoc_mackwolfe,\
+            posthoc_dscf, posthoc_dunn, posthoc_durbin,\
             posthoc_mannwhitney, posthoc_miller_friedman, posthoc_nemenyi,\
             posthoc_nemenyi_friedman, posthoc_npm_test, posthoc_quade,\
             posthoc_scheffe, posthoc_siegel_friedman, posthoc_tamhane,\

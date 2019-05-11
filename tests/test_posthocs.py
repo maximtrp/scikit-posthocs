@@ -143,14 +143,20 @@ class TestPosthocs(unittest.TestCase):
         result = som.test_durbin(self.df_bn)
         self.assertTrue(np.allclose(result, r_result))
 
-
-    # Post hoc tests
-    def test_posthoc_mackwolfe(self):
+    def test_mackwolfe(self):
         x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
-        result, _ = sp.posthoc_mackwolfe(x, p=2)
+        result, _ = som.test_mackwolfe(x, p=2)
 
         self.assertTrue(np.allclose(result, 0.0006812725))
 
+    def test_mackwolfe_nperm(self):
+        x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
+        result, _ = som.test_mackwolfe(x)
+
+        self.assertTrue(np.allclose(result, 2.2e-16))
+
+
+    # Post hoc tests
     def test_posthoc_anderson(self):
 
         r_results = np.array([[-1, 1.35079e-02, 8.64418e-09],
