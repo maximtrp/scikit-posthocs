@@ -223,6 +223,22 @@ class TestPosthocs(unittest.TestCase):
                               [0.6136576, 0.67344846, 0.5026565, 0.6136576, 0.6136576, 0.1266542, -1.000000]])
         self.assertTrue(np.allclose(results, p_results))
 
+    def test_posthoc_conover_friedman_tukey(self):
+
+        results = sp.posthoc_conover_friedman(self.df_bn, p_adjust='single-step')
+        p_results = np.array([[-1.000000, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                              [1.0000000, -1.000000, np.nan, np.nan, np.nan, np.nan, np.nan],
+                              [0.8908193, 0.9212619, -1.000000, np.nan, np.nan, np.nan, np.nan],
+                              [0.9455949, 0.9642182, 0.9999978, -1.000000, np.nan, np.nan, np.nan],
+                              [0.9455949, 0.9642182, 0.9999978, 1.0000000, -1.000000, np.nan, np.nan],
+                              [0.3177477, 0.3686514, 0.9642182, 0.9212619, 0.9212619, -1.000000, np.nan],
+                              [0.9986057, 0.9995081, 0.9931275, 0.9986057, 0.9986057,  0.6553018, -1.000000]])
+        p_results[p_results > 0.9] = 0.9
+        tri_upper = np.triu_indices(p_results.shape[0], 1)
+        p_results[tri_upper] = p_results.T[tri_upper]
+
+        self.assertTrue(np.allclose(results, p_results, atol=3.e-2))
+
     def test_posthoc_conover_friedman_non_melted(self):
 
         df = DataFrame(self.df_bn)
@@ -291,6 +307,20 @@ class TestPosthocs(unittest.TestCase):
                               [ 0.2081421 , 0.38443835, 0.85245022, 0.92586499, 1.00000000, 0.22378308,-1.00000000]])
         self.assertTrue(np.allclose(results, p_results))
 
+    def test_posthoc_quade_norm(self):
+
+        results = sp.posthoc_quade(self.df_bn, dist='normal')
+
+        p_results = np.array([[-1.00000000, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                              [ 0.5693540320,-1.00000000, np.nan, np.nan, np.nan, np.nan, np.nan],
+                              [ 0.0430605548, 0.145913303,-1.00000000, np.nan, np.nan, np.nan, np.nan],
+                              [ 0.0578705783, 0.184285855, 0.8993796,-1.00000000, np.nan, np.nan, np.nan],
+                              [ 0.0766885196, 0.229662468, 0.8003530, 0.8993796,-1.00000000, np.nan, np.nan],
+                              [ 0.0005066018, 0.003634715, 0.1459133, 0.1139777, 0.08782032,-1.00000000, np.nan],
+                              [ 0.0766885196, 0.229662468, 0.8003530, 0.8993796, 1.00000000, 0.08782032,-1.00000000]])
+        tri_upper = np.triu_indices(p_results.shape[0], 1)
+        p_results[tri_upper] = p_results.T[tri_upper]
+        self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_npm_test(self):
         results = sp.posthoc_npm_test(self.df_bn)
