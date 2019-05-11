@@ -51,13 +51,13 @@ def outliers_iqr(x, ret='filtered', coef = 1.5):
     ul = q3 + iqr * coef
 
     if ret == 'indices':
-        return np.where((x >= ll) & (x <= ul))[0]
+        return np.where((x > ll) & (x < ul))[0]
     elif ret == 'outliers':
         return x[(x < ll) | (x > ul)]
     elif ret == 'outliers_indices':
         return np.where((x < ll) | (x > ul))[0]
     else:
-        return x[(x >= ll) & (x <= ul)]
+        return x[(x > ll) & (x < ul)]
 
 def outliers_grubbs(x, hypo = False, alpha = 0.05):
 

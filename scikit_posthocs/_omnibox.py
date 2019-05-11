@@ -7,7 +7,7 @@ from statsmodels.stats.libqsturng import psturng
 from pandas import Categorical, Series
 from scikit_posthocs._posthocs import __convert_to_df, __convert_to_block_df
 
-def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=False, p_adjust=None):
+def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=False):
 
     '''Mack-Wolfe Test for Umbrella Alternatives.
 
@@ -59,8 +59,8 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
 
     Examples
     --------
-    >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
-    >>> sp.posthoc_mackwolfe(x, val_col = 0, group_col = 1)
+    >>> x = x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
+    >>> sp.posthoc_mackwolfe(x)
 
     '''
 

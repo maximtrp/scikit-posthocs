@@ -61,9 +61,21 @@ class TestPosthocs(unittest.TestCase):
     def test_outliers_iqr(self):
 
         x = np.array([4,5,6,10,12,4,3,1,2,3,23,5,3])
-        correct_results = np.array([12, 23])
-        test_results = so.outliers_iqr(x, ret = 'outliers')
-        self.assertTrue(np.all(test_results == correct_results))
+
+        x_filtered = np.array([4,5,6,10,4,3,1,2,3,5,3])
+        indices = np.delete(np.arange(13), [4, 10])
+        outliers_indices = np.array([4, 10])
+        outliers = np.array([12, 23])
+
+        test_outliers = so.outliers_iqr(x, ret = 'outliers')
+        test_outliers_indices = so.outliers_iqr(x, ret = 'outliers_indices')
+        test_indices = so.outliers_iqr(x, ret = 'indices')
+        test_filtered = so.outliers_iqr(x, ret = 'filtered')
+
+        self.assertTrue(np.all(test_outliers == outliers)\
+                        and np.all(test_outliers_indices == outliers_indices)\
+                        and np.all(test_indices == indices)\
+                        and np.all(test_filtered == x_filtered))
 
     def test_outliers_grubbs(self):
 
