@@ -1405,8 +1405,8 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
 
     else:
         n = b * k
-        denom = np.sqrt((k * (k + 1) * (2 * n + 1) * (k-1)) / (18 * n * (n + 1)))
-        ff = 1. / (b * (b + 1)/2)
+        denom = np.sqrt((k * (k + 1.) * (2. * n + 1.) * (k-1.)) / (18. * n * (n + 1.)))
+        ff = 1. / (b * (b + 1.)/2.)
 
         for i, j in combs:
             vs[i, j] = compare_stats_norm(i, j)
