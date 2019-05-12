@@ -128,8 +128,8 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
         N = np.sum(n)
 
         var = (2. * (N1**3 + N2**3) + 3. * (N1**2 + N2**2) -\
-                np.sum(n**2 * (2*n + 3.)) - n.iloc[p]**2 * (2. * n.iloc[p] + 3.) +\
-                12. * n.iloc[p] * N1 * N2 - 12. * n.iloc[p] ** 2 * N) / 72.
+                np.sum(n**2 * (2*n + 3.)) - n.iloc[p]**2. * (2. * n.iloc[p] + 3.) +\
+                12. * n.iloc[p] * N1 * N2 - 12. * n.iloc[p] ** 2. * N) / 72.
         return var
 
     if p:
