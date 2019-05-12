@@ -158,7 +158,6 @@ class TestPosthocs(unittest.TestCase):
     def test_mackwolfe(self):
         x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
         result, _ = som.test_mackwolfe(x, p=2)
-        print(result)
         self.assertTrue(np.allclose(result, 0.0006812725))
 
     def test_mackwolfe_nperm(self):
