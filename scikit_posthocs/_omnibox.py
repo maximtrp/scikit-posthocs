@@ -161,7 +161,6 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
             mt.append(np.max(Astarix))
 
         mt = np.array(mt)
-        print(mt)
         p_value = mt[mt > stat] / n_perm
 
     return p_value, stat
