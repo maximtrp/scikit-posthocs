@@ -1714,11 +1714,11 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
         a1i = np.where(groups == a1)[0][0]
         vs[a0i, a1i] = 1 if str(a[5]) == 'True' else 0
 
-    vs = np.triu(vs)
-    np.fill_diagonal(vs, -1)
-    tri_lower = np.tril_indices(vs.shape[0], -1)
-    vs[tri_lower] = vs.T[tri_lower]
-    return DataFrame(vs, index=groups, columns=groups)
+    vsu = np.triu(vs)
+    np.fill_diagonal(vsu, -1)
+    tri_lower = np.tril_indices(vsu.shape[0], -1)
+    vsu[tri_lower] = vsu.T[tri_lower]
+    return DataFrame(vsu, index=groups, columns=groups)
 
 
 def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, alternative='two-sided', p_adjust=None, sort=True):
@@ -2089,10 +2089,10 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
         else:
             ## checks according to Tamhane (1979, p. 474)
             ok1 = (9./10. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 10./9.)
-            ok2 = (9./10. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 10./9.)
-            ok3 = (4./5. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 5./4.) and (1./2. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 2.)
-            ok4 = (2./3. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 3./2.) and (3./4. <= (s2i[i] / ni[i]) / (s2i[j] / ni[j])) and ((s2i[i] / ni[i]) / (s2i[j] / ni[j]) <= 4./3.)
-            OK = any(ok1, ok2, ok3, ok4)
+            ok2 = (9./10. <= (si[i] / ni[i]) / (si[j] / ni[j])) and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 10./9.)
+            ok3 = (4./5. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 5./4.) and (1./2. <= (si[i] / ni[i]) / (si[j] / ni[j])) and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 2.)
+            ok4 = (2./3. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 3./2.) and (3./4. <= (si[i] / ni[i]) / (si[j] / ni[j])) and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 4./3.)
+            OK = any([ok1, ok2, ok3, ok4])
             if not OK:
                 print("Sample sizes or standard errors are not balanced. T2 test is recommended.")
             df = ni[i] + ni[j] - 2.

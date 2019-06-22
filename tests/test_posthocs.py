@@ -162,7 +162,7 @@ class TestPosthocs(unittest.TestCase):
 
     def test_mackwolfe_nperm(self):
         x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
-        result, stat = som.test_mackwolfe(x, n_perm=50)
+        _, stat = som.test_mackwolfe(x, n_perm=50)
         self.assertTrue(np.allclose(stat, 3.2024699769846983))
 
 
@@ -443,6 +443,15 @@ class TestPosthocs(unittest.TestCase):
                               [4.100954e-07, 2.333996e-05, -1]])
 
         results = sp.posthoc_tamhane(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
+        self.assertTrue(np.allclose(results, r_results))
+
+    def test_posthoc_tamhane_nw(self):
+
+        r_results = np.array([[-1, 2.883219e-02, 4.780682e-08],
+                              [2.883219e-02, -1, 8.643683e-06],
+                              [4.780682e-08, 8.643683e-06, -1]])
+
+        results = sp.posthoc_tamhane(self.df.sort_index(), val_col = 'pulse', group_col = 'kind', welch = False)
         self.assertTrue(np.allclose(results, r_results))
 
 
