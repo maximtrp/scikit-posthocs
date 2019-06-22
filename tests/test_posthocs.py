@@ -33,11 +33,23 @@ class TestPosthocs(unittest.TestCase):
         p_values = np.array([[-1.,0.00119517,0.00278329],
                              [0.00119517,-1.,0.18672227],
                              [0.00278329,0.18672227,-1.]])
-        test_results = splt.sign_table(p_values)
+        
         correct_results = np.array([['-','**','**'],
                                     ['**','-','NS'],
                                     ['**','NS','-']], dtype=object)
-        self.assertTrue(np.all(test_results == correct_results))
+        correct_resultsl = np.array([['-','',''],
+                                    ['**','-',''],
+                                    ['**','NS','-']], dtype=object)
+        correct_resultsu = np.array([['-','**','**'],
+                                    ['','-','NS'],
+                                    ['','','-']], dtype=object)
+        
+        with self.assertRaises(ValueError):
+            splt.sign_table(p_values, lower=False, upper=False)
+
+        self.assertTrue(np.all(splt.sign_table(p_values, lower=False, upper=True) == correct_resultsu))
+        self.assertTrue(np.all(splt.sign_table(p_values, lower=True, upper=False) == correct_resultsl))
+        self.assertTrue(np.all(splt.sign_table(p_values, lower=True, upper=True) == correct_results))
 
     def test_sign_plot(self):
 
@@ -52,8 +64,9 @@ class TestPosthocs(unittest.TestCase):
         x = np.array([[-1.,0.00119517,0.00278329],
                       [0.00119517,-1.,0.18672227],
                       [0.00278329,0.18672227,-1.]])
-        a, cbar = splt.sign_plot(x)
-        print(type(cbar))
+        a, cbar = splt.sign_plot(x, labels = False)
+        with self.assertRaises(ValueError):
+            splt.sign_plot(x, cmap=[1,1], labels = False)
         self.assertTrue(isinstance(a, ma._subplots.Axes) and isinstance(cbar, mpl.colorbar.ColorbarBase))
 
 
