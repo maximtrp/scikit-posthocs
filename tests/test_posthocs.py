@@ -64,7 +64,7 @@ class TestPosthocs(unittest.TestCase):
         x = np.array([[-1.,0.00119517,0.00278329],
                       [0.00119517,-1.,0.18672227],
                       [0.00278329,0.18672227,-1.]])
-        a, cbar = splt.sign_plot(x, labels = False)
+        a, cbar = splt.sign_plot(x, cbar=True, labels = False)
         with self.assertRaises(ValueError):
             splt.sign_plot(x, cmap=[1,1], labels = False)
         self.assertTrue(isinstance(a, ma._subplots.Axes) and isinstance(cbar, mpl.colorbar.ColorbarBase))
