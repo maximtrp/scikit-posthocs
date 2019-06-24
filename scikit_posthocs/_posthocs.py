@@ -1712,7 +1712,7 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
         a1 = str(a[1])
         a0i = np.where(groups == a0)[0][0]
         a1i = np.where(groups == a1)[0][0]
-        vs[a0i, a1i] = 1 if str(a[5]) == 'True' else 0
+        vs[a0i, a1i] = 1 if str(a[-1]) == 'True' else 0
 
     vsu = np.triu(vs)
     np.fill_diagonal(vsu, -1)
