@@ -304,7 +304,7 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
                           '{: >15s}'.format(str(np.round(r, 3))) + \
                           '{: >13s}'.format(str(np.round(l, 3))) + (" *" if r > l else ""))
 
-        print("\n".join(report))
+        return "\n".join(report)
 
     else:
         # Remove masked values

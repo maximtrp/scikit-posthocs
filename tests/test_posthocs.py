@@ -57,6 +57,8 @@ class TestPosthocs(unittest.TestCase):
                       [ 1, -1,  0],
                       [ 1,  0, -1]])
         a = splt.sign_plot(x, flat = True, labels = False)
+        with self.assertRaises(ValueError):
+            splt.sign_plot(x.astype(np.float), flat = True, labels = False)
         self.assertTrue(isinstance(a, ma._subplots.Axes))
 
     def test_sign_plot_nonflat(self):
@@ -65,8 +67,13 @@ class TestPosthocs(unittest.TestCase):
                       [0.00119517,-1.,0.18672227],
                       [0.00278329,0.18672227,-1.]])
         a, cbar = splt.sign_plot(x, cbar=True, labels = False)
+        _a, _cbar = splt.sign_plot(DataFrame(x), cbar=True, labels = False)
+        
         with self.assertRaises(ValueError):
             splt.sign_plot(x, cmap=[1,1], labels = False)
+        with self.assertRaises(ValueError):
+            splt.sign_plot(x.astype(np.integer), labels = False)
+        self.assertTrue(isinstance(_a, ma._subplots.Axes) and isinstance(_cbar, mpl.colorbar.ColorbarBase))
         self.assertTrue(isinstance(a, ma._subplots.Axes) and isinstance(cbar, mpl.colorbar.ColorbarBase))
 
 
@@ -95,6 +102,7 @@ class TestPosthocs(unittest.TestCase):
         x = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18,245.57])
         test_results = so.outliers_grubbs(x)
         correct_results = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18])
+        self.assertTrue(so.outliers_grubbs(x, hypo=True) == True)
         self.assertTrue(np.all(test_results == correct_results))
 
     def test_outliers_tietjen(self):
@@ -104,6 +112,7 @@ class TestPosthocs(unittest.TestCase):
         test_results = so.outliers_tietjen(x, 2)
         correct_results = np.array([-0.44,-0.3,-0.24,-0.22,-0.13,-0.05,0.06,
                                     0.1,0.18,0.2,0.39,0.48,0.63])
+        self.assertTrue(so.outliers_tietjen(x, 2, hypo=True) == True)
         self.assertTrue(np.all(test_results == correct_results))
 
     def test_outliers_gesd(self):
@@ -117,7 +126,7 @@ class TestPosthocs(unittest.TestCase):
                 1.99,  2.06,  2.09,  2.1 ,  2.14,  2.15,  2.23,  2.24,  2.26,
                 2.35,  2.37,  2.4 ,  2.47,  2.54,  2.62,  2.64,  2.9 ,  2.92,
                 2.92,  2.93,  3.21,  3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
-
+        self.assertTrue(isinstance(so.outliers_gesd(x, 5, report = True), str))
         self.assertTrue(np.all(test_results == correct_results))
 
 
