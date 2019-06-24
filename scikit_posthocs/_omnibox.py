@@ -72,11 +72,10 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
 
     k = x[_group_col].unique().size
 
-    if p:
-        if p > k:
+    if p and p > k:
             print("Selected 'p' > number of groups:", str(p), " > ", str(k))
             return False
-        elif p < 1:
+    elif p is not None and p < 1:
             print("Selected 'p' < 1: ", str(p))
             return False
 
