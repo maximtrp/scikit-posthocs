@@ -102,7 +102,7 @@ Dependencies
 Compatibility
 -------------
 
-Package is compatible with Python 2 and Python 3.
+Package is compatible with only Python 3.
 
 Install
 -------
