@@ -218,7 +218,8 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
 
     Returns
     -------
-    Numpy array if hypo is False or a bool value of a hypothesis test result.
+    Filtered Numpy array if alternative hypo is True, otherwise an unfiltered (input)
+    Numpy array. If `report` argument is True, test report is returned.
 
     Notes
     -----
