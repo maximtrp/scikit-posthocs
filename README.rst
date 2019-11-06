@@ -20,9 +20,13 @@
     :target: https://pypi.python.org/pypi/scikit-posthocs/
 
 
-**scikit-posthocs** is a Python package which provides post hoc tests for pairwise multiple comparisons that are usually performed in statistical data analysis to assess the differences between group levels if a statistically significant result of ANOVA test has been obtained.
+**scikit-posthocs** is a Python package which provides post hoc tests for
+pairwise multiple comparisons that are usually performed in statistical
+data analysis to assess the differences between group levels if a statistically
+significant result of ANOVA test has been obtained.
 
-**scikit-posthocs** is tightly integrated with Pandas DataFrames and NumPy arrays to ensure fast computations and convenient data import and storage.
+**scikit-posthocs** is tightly integrated with Pandas DataFrames and NumPy
+arrays to ensure fast computations and convenient data import and storage.
 
 This package will be useful for statisticians, data analysts, and researchers who use Python in their work.
 
@@ -30,11 +34,26 @@ This package will be useful for statisticians, data analysts, and researchers wh
 Background
 ----------
 
-Python statistical ecosystem is comprised of multiple packages. However, it still has numerous gaps and is surpassed by R packages and capabilities.
+Python statistical ecosystem is comprised of multiple packages. However, it
+still has numerous gaps and is surpassed by R packages and capabilities.
 
-`SciPy <https://www.scipy.org/>`_ (version 1.2.0) offers *Student*, *Wilcoxon*, and *Mann-Whitney* tests which are not adapted to multiple pairwise comparisons. `Statsmodels <http://statsmodels.sourceforge.net/>`_ (version 0.9.0) features *TukeyHSD* test which needs some extra actions to be fluently integrated into a data analysis pipeline. `Statsmodels <http://statsmodels.sourceforge.net/>`_ also has good helper methods: ``allpairtest`` (adapts an external function such as ``scipy.stats.ttest_ind`` to multiple pairwise comparisons) and ``multipletests`` (adjusts *p* values to minimize type I and II errors). `PMCMRplus <https://rdrr.io/cran/PMCMRplus/>`_ is a very good R package which has no rivals in Python as it offers more than 40 various tests (including post hoc tests) for factorial and block design data. PMCMRplus was an inspiration and a reference for *scikit-posthocs*.
+`SciPy <https://www.scipy.org/>`_ (version 1.2.0) offers *Student*, *Wilcoxon*,
+and *Mann-Whitney* tests which are not adapted to multiple pairwise
+comparisons. `Statsmodels <http://statsmodels.sourceforge.net/>`_(version 0.9.0)
+features *TukeyHSD* test which needs some extra actions to be fluently
+integrated into a data analysis pipeline.
+`Statsmodels <http://statsmodels.sourceforge.net/>`_ also has good helper
+methods: ``allpairtest`` (adapts an external function such as
+``scipy.stats.ttest_ind`` to multiple pairwise comparisons) and
+``multipletests`` (adjusts *p* values to minimize type I and II errors).
+`PMCMRplus <https://rdrr.io/cran/PMCMRplus/>`_ is a very good R package which
+has no rivals in Python as it offers more than 40 various tests (including
+post hoc tests) for factorial and block design data. PMCMRplus was an
+inspiration and a reference for *scikit-posthocs*.
 
-**scikit-posthocs** attempts to improve Python statistical capabilities by offering a lot of parametric and nonparametric post hoc tests along with outliers detection and basic plotting methods.
+**scikit-posthocs** attempts to improve Python statistical capabilities by
+offering a lot of parametric and nonparametric post hoc tests along with
+outliers detection and basic plotting methods.
 
 
 Features
@@ -120,7 +139,9 @@ Examples
 Parametric ANOVA with post hoc tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here is a simple example of the one-way analysis of variance (ANOVA) with post hoc tests used to compare *sepal width* means of three groups (three iris species) in *iris* dataset.
+Here is a simple example of the one-way analysis of variance (ANOVA)
+with post hoc tests used to compare *sepal width* means of three
+groups (three iris species) in *iris* dataset.
 
 To begin, we will import the dataset using statsmodels ``get_rdataset()`` method.
 
@@ -130,43 +151,57 @@ To begin, we will import the dataset using statsmodels ``get_rdataset()`` method
   >>> import statsmodels.formula.api as sfa
   >>> import scikit_posthocs as sp
   >>> df = sa.datasets.get_rdataset('iris').data
+  >>> df.columns = df.columns.str.replace('.', '')
   >>> df.head()
-     Sepal.Length  Sepal.Width  Petal.Length  Petal.Width Species
+      SepalLength   SepalWidth   PetalLength   PetalWidth Species
   0           5.1          3.5           1.4          0.2  setosa
   1           4.9          3.0           1.4          0.2  setosa
   2           4.7          3.2           1.3          0.2  setosa
   3           4.6          3.1           1.5          0.2  setosa
   4           5.0          3.6           1.4          0.2  setosa
 
-Now, we will build a model and run ANOVA using statsmodels ``ols()`` and ``anova_lm()`` methods. Columns ``Species`` and ``Sepal.Width`` contain independent (predictor) and dependent (response) variable values, correspondingly.
+Now, we will build a model and run ANOVA using statsmodels ``ols()``
+and ``anova_lm()`` methods. Columns ``Species`` and ``SepalWidth``
+contain independent (predictor) and dependent (response) variable
+values, correspondingly.
 
 .. code:: python
 
-  >>> lm = sfa.ols('Sepal.Width ~ C(Species)', data=df).fit()
+  >>> lm = sfa.ols('SepalWidth ~ C(Species)', data=df).fit()
   >>> anova = sa.stats.anova_lm(lm)
   >>> print(anova)
                  df     sum_sq   mean_sq         F        PR(>F)
   C(Species)    2.0  11.344933  5.672467  49.16004  4.492017e-17
   Residual    147.0  16.962000  0.115388       NaN           NaN
 
-The results tell us that there is a significant difference between groups means (p = 4.49e-17), but does not tell us the exact group pairs which are different in means. To obtain pairwise group differences, we will carry out a posteriori (post hoc) analysis using ``scikits-posthocs`` package. Student T test applied pairwisely gives us the following p values:
+The results tell us that there is a significant difference between
+groups means (p = 4.49e-17), but does not tell us the exact group pairs which
+are different in means. To obtain pairwise group differences, we will carry
+out a posteriori (post hoc) analysis using ``scikits-posthocs`` package.
+Student T test applied pairwisely gives us the following p values:
 
 .. code:: python
 
-  >>> sp.posthoc_ttest(df, val_col='Sepal.Width', group_col='Species', p_adjust='holm')
+  >>> sp.posthoc_ttest(df, val_col='SepalWidth', group_col='Species', p_adjust='holm')
                     setosa    versicolor     virginica
   setosa     -1.000000e+00  5.535780e-15  8.492711e-09
   versicolor  5.535780e-15 -1.000000e+00  1.819100e-03
   virginica   8.492711e-09  1.819100e-03 -1.000000e+00
 
-Remember to use a `FWER controlling procedure <https://en.wikipedia.org/wiki/Family-wise_error_rate#Controlling_procedures>`_, such as Holm procedure, when making multiple comparisons. As seen from this table, significant differences in group means are obtained for all group pairs.
+Remember to use a`FWER controlling procedure <https://en.wikipedia.org/wiki/Family-wise_error_rate#Controlling_procedures>`_,
+such as Holm procedure, when making multiple comparisons. As seen from this
+table, significant differences in group means are obtained for all group pairs.
 
 Non-parametric ANOVA with post hoc tests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If normality and other `assumptions <https://en.wikipedia.org/wiki/One-way_analysis_of_variance>`_ are violated, one can use a non-parametric Kruskal-Wallis H test (one-way non-parametric ANOVA) to test if samples came from the same distribution.
+If normality and other `assumptions <https://en.wikipedia.org/wiki/One-way_analysis_of_variance>`_
+are violated, one can use a non-parametric Kruskal-Wallis H test (one-way
+non-parametric ANOVA) to test if samples came from the same distribution.
 
-Let's use the same dataset just to demonstrate the procedure. Kruskal-Wallis test is implemented in SciPy package. ``scipy.stats.kruskal`` method accepts array-like structures, but not DataFrames.
+Let's use the same dataset just to demonstrate the procedure. Kruskal-Wallis
+test is implemented in SciPy package. ``scipy.stats.kruskal`` method
+accepts array-like structures, but not DataFrames.
 
 .. code:: python
 
@@ -174,9 +209,11 @@ Let's use the same dataset just to demonstrate the procedure. Kruskal-Wallis tes
   >>> import statsmodels.api as sa
   >>> import scikit_posthocs as sp
   >>> df = sa.datasets.get_rdataset('iris').data
-  >>> data = [df.loc[ids, 'Sepal.Width'].values for ids in df.groupby('Species').groups.values()]
+  >>> df.columns = df.columns.str.replace('.', '')
+  >>> data = [df.loc[ids, 'SepalWidth'].values for ids in df.groupby('Species').groups.values()]
 
-``data`` is a list of 1D arrays containing *sepal width* values, one array per each species. Now we can run Kruskal-Wallis analysis of variance.
+``data`` is a list of 1D arrays containing *sepal width* values, one array per
+each species. Now we can run Kruskal-Wallis analysis of variance.
 
 .. code:: python
 
@@ -184,24 +221,34 @@ Let's use the same dataset just to demonstrate the procedure. Kruskal-Wallis tes
   >>> p
   1.5692820940316782e-14
 
-P value tells us we may reject the null hypothesis that the population medians of all of the groups are equal. To learn what groups (species) differ in their medians we need to run post hoc tests. ``scikit-posthocs`` provides a lot of non-parametric tests mentioned above. Let's choose Conover's test.
+P value tells us we may reject the null hypothesis that the population medians
+of all of the groups are equal. To learn what groups (species) differ in their
+medians we need to run post hoc tests. ``scikit-posthocs`` provides a lot of
+non-parametric tests mentioned above. Let's choose Conover's test.
 
 .. code:: python
 
-  >>> sp.posthoc_conover(df, val_col='Sepal.Width', group_col='Species', p_adjust = 'holm')
+  >>> sp.posthoc_conover(df, val_col='SepalWidth', group_col='Species', p_adjust = 'holm')
                     setosa    versicolor     virginica
   setosa     -1.000000e+00  2.278515e-18  1.293888e-10
   versicolor  2.278515e-18 -1.000000e+00  1.881294e-03
   virginica   1.293888e-10  1.881294e-03 -1.000000e+00
 
-Pairwise comparisons show that we may reject the null hypothesis (p < 0.01) for each pair of species and conclude that all groups (species) differ in their sepal widths.
+Pairwise comparisons show that we may reject the null hypothesis (p < 0.01) for
+each pair of species and conclude that all groups (species) differ in their
+sepal widths.
 
 Block design
 ~~~~~~~~~~~~
 
-In block design case, we have a primary factor (e.g. treatment) and a blocking factor (e.g. age or gender). A blocking factor is also called a *nuisance* factor, and it is usually a source of variability that needs to be accounted for.
+In block design case, we have a primary factor (e.g. treatment) and a blocking
+factor (e.g. age or gender). A blocking factor is also called a *nuisance*
+factor, and it is usually a source of variability that needs to be accounted for.
 
-An example scenario is testing the effect of four fertilizers on crop yield in four cornfields. We can represent the results with a matrix in which rows correspond to the blocking factor (field) and columns correspond to the primary factor (yield).
+An example scenario is testing the effect of four fertilizers on crop yield in
+four cornfields. We can represent the results with a matrix in which rows
+correspond to the blocking factor (field) and columns correspond to the
+primary factor (yield).
 
 The following dataset is artificial and created just for demonstration of the procedure:
 
@@ -212,7 +259,8 @@ The following dataset is artificial and created just for demonstration of the pr
                        [ 8.27, 11.46, 10.24, 11.6 ],
                        [ 8.83, 13.25,  8.33, 11.51]])
 
-First, we need to perform an omnibus test — Friedman rank sum test. It is implemented in ``scipy.stats`` subpackage:
+First, we need to perform an omnibus test — Friedman rank sum test. It is
+implemented in ``scipy.stats`` subpackage:
 
 .. code:: python
 
@@ -220,7 +268,10 @@ First, we need to perform an omnibus test — Friedman rank sum test. It is impl
   >>> ss.friedmanchisquare(*data.T)
   FriedmanchisquareResult(statistic=8.700000000000003, pvalue=0.03355726870553798)
 
-We can reject the null hypothesis that our treatments have the same distribution, because p value is less than 0.05. A number of post hoc tests are available in ``scikit-posthocs`` package for unreplicated block design data. In the following example, Nemenyi's test is used:
+We can reject the null hypothesis that our treatments have the same
+distribution, because p value is less than 0.05. A number of post hoc tests are
+available in ``scikit-posthocs`` package for unreplicated block design data.
+In the following example, Nemenyi's test is used:
 
 .. code:: python
 
@@ -232,8 +283,11 @@ We can reject the null hypothesis that our treatments have the same distribution
   2  0.823993  0.670273 -1.000000  0.220908
   3  0.031375  0.823993  0.220908 -1.000000
 
-This function returns a DataFrame with p values obtained in pairwise comparisons between all treatments.
-One can also pass a DataFrame and specify the names of columns containing dependent variable values, blocking and primary factor values. The following code creates a DataFrame with the same data:
+This function returns a DataFrame with p values obtained in pairwise
+comparisons between all treatments.
+One can also pass a DataFrame and specify the names of columns containing
+dependent variable values, blocking and primary factor values.
+The following code creates a DataFrame with the same data:
 
 .. code:: python
 
@@ -277,7 +331,10 @@ This is a *melted* and ready-to-use DataFrame. Do not forget to pass ``melted`` 
 Data types
 ~~~~~~~~~~
 
-Internally, ``scikit-posthocs`` uses NumPy ndarrays and pandas DataFrames to store and process data. Python lists, NumPy ndarrays, and pandas DataFrames are supported as *input* data types. Below are usage examples of various input data structures.
+Internally, ``scikit-posthocs`` uses NumPy ndarrays and pandas DataFrames to
+store and process data. Python lists, NumPy ndarrays, and pandas DataFrames
+are supported as *input* data types. Below are usage examples of various
+input data structures.
 
 Lists and arrays
 ^^^^^^^^^^^^^^^^
@@ -351,16 +408,19 @@ It returns a tuple of a DataFrame representation and names of the columns contai
 DataFrames
 ^^^^^^^^^^
 
-If you are using DataFrames, you need to pass column names containing variable values to a post hoc function:
+If you are using DataFrames, you need to pass column names containing variable
+values to a post hoc function:
 
 .. code:: python
 
   >>> import statsmodels.api as sa
   >>> import scikit_posthocs as sp
   >>> df = sa.datasets.get_rdataset('iris').data
-  >>> sp.posthoc_conover(df, val_col='Sepal.Width', group_col='Species', p_adjust = 'holm')
+  >>> df.columns = df.columns.str.replace('.', '')
+  >>> sp.posthoc_conover(df, val_col='SepalWidth', group_col='Species', p_adjust = 'holm')
 
-``val_col`` and ``group_col`` arguments specify the names of the columns containing dependent (response) and independent (grouping) variable values.
+``val_col`` and ``group_col`` arguments specify the names of the columns
+containing dependent (response) and independent (grouping) variable values.
 
 
 Significance plots
@@ -391,9 +451,11 @@ Custom colormap applied to a plot:
 Citing
 ------
 
-If you want to cite *scikit-posthocs*, please refer to the publication in the `Journal of Open Source Software <http://joss.theoj.org>`_:
+If you want to cite *scikit-posthocs*, please refer to the publication in
+the `Journal of Open Source Software <http://joss.theoj.org>`_:
 
-Terpilowski, M. (2019). scikit-posthocs: Pairwise multiple comparison tests in Python. Journal of Open Source Software, 4(36), 1169, https://doi.org/10.21105/joss.01169
+Terpilowski, M. (2019). scikit-posthocs: Pairwise multiple comparison tests in
+Python. Journal of Open Source Software, 4(36), 1169, https://doi.org/10.21105/joss.01169
 
 .. code::
 
