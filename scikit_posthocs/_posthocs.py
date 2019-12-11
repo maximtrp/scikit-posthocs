@@ -1384,8 +1384,9 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
     x['r'] = x.groupby(block_col)[y_col].rank()
     q = (x.groupby(block_col)[y_col].max() - x.groupby(block_col)[y_col].min()).rank()
     x['rr'] = x['r'] - (k + 1)/2
-    x['s'] = x.apply(lambda x, y: x['rr'] * y[x['blocks']], axis=1, args=(q,))
-    x['w'] = x.apply(lambda x, y: x['r'] * y[x['blocks']], axis=1, args=(q,))
+    x['s'] = x.apply(lambda row: row['rr'] * q[row[block_col]], axis=1)
+    x['w'] = x.apply(lambda row: row['r'] * q[row[block_col]], axis=1)
+
     A = (x['s'] ** 2).sum()
     S = x.groupby(group_col)['s'].sum()
     B = np.sum(S ** 2) / b
@@ -1621,8 +1622,8 @@ def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True
 
     else:
         x = np.array(a)
-        x_grouped = np.array([np.array(a)[~np.isnan(a)] for a in x])
-        x_lens = np.asarray([len(a) for a in x_grouped])
+        x_grouped = np.array([np.array(_x)[~np.isnan(_x)] for _x in x])
+        x_lens = np.asarray([len(_xg) for _xg in x_grouped])
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
 
     if any(x_lens == 0):
