@@ -1621,7 +1621,7 @@ def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True
 
     else:
         x = np.array(a)
-        x_grouped = np.array([np.asarray(a)[~np.isnan(a)] for a in x])
+        x_grouped = np.array([np.array(a)[~np.isnan(a)] for a in x])
         x_lens = np.asarray([len(a) for a in x_grouped])
         x_lens_cumsum = np.insert(np.cumsum(x_lens), 0, 0)[:-1]
 
@@ -2090,9 +2090,14 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
         else:
             ## checks according to Tamhane (1979, p. 474)
             ok1 = (9./10. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 10./9.)
-            ok2 = (9./10. <= (si[i] / ni[i]) / (si[j] / ni[j])) and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 10./9.)
-            ok3 = (4./5. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 5./4.) and (1./2. <= (si[i] / ni[i]) / (si[j] / ni[j])) and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 2.)
-            ok4 = (2./3. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 3./2.) and (3./4. <= (si[i] / ni[i]) / (si[j] / ni[j])) and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 4./3.)
+            ok2 = (9./10. <= (si[i] / ni[i]) / (si[j] / ni[j])) and\
+                ((si[i] / ni[i]) / (si[j] / ni[j]) <= 10./9.)
+            ok3 = (4./5. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 5./4.) and\
+                (1./2. <= (si[i] / ni[i]) / (si[j] / ni[j])) and\
+                ((si[i] / ni[i]) / (si[j] / ni[j]) <= 2.)
+            ok4 = (2./3. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 3./2.) and\
+                (3./4. <= (si[i] / ni[i]) / (si[j] / ni[j]))\
+                and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 4./3.)
             OK = any([ok1, ok2, ok3, ok4])
             if not OK:
                 print("Sample sizes or standard errors are not balanced. T2 test is recommended.")
