@@ -52,7 +52,7 @@ def sign_table(p_values, lower=True, upper=True):
     Significance table
 
     Returns table that can be used in a publication. P values are replaced
-    with asterisks: \* - p < 0.05, \*\* - p < 0.01, \*\*\* - p < 0.001.
+    with asterisks: * - p < 0.05, ** - p < 0.01, *** - p < 0.001.
 
     Parameters
     ----------
@@ -107,7 +107,7 @@ def sign_table(p_values, lower=True, upper=True):
         pv[np.triu_indices(pv.shape[0], 1)] = ''
 
     return DataFrame(pv, index=p_values.index, columns=p_values.columns)\
-            if isinstance(p_values, DataFrame) else pv
+        if isinstance(p_values, DataFrame) else pv
 
 
 def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
@@ -156,7 +156,8 @@ def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
         Default is [0.95, 0.35, 0.04, 0.3].
 
     ax : matplotlib Axes, optional
-        Axes in which to draw the plot, otherwise use the currently-active Axes.
+        Axes in which to draw the plot, otherwise use the currently-active
+        Axes.
 
     kwargs : other keyword arguments
         Keyword arguments to be passed to seaborn heatmap method. These
@@ -164,8 +165,8 @@ def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
 
     Returns
     -------
-    Axes object with the heatmap (and ColorBase object of cbar if `flat` is set to
-    False).
+    Axes object with the heatmap (and ColorBase object of cbar if `flat` is set
+    to False).
 
     Examples
     --------
@@ -190,7 +191,7 @@ def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
     dtype = df.values.dtype
 
     if not np.issubdtype(dtype, np.integer) and flat:
-        raise ValueError("X should be a sign_array or DataFrame of integer values")
+        raise ValueError("X should be a sign_array or DataFrame of integers")
     elif not np.issubdtype(dtype, np.floating) and not flat:
         raise ValueError("X should be an array or DataFrame of float p values")
 

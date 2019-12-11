@@ -6,7 +6,8 @@ import itertools as it
 from statsmodels.sandbox.stats.multicomp import multipletests
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
-from pandas import DataFrame, Categorical, Series
+from pandas import DataFrame, Categorical
+
 
 def __convert_to_df(a, val_col=None, group_col=None, val_id=None, group_id=None):
 
