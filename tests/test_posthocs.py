@@ -102,7 +102,7 @@ class TestPosthocs(unittest.TestCase):
         x = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18,245.57])
         test_results = so.outliers_grubbs(x)
         correct_results = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18])
-        self.assertTrue(so.outliers_grubbs(x, hypo=True) == True)
+        self.assertTrue(so.outliers_grubbs(x, hypo=True))
         self.assertTrue(np.all(test_results == correct_results))
 
     def test_outliers_tietjen(self):
@@ -112,7 +112,7 @@ class TestPosthocs(unittest.TestCase):
         test_results = so.outliers_tietjen(x, 2)
         correct_results = np.array([-0.44,-0.3,-0.24,-0.22,-0.13,-0.05,0.06,
                                     0.1,0.18,0.2,0.39,0.48,0.63])
-        self.assertTrue(so.outliers_tietjen(x, 2, hypo=True) == True)
+        self.assertTrue(so.outliers_tietjen(x, 2, hypo=True))
         self.assertTrue(np.all(test_results == correct_results))
 
     def test_outliers_gesd(self):
