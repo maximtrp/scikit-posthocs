@@ -20,7 +20,7 @@
     :target: https://pypi.python.org/pypi/scikit-posthocs/
 
 
-**scikit-posthocs** is a Python package which provides post hoc tests for
+**scikit-posthocs** is a Python package that provides post hoc tests for
 pairwise multiple comparisons that are usually performed in statistical
 data analysis to assess the differences between group levels if a statistically
 significant result of ANOVA test has been obtained.
@@ -34,12 +34,12 @@ This package will be useful for statisticians, data analysts, and researchers wh
 Background
 ----------
 
-Python statistical ecosystem is comprised of multiple packages. However, it
+Python statistical ecosystem comprises multiple packages. However, it
 still has numerous gaps and is surpassed by R packages and capabilities.
 
 `SciPy <https://www.scipy.org/>`_ (version 1.2.0) offers *Student*, *Wilcoxon*,
 and *Mann-Whitney* tests which are not adapted to multiple pairwise
-comparisons. `Statsmodels <http://statsmodels.sourceforge.net/>`_(version 0.9.0)
+comparisons. `Statsmodels <http://statsmodels.sourceforge.net/>`_ (version 0.9.0)
 features *TukeyHSD* test which needs some extra actions to be fluently
 integrated into a data analysis pipeline.
 `Statsmodels <http://statsmodels.sourceforge.net/>`_ also has good helper
