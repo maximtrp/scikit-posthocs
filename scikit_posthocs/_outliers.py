@@ -280,7 +280,7 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
 
         # Masked values
         lms = ms[-1] if len(ms) > 0 else []
-        ms.append(lms + [np.argmax(abs_d)])
+        ms.append(lms + np.where(data == data_proc[np.argmax(abs_d)])[0].tolist())
 
         # Lambdas calculation
         p = 1 - alpha / (2 * (n - i))

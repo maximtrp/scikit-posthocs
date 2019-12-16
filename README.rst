@@ -28,7 +28,8 @@ significant result of ANOVA test has been obtained.
 **scikit-posthocs** is tightly integrated with Pandas DataFrames and NumPy
 arrays to ensure fast computations and convenient data import and storage.
 
-This package will be useful for statisticians, data analysts, and researchers who use Python in their work.
+This package will be useful for statisticians, data analysts, and
+researchers who use Python in their work.
 
 
 Background
@@ -107,7 +108,8 @@ Features
 
 - Plotting functionality (e.g. significance plots).
 
-All post hoc tests are capable of p adjustments for multiple pairwise comparisons.
+All post hoc tests are capable of p adjustments for multiple
+pairwise comparisons.
 
 Dependencies
 ------------
@@ -143,7 +145,8 @@ Here is a simple example of the one-way analysis of variance (ANOVA)
 with post hoc tests used to compare *sepal width* means of three
 groups (three iris species) in *iris* dataset.
 
-To begin, we will import the dataset using statsmodels ``get_rdataset()`` method.
+To begin, we will import the dataset using statsmodels
+``get_rdataset()`` method.
 
 .. code:: python
 
@@ -243,14 +246,16 @@ Block design
 
 In block design case, we have a primary factor (e.g. treatment) and a blocking
 factor (e.g. age or gender). A blocking factor is also called a *nuisance*
-factor, and it is usually a source of variability that needs to be accounted for.
+factor, and it is usually a source of variability that needs to be accounted
+for.
 
 An example scenario is testing the effect of four fertilizers on crop yield in
 four cornfields. We can represent the results with a matrix in which rows
 correspond to the blocking factor (field) and columns correspond to the
 primary factor (yield).
 
-The following dataset is artificial and created just for demonstration of the procedure:
+The following dataset is artificial and created just for demonstration
+of the procedure:
 
 .. code:: python
 
@@ -316,7 +321,8 @@ The following code creates a DataFrame with the same data:
   14       2       3  11.60
   15       3       3  11.51
 
-This is a *melted* and ready-to-use DataFrame. Do not forget to pass ``melted`` argument:
+This is a *melted* and ready-to-use DataFrame. Do not forget to pass ``melted``
+argument:
 
 .. code:: python
 
@@ -376,9 +382,11 @@ You can check how it is processed with a hidden function ``__convert_to_df()``:
    17     8       3
    18     3       3, 'vals', 'groups')
 
-It returns a tuple of a DataFrame representation and names of the columns containing dependent (``vals``) and independent (``groups``) variable values.
+It returns a tuple of a DataFrame representation and names of the columns
+containing dependent (``vals``) and independent (``groups``) variable values.
 
-*Block design* matrix passed as a NumPy ndarray is processed with a hidden ``__convert_to_block_df()`` function:
+*Block design* matrix passed as a NumPy ndarray is processed with a hidden
+``__convert_to_block_df()`` function:
 
 .. code:: python
 

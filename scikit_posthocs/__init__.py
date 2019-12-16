@@ -1,4 +1,4 @@
-__version__ = '0.6.1'
+__version__ = '0.6.2'
 
 from scikit_posthocs._omnibox import test_osrt, test_durbin, test_mackwolfe # noqa
 
