@@ -2294,7 +2294,7 @@ def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
         nj = n.loc[j]
         x_raw = x.loc[(x[_group_col] == i) | (x[_group_col] == j)].copy()
         x_raw['ranks'] = x_raw.loc[:, _val_col].rank()
-        r = x_raw.groupby(_group_col)['ranks'].sum().loc[[i, j]]
+        r = x_raw.groupby(_group_col)['ranks'].sum().loc[[j, i]]
         u = np.array([nj * ni + (nj * (nj + 1) / 2),
                       nj * ni + (ni * (ni + 1) / 2)]) - r
         u_min = np.min(u)
