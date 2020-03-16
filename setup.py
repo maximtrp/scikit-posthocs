@@ -13,22 +13,22 @@ setup(name='scikit-posthocs',
       keywords='statistics posthoc anova',
       install_requires=['numpy', 'scipy', 'statsmodels',
                         'pandas>=0.20.0', 'seaborn', 'matplotlib'],
-	  classifiers=[
-		'Development Status :: 5 - Production/Stable',
+      classifiers=[
+        'Development Status :: 5 - Production/Stable',
 
-		'Intended Audience :: Education',
-		'Intended Audience :: Information Technology',
-		'Intended Audience :: Science/Research',
+        'Intended Audience :: Education',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: Science/Research',
 
-		'Topic :: Scientific/Engineering :: Information Analysis',
-		'Topic :: Scientific/Engineering :: Mathematics',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Scientific/Engineering :: Mathematics',
 
-		'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: BSD License',
 
-		'Programming Language :: Python :: 3',
-		'Programming Language :: Python :: 3.5',
-		'Programming Language :: Python :: 3.6',
-		'Programming Language :: Python :: 3.7',
-	  ],
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+      ],
       test_suite='tests.posthocs_suite',
       zip_safe=False)
