@@ -1,11 +1,7 @@
-import os, sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
+import os
+import sys
 import unittest
 import matplotlib as mpl
-if os.environ.get('DISPLAY','') == '':
-    print('No display found. Using non-interactive Agg backend')
-    mpl.use('Agg')
 import scikit_posthocs._posthocs as sp
 import scikit_posthocs._omnibox as som
 import scikit_posthocs._outliers as so
@@ -14,6 +10,10 @@ import seaborn as sb
 import numpy as np
 import matplotlib.axes as ma
 from pandas import DataFrame
+if os.environ.get('DISPLAY', '') == '':
+    print('No display found. Using non-interactive Agg backend')
+    mpl.use('Agg')
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 class TestPosthocs(unittest.TestCase):
@@ -22,28 +22,28 @@ class TestPosthocs(unittest.TestCase):
     def test_sign_array(self):
 
         p_values = np.array([[0., 0.00119517, 0.00278329],
-                             [0.00119517, 0. , 0.18672227],
+                             [0.00119517, 0., 0.18672227],
                              [0.00278329, 0.18672227, 0.]])
         test_results = splt.sign_array(p_values)
-        correct_results = np.array([[-1,1,1],[1,-1,0],[1,0,-1]])
+        correct_results = np.array([[-1, 1, 1], [1, -1, 0], [1, 0, -1]])
         self.assertTrue(np.all(test_results == correct_results))
 
     def test_sign_table(self):
 
-        p_values = np.array([[-1.,0.00119517,0.00278329],
-                             [0.00119517,-1.,0.18672227],
-                             [0.00278329,0.18672227,-1.]])
-        
-        correct_results = np.array([['-','**','**'],
-                                    ['**','-','NS'],
-                                    ['**','NS','-']], dtype=object)
-        correct_resultsl = np.array([['-','',''],
-                                    ['**','-',''],
-                                    ['**','NS','-']], dtype=object)
-        correct_resultsu = np.array([['-','**','**'],
-                                    ['','-','NS'],
-                                    ['','','-']], dtype=object)
-        
+        p_values = np.array([[-1., 0.00119517, 0.00278329],
+                             [0.00119517, -1., 0.18672227],
+                             [0.00278329, 0.18672227, -1.]])
+
+        correct_results = np.array([['-', '**', '**'],
+                                    ['**', '-', 'NS'],
+                                    ['**', 'NS', '-']], dtype=object)
+        correct_resultsl = np.array([['-', '', ''],
+                                    ['**', '-', ''],
+                                    ['**', 'NS', '-']], dtype=object)
+        correct_resultsu = np.array([['-', '**', '**'],
+                                    ['', '-', 'NS'],
+                                    ['', '', '-']], dtype=object)
+
         with self.assertRaises(ValueError):
             splt.sign_table(p_values, lower=False, upper=False)
 
@@ -53,65 +53,66 @@ class TestPosthocs(unittest.TestCase):
 
     def test_sign_plot(self):
 
-        x = np.array([[-1,  1,  1],
-                      [ 1, -1,  0],
-                      [ 1,  0, -1]])
-        a = splt.sign_plot(x, flat = True, labels = False)
+        x = np.array([[-1, 1, 1],
+                      [1, -1, 0],
+                      [1, 0, -1]])
+        a = splt.sign_plot(x, flat=True, labels=False)
         with self.assertRaises(ValueError):
-            splt.sign_plot(x.astype(np.float), flat = True, labels = False)
+            splt.sign_plot(x.astype(np.float), flat=True, labels=False)
         self.assertTrue(isinstance(a, ma._subplots.Axes))
 
     def test_sign_plot_nonflat(self):
 
-        x = np.array([[-1.,0.00119517,0.00278329],
-                      [0.00119517,-1.,0.18672227],
-                      [0.00278329,0.18672227,-1.]])
-        a, cbar = splt.sign_plot(x, cbar=True, labels = False)
-        _a, _cbar = splt.sign_plot(DataFrame(x), cbar=True, labels = False)
+        x = np.array([[-1., 0.00119517, 0.00278329],
+                      [0.00119517, -1., 0.18672227],
+                      [0.00278329, 0.18672227, -1.]])
+        a, cbar = splt.sign_plot(x, cbar=True, labels=False)
+        _a, _cbar = splt.sign_plot(DataFrame(x), cbar=True, labels=False)
 
         with self.assertRaises(ValueError):
-            splt.sign_plot(x, cmap=[1,1], labels = False)
+            splt.sign_plot(x, cmap=[1, 1], labels=False)
         with self.assertRaises(ValueError):
-            splt.sign_plot(x.astype(np.integer), labels = False)
+            splt.sign_plot(x.astype(np.integer), labels=False)
         self.assertTrue(isinstance(_a, ma._subplots.Axes) and isinstance(_cbar, mpl.colorbar.ColorbarBase))
         self.assertTrue(isinstance(a, ma._subplots.Axes) and isinstance(cbar, mpl.colorbar.ColorbarBase))
-
 
     # Outliers tests
     def test_outliers_iqr(self):
 
-        x = np.array([4,5,6,10,12,4,3,1,2,3,23,5,3])
+        x = np.array([4, 5, 6, 10, 12, 4, 3, 1, 2, 3, 23, 5, 3])
 
-        x_filtered = np.array([4,5,6,10,4,3,1,2,3,5,3])
+        x_filtered = np.array([4, 5, 6, 10, 4, 3, 1, 2, 3, 5, 3])
         indices = np.delete(np.arange(13), [4, 10])
         outliers_indices = np.array([4, 10])
         outliers = np.array([12, 23])
 
-        test_outliers = so.outliers_iqr(x, ret = 'outliers')
-        test_outliers_indices = so.outliers_iqr(x, ret = 'outliers_indices')
-        test_indices = so.outliers_iqr(x, ret = 'indices')
-        test_filtered = so.outliers_iqr(x, ret = 'filtered')
+        test_outliers = so.outliers_iqr(x, ret='outliers')
+        test_outliers_indices = so.outliers_iqr(x, ret='outliers_indices')
+        test_indices = so.outliers_iqr(x, ret='indices')
+        test_filtered = so.outliers_iqr(x, ret='filtered')
 
-        self.assertTrue(np.all(test_outliers == outliers)\
-                        and np.all(test_outliers_indices == outliers_indices)\
-                        and np.all(test_indices == indices)\
+        self.assertTrue(np.all(test_outliers == outliers)
+                        and np.all(test_outliers_indices == outliers_indices)
+                        and np.all(test_indices == indices)
                         and np.all(test_filtered == x_filtered))
 
     def test_outliers_grubbs(self):
 
-        x = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18,245.57])
+        x = np.array([199.31, 199.53, 200.19, 200.82,
+                      201.92, 201.95, 202.18, 245.57])
         test_results = so.outliers_grubbs(x)
-        correct_results = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18])
+        correct_results = np.array(
+            [199.31, 199.53, 200.19, 200.82, 201.92, 201.95, 202.18])
         self.assertTrue(so.outliers_grubbs(x, hypo=True))
         self.assertTrue(np.all(test_results == correct_results))
 
     def test_outliers_tietjen(self):
 
-        x = np.array([-1.40,-0.44,-0.30,-0.24,-0.22,-0.13,-0.05,0.06,0.10,
-                      0.18,0.20,0.39,0.48,0.63,1.01])
+        x = np.array([-1.40, -0.44, -0.30, -0.24, -0.22, -0.13, -0.05, 0.06, 0.10,
+                      0.18, 0.20, 0.39, 0.48, 0.63, 1.01])
         test_results = so.outliers_tietjen(x, 2)
-        correct_results = np.array([-0.44,-0.3,-0.24,-0.22,-0.13,-0.05,0.06,
-                                    0.1,0.18,0.2,0.39,0.48,0.63])
+        correct_results = np.array([-0.44, -0.3, -0.24, -0.22, -0.13, -0.05, 0.06,
+                                    0.1, 0.18, 0.2, 0.39, 0.48, 0.63])
         self.assertTrue(so.outliers_tietjen(x, 2, hypo=True))
         self.assertTrue(np.all(test_results == correct_results))
 
@@ -131,7 +132,7 @@ class TestPosthocs(unittest.TestCase):
             1.99,  2.06,  2.09,  2.1 ,  2.14,  2.15,  2.23,  2.24,  2.26,
             2.35,  2.37,  2.4 ,  2.47,  2.54,  2.62,  2.64,  2.9 ,  2.92,
             2.92,  2.93,  3.21,  3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
-        self.assertTrue(isinstance(so.outliers_gesd(x, 5, report = True), str))
+        self.assertTrue(isinstance(so.outliers_gesd(x, 5, report=True), str))
         self.assertTrue(np.all(test_results == correct_results))
 
 
@@ -172,7 +173,7 @@ class TestPosthocs(unittest.TestCase):
 
     # Omnibox tests
     def test_osrt(self):
-        df = DataFrame(dict(zip(['a','b','c'], self.df_bn.tolist()))).melt()
+        df = DataFrame(dict(zip(['a', 'b', 'c'], self.df_bn.tolist()))).melt()
         p,_ = som.test_osrt(df, val_col='value', group_col='variable')
         result = 0.3157646
         self.assertTrue(np.allclose(p, result, atol=1.e-3))
@@ -387,9 +388,9 @@ class TestPosthocs(unittest.TestCase):
 
 
     def test_posthoc_dscf(self):
-        r_results = np.array([[-1, 9.828003e-08, 4.430682e-02],
-                              [9.828003e-08, -1, 5.655274e-05],
-                              [4.430682e-02, 5.655274e-05, -1]])
+        r_results = np.array([[-1, 4.430682e-02, 9.828003e-08],
+                              [4.430682e-02, -1, 5.655274e-05],
+                              [9.828003e-08, 5.655274e-05, -1]])
 
         results = sp.posthoc_dscf(self.df, val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results, atol=0.001))
@@ -447,9 +448,9 @@ class TestPosthocs(unittest.TestCase):
 
     def test_posthoc_wilcoxon(self):
 
-        r_results = np.array([[-1, 2.857818e-06, 2.337133e-03],
-                              [2.857818e-06, -1, 1.230888e-05],
-                              [2.337133e-03, 1.230888e-05, -1]])
+        r_results = np.array([[-1, 2.337133e-03, 2.857818e-06],
+                              [2.337133e-03, -1, 1.230888e-05],
+                              [2.857818e-06, 1.230888e-05, -1]])
 
         results = sp.posthoc_wilcoxon(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
@@ -457,9 +458,9 @@ class TestPosthocs(unittest.TestCase):
 
     def test_posthoc_scheffe(self):
 
-        r_results = np.array([[-1, 3.047472e-10, 3.378449e-01],
-                              [3.047472e-10, -1, 2.173209e-07],
-                              [3.378449e-01, 2.173209e-07, -1]])
+        r_results = np.array([[-1, 3.378449e-01, 3.047472e-10],
+                              [3.378449e-01, -1, 2.173209e-07],
+                              [3.047472e-10, 2.173209e-07, -1]])
 
         results = sp.posthoc_scheffe(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
@@ -485,9 +486,9 @@ class TestPosthocs(unittest.TestCase):
 
 
     def test_posthoc_tukey(self):
-        r_results = np.array([[-1, 4.308631e-10, 3.042955e-01],
-                              [4.308631e-10, -1, 9.946571e-08],
-                              [3.042955e-01, 9.946571e-08, -1]])
+        r_results = np.array([[-1, 3.042955e-01, 4.308631e-10],
+                              [3.042955e-01, -1, 9.946571e-08],
+                              [4.308631e-10, 9.946571e-08, -1]])
 
         results = sp.posthoc_tukey(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results, atol=1.e-3))
