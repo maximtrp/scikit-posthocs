@@ -7,6 +7,7 @@ from statsmodels.stats.libqsturng import psturng
 from pandas import Categorical, Series
 from scikit_posthocs._posthocs import __convert_to_df, __convert_to_block_df
 
+
 def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=False):
 
     '''Mack-Wolfe Test for Umbrella Alternatives.
@@ -73,11 +74,11 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
     k = x[_group_col].unique().size
 
     if p and p > k:
-            print("Selected 'p' > number of groups:", str(p), " > ", str(k))
-            return False
+        print("Selected 'p' > number of groups:", str(p), " > ", str(k))
+        return False
     elif p is not None and p < 1:
-            print("Selected 'p' < 1: ", str(p))
-            return False
+        print("Selected 'p' < 1: ", str(p))
+        return False
 
     Rij = x[_val_col].rank()
     n = x.groupby(_group_col)[_val_col].count()
@@ -91,8 +92,8 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
 
         for i in range(k):
             for j in range(i):
-                U[i,j] = _fn(Rij[x[_group_col] == levels[i]], Rij[x[_group_col] == levels[j]])
-                U[j,i] = _fn(Rij[x[_group_col] == levels[j]], Rij[x[_group_col] == levels[i]])
+                U[i, j] = _fn(Rij[x[_group_col] == levels[i]], Rij[x[_group_col] == levels[j]])
+                U[j, i] = _fn(Rij[x[_group_col] == levels[j]], Rij[x[_group_col] == levels[i]])
 
         return U
 
@@ -101,12 +102,12 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
         if p > 0:
             for i in range(p):
                 for j in range(i+1, p+1):
-                    tmp1 += U[i,j]
+                    tmp1 += U[i, j]
         tmp2 = 0.
         if p < k:
             for i in range(p, k):
                 for j in range(i+1, k):
-                    tmp2 += U[j,i]
+                    tmp2 += U[j, i]
 
         return tmp1 + tmp2
 
@@ -126,13 +127,13 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
         N2 = _n2(p, n)
         N = np.sum(n)
 
-        var = (2. * (N1**3 + N2**3) + 3. * (N1**2 + N2**2) -\
-                np.sum(n**2 * (2*n + 3.)) - n.iloc[p]**2. * (2. * n.iloc[p] + 3.) +\
-                12. * n.iloc[p] * N1 * N2 - 12. * n.iloc[p] ** 2. * N) / 72.
+        var = (2. * (N1**3 + N2**3) + 3. * (N1**2 + N2**2) -
+               np.sum(n**2 * (2*n + 3.)) - n.iloc[p]**2. * (2. * n.iloc[p] + 3.) +
+               12. * n.iloc[p] * N1 * N2 - 12. * n.iloc[p] ** 2. * N) / 72.
         return var
 
     if p:
-        #if (x.groupby(_val_col).count() > 1).any().any():
+        # if (x.groupby(_val_col).count() > 1).any().any():
         #    print("Ties are present")
         U = _ustat(Rij, x[_group_col], k)
         est = _ap(p, U)
@@ -163,6 +164,7 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
         p_value = mt[mt > stat] / n_perm
 
     return p_value, stat
+
 
 def test_osrt(a, val_col=None, group_col=None, sort=False):
 
@@ -233,7 +235,7 @@ def test_osrt(a, val_col=None, group_col=None, sort=False):
     for i in range(k):
         for j in range(ni.iloc[i]):
             c += 1
-            sigma2 += (x[_val_col].iat[c] - xi[i])**2. /df
+            sigma2 += (x[_val_col].iat[c] - xi[i])**2. / df
 
     sigma = np.sqrt(sigma2)
 
@@ -246,7 +248,7 @@ def test_osrt(a, val_col=None, group_col=None, sort=False):
     vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
 
-    for i,j in combs:
+    for i, j in combs:
         vs[i, j] = compare(i, j)
 
     stat = np.max(vs)
