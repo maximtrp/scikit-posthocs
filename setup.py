@@ -2,13 +2,13 @@ from setuptools import setup
 from os.path import join, dirname
 
 setup(name='scikit-posthocs',
-      version='0.6.4',
+      version='0.6.5',
       description='Statistical post-hoc analysis and outlier detection algorithms',
       long_description=open(join(dirname(__file__), 'DESCRIPTION.rst')).read(),
       url='http://github.com/maximtrp/scikit-posthocs',
       author='Maksim Terpilowski',
       author_email='maximtrp@gmail.com',
-      license='BSD',
+      license='MIT',
       packages=['scikit_posthocs'],
       keywords='statistics posthoc anova',
       install_requires=['numpy', 'scipy', 'statsmodels',
@@ -23,12 +23,13 @@ setup(name='scikit-posthocs',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Scientific/Engineering :: Mathematics',
 
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: MIT License',
 
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
       ],
       test_suite='tests.posthocs_suite',
       zip_safe=False)

@@ -25,14 +25,14 @@ class TestPosthocs(unittest.TestCase):
                              [0.00119517, 0., 0.18672227],
                              [0.00278329, 0.18672227, 0.]])
         test_results = splt.sign_array(p_values)
-        correct_results = np.array([[-1, 1, 1], [1, -1, 0], [1, 0, -1]])
+        correct_results = np.array([[1, 1, 1], [1, 1, 0], [1, 0, 1]])
         self.assertTrue(np.all(test_results == correct_results))
 
     def test_sign_table(self):
 
-        p_values = np.array([[-1., 0.00119517, 0.00278329],
-                             [0.00119517, -1., 0.18672227],
-                             [0.00278329, 0.18672227, -1.]])
+        p_values = np.array([[1., 0.00119517, 0.00278329],
+                             [0.00119517, 1., 0.18672227],
+                             [0.00278329, 0.18672227, 1.]])
 
         correct_results = np.array([['-', '**', '**'],
                                     ['**', '-', 'NS'],
@@ -53,9 +53,9 @@ class TestPosthocs(unittest.TestCase):
 
     def test_sign_plot(self):
 
-        x = np.array([[-1, 1, 1],
-                      [1, -1, 0],
-                      [1, 0, -1]])
+        x = np.array([[1, 1, 1],
+                      [1, 1, 0],
+                      [1, 0, 1]])
         a = splt.sign_plot(x, flat=True, labels=False)
         with self.assertRaises(ValueError):
             splt.sign_plot(x.astype(np.float), flat=True, labels=False)
@@ -63,17 +63,18 @@ class TestPosthocs(unittest.TestCase):
 
     def test_sign_plot_nonflat(self):
 
-        x = np.array([[-1., 0.00119517, 0.00278329],
-                      [0.00119517, -1., 0.18672227],
-                      [0.00278329, 0.18672227, -1.]])
+        x = np.array([[1., 0.00119517, 0.00278329],
+                      [0.00119517, 1., 0.18672227],
+                      [0.00278329, 0.18672227, 1.]])
         a, cbar = splt.sign_plot(x, cbar=True, labels=False)
-        _a, _cbar = splt.sign_plot(DataFrame(x), cbar=True, labels=False)
+        #x_df = DataFrame(x)
+        #_a, _cbar = splt.sign_plot(x_df, cbar=True, labels=False)
 
         with self.assertRaises(ValueError):
             splt.sign_plot(x, cmap=[1, 1], labels=False)
         with self.assertRaises(ValueError):
             splt.sign_plot(x.astype(np.integer), labels=False)
-        self.assertTrue(isinstance(_a, ma._subplots.Axes) and isinstance(_cbar, mpl.colorbar.ColorbarBase))
+        #self.assertTrue(isinstance(_a, ma._subplots.Axes) and isinstance(_cbar, mpl.colorbar.ColorbarBase))
         self.assertTrue(isinstance(a, ma._subplots.Axes) and isinstance(cbar, mpl.colorbar.ColorbarBase))
 
     # Outliers tests
@@ -199,18 +200,18 @@ class TestPosthocs(unittest.TestCase):
     # Post hoc tests
     def test_posthoc_anderson(self):
 
-        r_results = np.array([[-1, 1.35079e-02, 8.64418e-09],
-                              [1.35079e-02, -1, 1.644534e-05],
-                              [8.64418e-09, 1.644534e-05, -1]])
+        r_results = np.array([[1, 1.35079e-02, 8.64418e-09],
+                              [1.35079e-02, 1, 1.644534e-05],
+                              [8.64418e-09, 1.644534e-05, 1]])
 
         results = sp.posthoc_anderson(self.df, val_col = 'pulse', group_col = 'kind', p_adjust = 'holm')
         self.assertTrue(np.allclose(results.values, r_results, atol=3.e-3))
 
     def test_posthoc_conover(self):
 
-        r_results = np.array([[-1, 9.354690e-11, 1.131263e-02],
-                              [9.354690e-11, -1, 5.496288e-06],
-                              [1.131263e-02, 5.496288e-06, -1]])
+        r_results = np.array([[1, 9.354690e-11, 1.131263e-02],
+                              [9.354690e-11, 1, 5.496288e-06],
+                              [1.131263e-02, 5.496288e-06, 1]])
 
         results = sp.posthoc_conover(self.df, val_col = 'pulse', group_col = 'kind', p_adjust = 'holm').values
         self.assertTrue(np.allclose(results, r_results))
@@ -218,27 +219,27 @@ class TestPosthocs(unittest.TestCase):
 
     def test_posthoc_dunn(self):
 
-        r_results = np.array([[-1, 9.570998e-09, 4.390066e-02],
-                              [9.570998e-09, -1, 1.873208e-04],
-                              [4.390066e-02, 1.873208e-04, -1]])
+        r_results = np.array([[1, 9.570998e-09, 4.390066e-02],
+                              [9.570998e-09, 1, 1.873208e-04],
+                              [4.390066e-02, 1.873208e-04, 1]])
 
         results = sp.posthoc_dunn(self.df, val_col = 'pulse', group_col = 'kind', p_adjust = 'holm').values
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_nemenyi(self):
 
-        r_results = np.array([[-1, 2.431833e-08, 1.313107e-01],
-                              [2.431833e-08, -1, 4.855675e-04],
-                              [1.313107e-01, 4.855675e-04, -1]])
+        r_results = np.array([[1, 2.431833e-08, 1.313107e-01],
+                              [2.431833e-08, 1, 4.855675e-04],
+                              [1.313107e-01, 4.855675e-04, 1]])
 
         results = sp.posthoc_nemenyi(self.df, val_col = 'pulse', group_col = 'kind').values
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_nemenyi_tukey(self):
 
-        r_results = np.array([[-1, 9.793203e-09, 1.088785e-01],
-                              [9.793203e-09, -1, 0.0002789016],
-                              [1.088785e-01, 0.0002789016, -1]])
+        r_results = np.array([[1, 9.793203e-09, 1.088785e-01],
+                              [9.793203e-09, 1, 0.0002789016],
+                              [1.088785e-01, 0.0002789016, 1]])
 
         results = sp.posthoc_nemenyi(self.df, val_col = 'pulse', group_col = 'kind', dist = 'tukey').values
         self.assertTrue(np.allclose(results, r_results, atol=1.e-3))
@@ -246,13 +247,13 @@ class TestPosthocs(unittest.TestCase):
 
     def test_posthoc_nemenyi_friedman(self):
 
-        p_results = np.array([[-1., 0.9, 0.82163255, 0.9, 0.9, 0.21477876, 0.9],
-                              [0.9, -1., 0.87719193, 0.9, 0.9, 0.25967965, 0.9],
-                              [0.82163255, 0.87719193, -1., 0.9, 0.9, 0.9, 0.9],
-                              [0.9, 0.9, 0.9, -1., 0.9, 0.87719193, 0.9],
-                              [0.9, 0.9, 0.9, 0.9, -1., 0.87719193, 0.9],
-                              [0.21477876, 0.25967965, 0.9, 0.87719193, 0.87719193, -1., 0.54381888],
-                              [0.9, 0.9, 0.9, 0.9, 0.9, 0.54381888, -1.]])
+        p_results = np.array([[1., 0.9, 0.82163255, 0.9, 0.9, 0.21477876, 0.9],
+                              [0.9, 1., 0.87719193, 0.9, 0.9, 0.25967965, 0.9],
+                              [0.82163255, 0.87719193, 1., 0.9, 0.9, 0.9, 0.9],
+                              [0.9, 0.9, 0.9, 1., 0.9, 0.87719193, 0.9],
+                              [0.9, 0.9, 0.9, 0.9, 1., 0.87719193, 0.9],
+                              [0.21477876, 0.25967965, 0.9, 0.87719193, 0.87719193, 1., 0.54381888],
+                              [0.9, 0.9, 0.9, 0.9, 0.9, 0.54381888, 1.]])
         results = sp.posthoc_nemenyi_friedman(self.df_bn)
         self.assertTrue(np.allclose(results, p_results))
 
@@ -260,42 +261,42 @@ class TestPosthocs(unittest.TestCase):
     def test_posthoc_conover_friedman(self):
 
         results = sp.posthoc_conover_friedman(self.df_bn)
-        p_results = np.array([[-1.000000, 0.9325836, 0.2497915, 0.3203414, 0.3203414, 0.0517417, 0.6136576],
-                              [0.9325836, -1.000000, 0.28339156, 0.36072942, 0.36072942, 0.06033626, 0.67344846],
-                              [0.2497915, 0.28339156, -1.000000, 0.8657092, 0.8657092, 0.3607294, 0.5026565],
-                              [0.3203414, 0.36072942, 0.8657092, -1.000000, 1.000000, 0.2833916, 0.6136576],
-                              [0.3203414, 0.36072942, 0.8657092, 1.000000, -1.000000, 0.2833916, 0.6136576],
-                              [0.0517417, 0.06033626, 0.3607294, 0.2833916, 0.2833916, -1.000000, 0.1266542],
-                              [0.6136576, 0.67344846, 0.5026565, 0.6136576, 0.6136576, 0.1266542, -1.000000]])
+        p_results = np.array([[1.000000, 0.9325836, 0.2497915, 0.3203414, 0.3203414, 0.0517417, 0.6136576],
+                              [0.9325836, 1.000000, 0.28339156, 0.36072942, 0.36072942, 0.06033626, 0.67344846],
+                              [0.2497915, 0.28339156, 1.000000, 0.8657092, 0.8657092, 0.3607294, 0.5026565],
+                              [0.3203414, 0.36072942, 0.8657092, 1.000000, 1.000000, 0.2833916, 0.6136576],
+                              [0.3203414, 0.36072942, 0.8657092, 1.000000, 1.000000, 0.2833916, 0.6136576],
+                              [0.0517417, 0.06033626, 0.3607294, 0.2833916, 0.2833916, 1.000000, 0.1266542],
+                              [0.6136576, 0.67344846, 0.5026565, 0.6136576, 0.6136576, 0.1266542, 1.000000]])
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_conover_friedman_tukey(self):
 
         results = sp.posthoc_conover_friedman(self.df_bn, p_adjust='single-step')
-        p_results = np.array([[-1.000000, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
-                              [1.0000000, -1.000000, np.nan, np.nan, np.nan, np.nan, np.nan],
-                              [0.8908193, 0.9212619, -1.000000, np.nan, np.nan, np.nan, np.nan],
-                              [0.9455949, 0.9642182, 0.9999978, -1.000000, np.nan, np.nan, np.nan],
-                              [0.9455949, 0.9642182, 0.9999978, 1.0000000, -1.000000, np.nan, np.nan],
-                              [0.3177477, 0.3686514, 0.9642182, 0.9212619, 0.9212619, -1.000000, np.nan],
-                              [0.9986057, 0.9995081, 0.9931275, 0.9986057, 0.9986057,  0.6553018, -1.000000]])
+        p_results = np.array([[1.0000000,    np.nan,    np.nan,    np.nan,    np.nan,     np.nan,   np.nan],
+                              [1.0000000,  1.000000,    np.nan,    np.nan,    np.nan,     np.nan,   np.nan],
+                              [0.8908193, 0.9212619,  1.000000,    np.nan,    np.nan,     np.nan,   np.nan],
+                              [0.9455949, 0.9642182, 0.9999978,  1.000000,    np.nan,     np.nan,   np.nan],
+                              [0.9455949, 0.9642182, 0.9999978, 1.0000000,  1.000000,     np.nan,   np.nan],
+                              [0.3177477, 0.3686514, 0.9642182, 0.9212619, 0.9212619,   1.000000,   np.nan],
+                              [0.9986057, 0.9995081, 0.9931275, 0.9986057, 0.9986057,  0.6553018, 1.000000]])
         p_results[p_results > 0.9] = 0.9
         tri_upper = np.triu_indices(p_results.shape[0], 1)
         p_results[tri_upper] = p_results.T[tri_upper]
-
+        np.fill_diagonal(p_results, 1)
         self.assertTrue(np.allclose(results, p_results, atol=3.e-2))
 
     def test_posthoc_conover_friedman_non_melted(self):
 
         df = DataFrame(self.df_bn)
         results = sp.posthoc_conover_friedman(df, melted=False)
-        p_results = np.array([[-1.000000, 0.9325836, 0.2497915, 0.3203414, 0.3203414, 0.0517417, 0.6136576],
-                              [0.9325836, -1.000000, 0.28339156, 0.36072942, 0.36072942, 0.06033626, 0.67344846],
-                              [0.2497915, 0.28339156, -1.000000, 0.8657092, 0.8657092, 0.3607294, 0.5026565],
-                              [0.3203414, 0.36072942, 0.8657092, -1.000000, 1.000000, 0.2833916, 0.6136576],
-                              [0.3203414, 0.36072942, 0.8657092, 1.000000, -1.000000, 0.2833916, 0.6136576],
-                              [0.0517417, 0.06033626, 0.3607294, 0.2833916, 0.2833916, -1.000000, 0.1266542],
-                              [0.6136576, 0.67344846, 0.5026565, 0.6136576, 0.6136576, 0.1266542, -1.000000]])
+        p_results = np.array([[1.000000, 0.9325836, 0.2497915, 0.3203414, 0.3203414, 0.0517417, 0.6136576],
+                              [0.9325836, 1.000000, 0.28339156, 0.36072942, 0.36072942, 0.06033626, 0.67344846],
+                              [0.2497915, 0.28339156, 1.000000, 0.8657092, 0.8657092, 0.3607294, 0.5026565],
+                              [0.3203414, 0.36072942, 0.8657092, 1.000000, 1.000000, 0.2833916, 0.6136576],
+                              [0.3203414, 0.36072942, 0.8657092, 1.000000, 1.000000, 0.2833916, 0.6136576],
+                              [0.0517417, 0.06033626, 0.3607294, 0.2833916, 0.2833916, 1.000000, 0.1266542],
+                              [0.6136576, 0.67344846, 0.5026565, 0.6136576, 0.6136576, 0.1266542, 1.000000]])
         self.assertTrue(np.allclose(results, p_results))
 
 
@@ -303,13 +304,13 @@ class TestPosthocs(unittest.TestCase):
 
         results = sp.posthoc_miller_friedman(self.df_bn)
 
-        p_results = np.array([[-1.0, 1.0, 0.9411963, 0.9724396000000001, 0.9724396000000001, 0.4717981, 0.9993864],
-                              [1.0, -1.0, 0.9588993, 0.9823818000000001, 0.9823818000000001, 0.5256257, 0.9997869],
-                              [0.9411963, 0.9588993, -1.0, 0.9999991, 0.9999991, 0.9823818000000001, 0.9968575999999999],
-                              [0.9724396000000001, 0.9823818000000001, 0.9999991, -1.0, 1.0, 0.9588993, 0.9993864],
-                              [0.9724396000000001, 0.9823818000000001, 0.9999991, 1.0, -1.0, 0.9588993, 0.9993864],
-                              [0.4717981, 0.5256257, 0.9823818000000001, 0.9588993, 0.9588993, -1.0, 0.7803545999999999],
-                              [0.9993864, 0.9997869, 0.9968575999999999, 0.9993864, 0.9993864, 0.7803545999999999, -1.0]])
+        p_results = np.array([[1.0, 1.0, 0.9411963, 0.9724396000000001, 0.9724396000000001, 0.4717981, 0.9993864],
+                              [1.0, 1.0, 0.9588993, 0.9823818000000001, 0.9823818000000001, 0.5256257, 0.9997869],
+                              [0.9411963, 0.9588993, 1.0, 0.9999991, 0.9999991, 0.9823818000000001, 0.9968575999999999],
+                              [0.9724396000000001, 0.9823818000000001, 0.9999991, 1.0, 1.0, 0.9588993, 0.9993864],
+                              [0.9724396000000001, 0.9823818000000001, 0.9999991, 1.0, 1.0, 0.9588993, 0.9993864],
+                              [0.4717981, 0.5256257, 0.9823818000000001, 0.9588993, 0.9588993, 1.0, 0.7803545999999999],
+                              [0.9993864, 0.9997869, 0.9968575999999999, 0.9993864, 0.9993864, 0.7803545999999999, 1.0]])
 
         self.assertTrue(np.allclose(results, p_results))
 
@@ -318,13 +319,13 @@ class TestPosthocs(unittest.TestCase):
 
         results = sp.posthoc_siegel_friedman(self.df_bn)
 
-        p_results = np.array([[-1.000000, 0.92471904, 0.18587673, 0.25683926, 0.25683926, 0.01816302, 0.57075039],
-                              [0.92471904, -1.0000000, 0.2193026, 0.2986177, 0.2986177, 0.0233422, 0.6366016],
-                              [0.18587673, 0.2193026, -1.0000000, 0.8501067, 0.8501067, 0.2986177, 0.4496918],
-                              [0.25683926, 0.2986177, 0.8501067, -1.000000, 1.0000000, 0.2193026, 0.5707504],
-                              [0.25683926, 0.2986177, 0.8501067, 1.0000000, -1.0000000, 0.2193026, 0.5707504],
-                              [0.01816302, 0.0233422, 0.2986177, 0.2193026, 0.2193026, -1.000000, 0.07260094],
-                              [0.57075039, 0.6366016, 0.4496918, 0.5707504, 0.5707504, 0.07260094, -1.000000]])
+        p_results = np.array([[1.000000, 0.92471904, 0.18587673, 0.25683926, 0.25683926, 0.01816302, 0.57075039],
+                              [0.92471904, 1.0000000, 0.2193026, 0.2986177, 0.2986177, 0.0233422, 0.6366016],
+                              [0.18587673, 0.2193026, 1.0000000, 0.8501067, 0.8501067, 0.2986177, 0.4496918],
+                              [0.25683926, 0.2986177, 0.8501067, 1.000000, 1.0000000, 0.2193026, 0.5707504],
+                              [0.25683926, 0.2986177, 0.8501067, 1.0000000, 1.0000000, 0.2193026, 0.5707504],
+                              [0.01816302, 0.0233422, 0.2986177, 0.2193026, 0.2193026, 1.000000, 0.07260094],
+                              [0.57075039, 0.6366016, 0.4496918, 0.5707504, 0.5707504, 0.07260094, 1.000000]])
 
         self.assertTrue(np.allclose(results, p_results))
 
@@ -332,38 +333,38 @@ class TestPosthocs(unittest.TestCase):
     def test_posthoc_durbin(self):
         results = sp.posthoc_durbin(self.df_bn, p_adjust = 'holm')
 
-        p_results = np.array([[-1.000000, 1.000000, 1.0, 1.0, 1.0, 0.381364, 1.0],
-                              [1.000000, -1.000000, 1.0, 1.0, 1.0, 0.444549, 1.0],
-                              [1.000000, 1.000000, -1.0, 1.0, 1.0, 1.000000, 1.0],
-                              [1.000000, 1.000000, 1.0, -1.0, 1.0, 1.000000, 1.0],
-                              [1.000000, 1.000000, 1.0, 1.0, -1.0, 1.000000, 1.0],
-                              [0.381364, 0.444549, 1.0, 1.0, 1.0, -1.000000, 1.0],
-                              [1.000000, 1.000000, 1.0, 1.0, 1.0, 1.000000, -1.0]])
+        p_results = np.array([[1.000000, 1.000000, 1.0, 1.0, 1.0, 0.381364, 1.0],
+                              [1.000000, 1.000000, 1.0, 1.0, 1.0, 0.444549, 1.0],
+                              [1.000000, 1.000000, 1.0, 1.0, 1.0, 1.000000, 1.0],
+                              [1.000000, 1.000000, 1.0, 1.0, 1.0, 1.000000, 1.0],
+                              [1.000000, 1.000000, 1.0, 1.0, 1.0, 1.000000, 1.0],
+                              [0.381364, 0.444549, 1.0, 1.0, 1.0, 1.000000, 1.0],
+                              [1.000000, 1.000000, 1.0, 1.0, 1.0, 1.000000, 1.0]])
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_quade(self):
         results = sp.posthoc_quade(self.df_bn)
 
-        p_results = np.array([[-1.00000000, 0.67651326, 0.15432143, 0.17954686, 0.2081421 , 0.02267043, 0.2081421],
-                              [ 0.67651326,-1.00000000, 0.29595042, 0.33809987, 0.38443835, 0.0494024 , 0.38443835],
-                              [ 0.15432143, 0.29595042,-1.00000000, 0.92586499, 0.85245022, 0.29595042, 0.85245022],
-                              [ 0.17954686, 0.33809987, 0.92586499,-1.00000000, 0.92586499, 0.25789648, 0.92586499],
-                              [ 0.2081421 , 0.38443835, 0.85245022, 0.92586499,-1.00000000, 0.22378308, 1.00000000],
-                              [ 0.02267043, 0.0494024 , 0.29595042, 0.25789648, 0.22378308,-1.00000000, 0.22378308],
-                              [ 0.2081421 , 0.38443835, 0.85245022, 0.92586499, 1.00000000, 0.22378308,-1.00000000]])
+        p_results = np.array([[1.00000000, 0.67651326, 0.15432143, 0.17954686, 0.2081421 , 0.02267043, 0.2081421],
+                              [ 0.67651326,1.00000000, 0.29595042, 0.33809987, 0.38443835, 0.0494024 , 0.38443835],
+                              [ 0.15432143, 0.29595042,1.00000000, 0.92586499, 0.85245022, 0.29595042, 0.85245022],
+                              [ 0.17954686, 0.33809987, 0.92586499,1.00000000, 0.92586499, 0.25789648, 0.92586499],
+                              [ 0.2081421 , 0.38443835, 0.85245022, 0.92586499,1.00000000, 0.22378308, 1.00000000],
+                              [ 0.02267043, 0.0494024 , 0.29595042, 0.25789648, 0.22378308,1.00000000, 0.22378308],
+                              [ 0.2081421 , 0.38443835, 0.85245022, 0.92586499, 1.00000000, 0.22378308,1.00000000]])
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_quade_norm(self):
 
         results = sp.posthoc_quade(self.df_bn, dist='normal')
 
-        p_results = np.array([[-1.00000000, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
-                              [ 0.5693540320,-1.00000000, np.nan, np.nan, np.nan, np.nan, np.nan],
-                              [ 0.0430605548, 0.145913303,-1.00000000, np.nan, np.nan, np.nan, np.nan],
-                              [ 0.0578705783, 0.184285855, 0.8993796,-1.00000000, np.nan, np.nan, np.nan],
-                              [ 0.0766885196, 0.229662468, 0.8003530, 0.8993796,-1.00000000, np.nan, np.nan],
-                              [ 0.0005066018, 0.003634715, 0.1459133, 0.1139777, 0.08782032,-1.00000000, np.nan],
-                              [ 0.0766885196, 0.229662468, 0.8003530, 0.8993796, 1.00000000, 0.08782032,-1.00000000]])
+        p_results = np.array([[1.00000000, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                              [ 0.5693540320,1.00000000, np.nan, np.nan, np.nan, np.nan, np.nan],
+                              [ 0.0430605548, 0.145913303,1.00000000, np.nan, np.nan, np.nan, np.nan],
+                              [ 0.0578705783, 0.184285855, 0.8993796,1.00000000, np.nan, np.nan, np.nan],
+                              [ 0.0766885196, 0.229662468, 0.8003530, 0.8993796,1.00000000, np.nan, np.nan],
+                              [ 0.0005066018, 0.003634715, 0.1459133, 0.1139777, 0.08782032,1.00000000, np.nan],
+                              [ 0.0766885196, 0.229662468, 0.8003530, 0.8993796, 1.00000000, 0.08782032,1.00000000]])
         tri_upper = np.triu_indices(p_results.shape[0], 1)
         p_results[tri_upper] = p_results.T[tri_upper]
         self.assertTrue(np.allclose(results, p_results))
@@ -371,26 +372,26 @@ class TestPosthocs(unittest.TestCase):
     def test_posthoc_npm_test(self):
         results = sp.posthoc_npm_test(self.df_bn)
 
-        p_results = np.array([[-1, .9, .9],
-                              [.9, -1, .9],
-                              [.9, .9, -1]])
+        p_results = np.array([[1., .9, .9],
+                              [.9, 1., .9],
+                              [.9, .9, 1.]])
 
         self.assertTrue(np.allclose(results, p_results))
 
 
     def test_posthoc_vanwaerden(self):
-        r_results = np.array([[-1, 1.054709e-02, 6.476665e-11],
-                              [1.054709e-02, -1, 4.433141e-06],
-                              [6.476665e-11, 4.433141e-06, -1]])
+        r_results = np.array([[1, 1.054709e-02, 6.476665e-11],
+                              [1.054709e-02, 1, 4.433141e-06],
+                              [6.476665e-11, 4.433141e-06, 1]])
 
         results = sp.posthoc_vanwaerden(self.df, val_col = 'pulse', group_col = 'kind', p_adjust='holm')
         self.assertTrue(np.allclose(results, r_results))
 
 
     def test_posthoc_dscf(self):
-        r_results = np.array([[-1, 4.430682e-02, 9.828003e-08],
-                              [4.430682e-02, -1, 5.655274e-05],
-                              [9.828003e-08, 5.655274e-05, -1]])
+        r_results = np.array([[1, 4.430682e-02, 9.828003e-08],
+                              [4.430682e-02, 1, 5.655274e-05],
+                              [9.828003e-08, 5.655274e-05, 1]])
 
         results = sp.posthoc_dscf(self.df, val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results, atol=0.001))
@@ -398,9 +399,9 @@ class TestPosthocs(unittest.TestCase):
 
     def test_posthoc_ttest(self):
 
-        r_results = np.array([[-1, 9.757069e-03, 4.100954e-07],
-                              [9.757069e-03, -1, 1.556010e-05],
-                              [4.100954e-07, 1.556010e-05, -1]])
+        r_results = np.array([[1, 9.757069e-03, 4.100954e-07],
+                              [9.757069e-03, 1, 1.556010e-05],
+                              [4.100954e-07, 1.556010e-05, 1]])
 
         results = sp.posthoc_ttest(self.df, val_col = 'pulse', group_col = 'kind', equal_var = False, p_adjust='holm')
         self.assertTrue(np.allclose(results, r_results))
@@ -408,9 +409,9 @@ class TestPosthocs(unittest.TestCase):
     def test_posthoc_ttest_pooled(self):
 
         x = [[1,2,3,5,1], [12,31,54,50,40], [10,12,6,74,11]]
-        r_results = np.array([[-1, 0.04226866, 0.24706893],
-                              [0.04226866, -1, 0.2482456],
-                              [0.24706893, 0.2482456, -1]])
+        r_results = np.array([[1, 0.04226866, 0.24706893],
+                              [0.04226866, 1, 0.2482456],
+                              [0.24706893, 0.2482456, 1]])
 
         results = sp.posthoc_ttest(x, equal_var = False, p_adjust='holm', pool_sd=True)
         self.assertTrue(np.allclose(results, r_results))
@@ -421,15 +422,15 @@ class TestPosthocs(unittest.TestCase):
         x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
         g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
         results = sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
-        n_results = np.array([[-1,  1,  0],[ 1, -1,  1],[ 0,  1, -1]])
+        n_results = np.array([[1, 1, 0], [1, 1, 1], [0, 1, 1]])
         self.assertTrue(np.allclose(n_results, results))
 
 
     def test_posthoc_mannwhitney(self):
 
-        r_results = np.array([[-1, 3.420508e-08, 1.714393e-02],
-                              [3.420508e-08, -1, 1.968352e-05],
-                              [1.714393e-02, 1.968352e-05, -1]])
+        r_results = np.array([[1, 3.420508e-08, 1.714393e-02],
+                              [3.420508e-08, 1, 1.968352e-05],
+                              [1.714393e-02, 1.968352e-05, 1]])
 
         results = sp.posthoc_mannwhitney(self.df, val_col = 'pulse', group_col = 'kind').values
         self.assertTrue(np.allclose(results, r_results))
@@ -448,9 +449,9 @@ class TestPosthocs(unittest.TestCase):
 
     def test_posthoc_wilcoxon(self):
 
-        r_results = np.array([[-1, 2.337133e-03, 2.857818e-06],
-                              [2.337133e-03, -1, 1.230888e-05],
-                              [2.857818e-06, 1.230888e-05, -1]])
+        r_results = np.array([[1, 2.337133e-03, 2.857818e-06],
+                              [2.337133e-03, 1, 1.230888e-05],
+                              [2.857818e-06, 1.230888e-05, 1]])
 
         results = sp.posthoc_wilcoxon(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
@@ -458,9 +459,9 @@ class TestPosthocs(unittest.TestCase):
 
     def test_posthoc_scheffe(self):
 
-        r_results = np.array([[-1, 3.378449e-01, 3.047472e-10],
-                              [3.378449e-01, -1, 2.173209e-07],
-                              [3.047472e-10, 2.173209e-07, -1]])
+        r_results = np.array([[1., 3.378449e-01, 3.047472e-10],
+                              [3.378449e-01, 1., 2.173209e-07],
+                              [3.047472e-10, 2.173209e-07, 1.]])
 
         results = sp.posthoc_scheffe(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
@@ -468,27 +469,27 @@ class TestPosthocs(unittest.TestCase):
 
     def test_posthoc_tamhane(self):
 
-        r_results = np.array([[-1, 2.898653e-02, 4.100954e-07],
-                              [2.898653e-02, -1, 2.333996e-05],
-                              [4.100954e-07, 2.333996e-05, -1]])
+        r_results = np.array([[1, 2.898653e-02, 4.100954e-07],
+                              [2.898653e-02, 1, 2.333996e-05],
+                              [4.100954e-07, 2.333996e-05, 1]])
 
         results = sp.posthoc_tamhane(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_tamhane_nw(self):
 
-        r_results = np.array([[-1, 2.883219e-02, 4.780682e-08],
-                              [2.883219e-02, -1, 8.643683e-06],
-                              [4.780682e-08, 8.643683e-06, -1]])
+        r_results = np.array([[1, 2.883219e-02, 4.780682e-08],
+                              [2.883219e-02, 1, 8.643683e-06],
+                              [4.780682e-08, 8.643683e-06, 1]])
 
         results = sp.posthoc_tamhane(self.df.sort_index(), val_col = 'pulse', group_col = 'kind', welch = False)
         self.assertTrue(np.allclose(results, r_results))
 
 
     def test_posthoc_tukey(self):
-        r_results = np.array([[-1, 3.042955e-01, 4.308631e-10],
-                              [3.042955e-01, -1, 9.946571e-08],
-                              [4.308631e-10, 9.946571e-08, -1]])
+        r_results = np.array([[1, 3.042955e-01, 4.308631e-10],
+                              [3.042955e-01, 1, 9.946571e-08],
+                              [4.308631e-10, 9.946571e-08, 1]])
 
         results = sp.posthoc_tukey(self.df.sort_index(), val_col = 'pulse', group_col = 'kind')
         self.assertTrue(np.allclose(results, r_results, atol=1.e-3))

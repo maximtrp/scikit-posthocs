@@ -23,8 +23,8 @@ numerous gaps and is surpassed by R packages and capabilities.
 and *Mann-Whitney* tests that are not adapted to multiple pairwise comparisons.
 `Statsmodels <http://statsmodels.sourceforge.net/>`_ (version 0.9.0) features
 *TukeyHSD* test that needs some extra actions to be fluently integrated into
-a data analysis pipeline. `Statsmodels <http://statsmodels.sourceforge.net/>`_
-also has good helper methods: ``allpairtest`` (adapts an external function such
+a data analysis pipeline. Statsmodels also has good helper methods:
+``allpairtest`` (adapts an external function such
 as ``scipy.stats.ttest_ind`` to multiple pairwise comparisons) and
 ``multipletests`` (adjusts *p* values to minimize type I and II errors).
 `PMCMRplus <https://rdrr.io/cran/PMCMRplus/>`_ is a very good R package that

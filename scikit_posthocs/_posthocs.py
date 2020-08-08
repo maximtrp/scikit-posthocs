@@ -258,7 +258,7 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
 
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
 
@@ -366,7 +366,7 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
 
 
@@ -473,7 +473,7 @@ def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
         vs[tri_upper] = psturng(vs[tri_upper], x_len, np.inf)
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
 
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
 
@@ -589,7 +589,7 @@ def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melt
     vs *= np.sqrt(2.)
     vs[tri_upper] = psturng(vs[tri_upper], k, np.inf)
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -733,7 +733,7 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
             vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -840,7 +840,7 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
     # if p_adjust:
     #    p_values[tri_upper] = multipletests(p_values[tri_upper], method = p_adjust)[1]
 
-    np.fill_diagonal(p_values, -1)
+    np.fill_diagonal(p_values, 1)
     return DataFrame(p_values, index=groups, columns=groups)
 
 
@@ -958,7 +958,7 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -1066,7 +1066,7 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
     vs = ss.chi2.sf(vs, k - 1)
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -1187,7 +1187,7 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -1272,7 +1272,7 @@ def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, 
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -1421,7 +1421,7 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -1534,7 +1534,7 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=Non
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -1650,7 +1650,7 @@ def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 def posthoc_tukey_hsd(x, g, alpha=0.05):
@@ -1702,7 +1702,7 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
         vs[a0i, a1i] = 1 if str(a[-1]) == 'True' else 0
 
     vsu = np.triu(vs)
-    np.fill_diagonal(vsu, -1)
+    np.fill_diagonal(vsu, 1)
     tri_lower = np.tril_indices(vsu.shape[0], -1)
     vsu[tri_lower] = vsu.T[tri_lower]
     return DataFrame(vsu, index=groups, columns=groups)
@@ -1798,7 +1798,7 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -1895,7 +1895,7 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
     vs[tri_lower] = vs.T[tri_lower]
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -1986,7 +1986,7 @@ def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
     vs[tri_lower] = vs.T[tri_lower]
     p_values = ss.f.sf(vs, groups.size - 1., n - groups.size)
 
-    np.fill_diagonal(p_values, -1)
+    np.fill_diagonal(p_values, 1)
     return DataFrame(p_values, index=groups, columns=groups)
 
 
@@ -2099,7 +2099,7 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
     vs[tri_lower] = vs.T[tri_lower]
     vs[vs > 1] = 1
 
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -2188,7 +2188,7 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
     vs[tri_upper] = psturng(np.abs(vs[tri_upper]), groups.size, n - groups.size)
     vs[tri_lower] = vs.T[tri_lower]
 
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
@@ -2291,5 +2291,5 @@ def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
     vs[tri_upper] = psturng(np.abs(vs[tri_upper]), k, np.inf)
     vs[tri_lower] = vs.T[tri_lower]
 
-    np.fill_diagonal(vs, -1)
+    np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)

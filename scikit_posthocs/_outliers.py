@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import numpy as np
 from scipy.stats import t
 
@@ -37,25 +35,25 @@ def outliers_iqr(x, ret='filtered', coef = 1.5):
 
     Examples
     --------
-    >>> x = np.array([4,5,6,10,12,4,3,1,2,3,23,5,3])
+    >>> x = np.array([4, 5, 6, 10, 12, 4, 3, 1, 2, 3, 23, 5, 3])
     >>> outliers_iqr(x, ret = 'outliers')
     array([12, 23])
 
     """
 
-    x = np.asarray(x)
+    arr = np.copy(x)
 
-    q1, q3 = np.percentile(x, [25, 75])
+    q1, q3 = np.percentile(arr, [25, 75])
     iqr = q3 - q1
     ll = q1 - iqr * coef
     ul = q3 + iqr * coef
 
     if ret == 'indices':
-        return np.where((x > ll) & (x < ul))[0]
+        return np.where((arr > ll) & (arr < ul))[0]
     elif ret == 'outliers':
-        return x[(x < ll) | (x > ul)]
+        return arr[(arr < ll) | (arr > ul)]
     elif ret == 'outliers_indices':
-        return np.where((x < ll) | (x > ul))[0]
+        return np.where((arr < ll) | (arr > ul))[0]
     else:
         return x[(x > ll) & (x < ul)]
 
@@ -98,19 +96,20 @@ def outliers_grubbs(x, hypo = False, alpha = 0.05):
     array([ 199.31,  199.53,  200.19,  200.82,  201.92,  201.95,  202.18])
     """
 
-    val = np.max(np.abs(x - np.mean(x)))
-    ind = np.argmax(np.abs(x - np.mean(x)))
-    G = val / np.std(x, ddof=1)
-    N = len(x)
+    arr = np.copy(x)
+    val = np.max(np.abs(arr - np.mean(arr)))
+    ind = np.argmax(np.abs(arr - np.mean(arr)))
+    G = val / np.std(arr, ddof=1)
+    N = len(arr)
     result = G > (N - 1)/np.sqrt(N) * np.sqrt((t.ppf(1-alpha/(2*N), N-2) ** 2) / (N - 2 + t.ppf(1-alpha/(2*N), N-2) ** 2))
 
     if hypo:
         return result
     else:
         if result:
-            return np.delete(x, ind)
+            return np.delete(arr, ind)
         else:
-            return x
+            return arr
 
 def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
@@ -163,7 +162,8 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
     """
 
-    n = x.size
+    arr = np.copy(x)
+    n = arr.size
     def tietjen(x_, k_):
         x_mean = x_.mean()
         r = np.abs(x_ - x_mean)
@@ -171,7 +171,7 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
         E = np.sum((z[:-k_] - z[:-k_].mean()) ** 2) / np.sum((z - x_mean) ** 2)
         return E
 
-    E_x = tietjen(x, k)
+    E_x = tietjen(arr, k)
     E_norm = np.zeros(10000)
 
     for i in np.arange(10000):
@@ -185,12 +185,12 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
         return result
     else:
         if result:
-            ind = np.argpartition(np.abs(x - x.mean()), -k)[-k:]
-            return np.delete(x, ind)
+            ind = np.argpartition(np.abs(arr - arr.mean()), -k)[-k:]
+            return np.delete(arr, ind)
         else:
-            return x
+            return arr
 
-def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
+def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
 
     """
     The generalized (Extreme Studentized Deviate) ESD test is used
@@ -199,7 +199,7 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
 
     Parameters
     ----------
-    data : array_like or ndarray, 1d
+    x : array_like or ndarray, 1d
         An array, any object exposing the array interface, containing
         data to test for outliers.
 
@@ -266,8 +266,8 @@ def outliers_gesd(data, outliers = 5, report = False, alpha=0.05):
     Rs, ls = np.zeros(outliers, dtype = np.float), np.zeros(outliers, dtype = np.float)
     ms = []
 
-    data = np.sort(np.array(data))
-    data_proc = np.copy(data)
+    data_proc = np.copy(x)
+    data = np.sort(data_proc)
     n = data_proc.size
 
     for i in np.arange(outliers):

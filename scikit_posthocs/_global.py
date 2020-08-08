@@ -3,7 +3,7 @@ import itertools as it
 import scipy.stats as ss
 
 
-def global_test_simes(x):
+def global_simes_test(x):
     '''Global Simes test of the intersection null hypothesis. Computes
     the combined p value as min(np(i)/i), where p(1), ..., p(n)
     are the ordered p values.
@@ -26,13 +26,13 @@ def global_test_simes(x):
     Examples
     --------
     >>> x = [0.04, 0.03, 0.98, 0.01, 0.43, 0.99, 1.0, 0.002]
-    >>> sp.global_test_simes(x)
+    >>> sp.global_simes_test(x)
 
     '''
 
     arr = np.array(x)
     ranks = ss.rankdata(arr)
-    p = np.min(arr.size * arr / r)
+    p = np.min(arr.size * arr / ranks)
     return p
 
 

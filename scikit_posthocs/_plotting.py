@@ -4,7 +4,6 @@ from matplotlib.colorbar import ColorbarBase
 from seaborn import heatmap
 from pandas import DataFrame
 
-
 def sign_array(p_values, alpha=0.05):
     """
     Significance array
@@ -30,20 +29,20 @@ def sign_array(p_values, alpha=0.05):
     Examples
     --------
 
-    >>> p_values = np.array([[ 0.        ,  0.00119517,  0.00278329],
-                             [ 0.00119517,  0.        ,  0.18672227],
-                             [ 0.00278329,  0.18672227,  0.        ]])
+    >>> p_values = np.array([[ 1.        ,  0.00119517,  0.00278329],
+                             [ 0.00119517,  1.        ,  0.18672227],
+                             [ 0.00278329,  0.18672227,  1.        ]])
     >>> ph.sign_array(p_values)
-    array([[-1,  1,  1],
-           [ 1, -1,  0],
-           [ 1,  0, -1]])
+    array([[1, 1, 1],
+           [1, 1, 0],
+           [1, 0, 1]])
 
     """
 
     p_values = np.array(p_values)
     p_values[p_values > alpha] = 0
     p_values[(p_values < alpha) & (p_values > 0)] = 1
-    np.fill_diagonal(p_values, -1)
+    np.fill_diagonal(p_values, 1)
     return p_values
 
 
@@ -110,8 +109,10 @@ def sign_table(p_values, lower=True, upper=True):
         if isinstance(p_values, DataFrame) else pv
 
 
-def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
-              cbar_ax_bbox=None, ax=None, **kwargs):
+def sign_plot(
+    x, g=None, flat=False, labels=True, cmap=None,
+    cbar_ax_bbox=None, ax=None, **kwargs
+):
     """
     Significance plot, a heatmap of p values (based on Seaborn).
 
@@ -170,9 +171,9 @@ def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
 
     Examples
     --------
-    >>> x = np.array([[-1,  1,  1],
-                      [ 1, -1,  0],
-                      [ 1,  0, -1]])
+    >>> x = np.array([[ 1, 1, 1],
+                      [ 1, 1, 0],
+                      [ 1, 0, 1]])
     >>> ph.sign_plot(x, flat = True)
 
     """
@@ -186,7 +187,7 @@ def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
     else:
         x = np.array(x)
         g = g or np.arange(x.shape[0])
-        df = DataFrame(x, index=g, columns=g)
+        df = DataFrame(np.copy(x), index=g, columns=g)
 
     dtype = df.values.dtype
 
@@ -203,30 +204,42 @@ def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
         cmap = ['1', '#fbd7d4', '#005a32', '#238b45', '#a1d99b']
 
     if flat:
-        g = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax,
+        np.fill_diagonal(df.values, -1)
+        hax = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax,
                     **kwargs)
         if not labels:
-            g.set_xlabel('')
-            g.set_ylabel('')
-        return g
+            hax.set_xlabel('')
+            hax.set_ylabel('')
+        return hax
 
     else:
-        df[(x <= 0.001) & (x >= 0)] = 1
-        df[(x <= 0.01) & (x > 0.001)] = 2
-        df[(x <= 0.05) & (x > 0.01)] = 3
-        df[(x > 0.05)] = 0
+        df[(x < 0.001) & (x >= 0)] = 1
+        df[(x < 0.01) & (x >= 0.001)] = 2
+        df[(x < 0.05) & (x >= 0.01)] = 3
+        df[(x >= 0.05)] = 0
+
         np.fill_diagonal(df.values, -1)
 
         if len(cmap) != 5:
             raise ValueError("Cmap list must contain 5 items")
 
-        g = heatmap(df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1, cbar=False,
-                    ax=ax, **kwargs)
-        if not labels:
-            g.set_xlabel('')
-            g.set_ylabel('')
+        print(df)
+        print('-----------')
 
-        cbar_ax = g.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
+        hax = heatmap(
+            df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1, cbar=False,
+            ax=ax, **kwargs
+        )
+        if not labels:
+            hax.set_xlabel('')
+            hax.set_ylabel('')
+
+        #hax.set_xticks(np.arange(df.shape[1]) + 0.5)
+        #hax.set_yticks(np.arange(df.shape[0]) + 0.5)
+        #hax.set_xticklabels(df.columns.values)
+        #hax.set_yticklabels(df.index.values)
+
+        cbar_ax = hax.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
         cbar = ColorbarBase(cbar_ax, cmap=ListedColormap(cmap[2:] + [cmap[1]]),
                             boundaries=[0, 1, 2, 3, 4])
         cbar.set_ticks(np.linspace(0.5, 3.5, 4))
@@ -236,4 +249,4 @@ def sign_plot(x, g=None, flat=False, labels=True, cmap=None,
         cbar.outline.set_edgecolor('0.5')
         cbar.ax.tick_params(size=0)
 
-        return g, cbar
+        return hax, cbar
