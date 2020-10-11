@@ -14,7 +14,7 @@ def outliers_iqr(x, ret='filtered', coef = 1.5):
 
     Parameters
     ----------
-    x : array_like or ndarray, 1d
+    x : array_like or np.ndarray, 1d
         An array, any object exposing the array interface, containing
         p values.
 
@@ -30,8 +30,17 @@ def outliers_iqr(x, ret='filtered', coef = 1.5):
 
     Returns
     -------
-    Numpy array where 0 is False (not significant), 1 is True (significant),
-    and -1 is for diagonal elements.
+    filtered : np.ndarray
+        Filtered array (default).
+
+    indices : np.ndarray, optional
+        Array with indices of elements lying within the specified limits.
+    
+    outliers : np.ndarray, optional
+        Array with outliers.
+
+    outliers_indices : np.ndarray, optional
+        Array with indices of outlier elements.
 
     Examples
     --------
@@ -82,7 +91,12 @@ def outliers_grubbs(x, hypo = False, alpha = 0.05):
 
     Returns
     -------
-    Numpy array if hypo is False or a bool value of a hypothesis test result.
+    arr : np.ndarray
+        Filtered array if alternative hypo is True, otherwise an unfiltered
+        array.
+
+    hypo : bool, optional
+        Null hypothesis test result.
 
     Notes
     -----
@@ -124,7 +138,7 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
     Parameters
     ----------
-    x : array_like or ndarray, 1d
+    x : array_like or np.ndarray, 1d
         An array, any object exposing the array interface, containing
         data to test for an outlier in.
 
@@ -144,7 +158,12 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
     Returns
     -------
-    Numpy array if hypo is False or a bool value of a hypothesis test result.
+    arr : np.ndarray
+        Filtered array if alternative hypo is True, otherwise an unfiltered
+        array.
+
+    hypo : bool, optional
+        Null hypothesis test result.
 
     Notes
     -----
@@ -199,7 +218,7 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
 
     Parameters
     ----------
-    x : array_like or ndarray, 1d
+    x : array_like or np.ndarray, 1d
         An array, any object exposing the array interface, containing
         data to test for outliers.
 
@@ -218,8 +237,13 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
 
     Returns
     -------
-    Filtered Numpy array if alternative hypo is True, otherwise an unfiltered (input)
-    Numpy array. If `report` argument is True, test report is returned.
+    result : np.ndarray
+        Filtered array if alternative hypo is True, otherwise an unfiltered
+        (input) array.
+    
+    report : str, optional
+        If `report` argument is True, test report is returned instead of
+        the result.
 
     Notes
     -----

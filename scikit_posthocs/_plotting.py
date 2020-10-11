@@ -23,8 +23,9 @@ def sign_array(p_values, alpha=0.05):
 
     Returns
     -------
-    Numpy array where 0 is False (not significant), 1 is True (significant),
-    and -1 is for diagonal elements.
+    result : numpy.ndarray
+        Array where 0 is False (not significant), 1 is True (significant),
+        and -1 is for diagonal elements.
 
     Examples
     --------
@@ -55,7 +56,7 @@ def sign_table(p_values, lower=True, upper=True):
 
     Parameters
     ----------
-    p_values : array_like, or ndarray, or pandas DataFrame
+    p_values : array_like, or numpy.ndarray, or pandas.DataFrame
         An array, any object exposing the array interface, containing
         p values.
 
@@ -67,7 +68,8 @@ def sign_table(p_values, lower=True, upper=True):
 
     Returns
     -------
-    Numpy array or pandas DataFrame with asterisks masked p values.
+    result : numpy.ndarray or pandas.DataFrame
+        P values masked with asterisks.
 
     Examples
     --------
@@ -160,14 +162,17 @@ def sign_plot(
         Axes in which to draw the plot, otherwise use the currently-active
         Axes.
 
-    kwargs : other keyword arguments
+    kwargs
         Keyword arguments to be passed to seaborn heatmap method. These
         keyword args cannot be used: cbar, vmin, vmax, center.
 
     Returns
     -------
-    Axes object with the heatmap (and ColorBase object of cbar if `flat` is set
-    to False).
+    ax : matplotlib.axes._subplots.AxesSubplot
+        Axes object with the heatmap
+
+    cbar : matplotlib.colorbar.Colorbar, optional
+        ColorBar object of cbar if `flat` is set to False.
 
     Examples
     --------
