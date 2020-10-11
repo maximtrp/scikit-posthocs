@@ -21,6 +21,7 @@ This package will be useful for statisticians, data analysts, and researchers wh
    :maxdepth: 2
 
    Post-hocs API <posthocs_api>
+   Global Tests API <global_api>
    Plotting API <plotting_api>
    Outliers API <outliers_api>
 
