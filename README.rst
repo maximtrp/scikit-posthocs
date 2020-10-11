@@ -326,7 +326,7 @@ argument:
 
 .. code:: python
 
-  >>> sp.posthoc_nemenyi_friedman(x, y_col='y', block_col='blocks', group_col='groups', melted=True)
+  >>> sp.posthoc_nemenyi_friedman(data, y_col='y', block_col='blocks', group_col='groups', melted=True)
             0         1         2         3
   0 -1.000000  0.220908  0.823993  0.031375
   1  0.220908 -1.000000  0.670273  0.823993
