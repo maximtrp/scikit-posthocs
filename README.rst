@@ -14,6 +14,8 @@
     :target: https://www.codacy.com/app/maximtrp/scikit-posthocs?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=maximtrp/scikit-posthocs&amp;utm_campaign=Badge_Grade
 .. image:: https://pepy.tech/badge/scikit-posthocs
     :target: https://pepy.tech/project/scikit-posthocs
+.. image:: https://img.shields.io/github/commit-activity/m/maximtrp/scikit-posthocs
+    :alt: GitHub commit activity
 .. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg
     :target: https://github.com/maximtrp/scikit-posthocs/issues
 .. image:: https://img.shields.io/pypi/v/scikit-posthocs.svg
