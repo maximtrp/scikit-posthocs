@@ -228,9 +228,6 @@ def sign_plot(
         if len(cmap) != 5:
             raise ValueError("Cmap list must contain 5 items")
 
-        print(df)
-        print('-----------')
-
         hax = heatmap(
             df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1, cbar=False,
             ax=ax, **kwargs
