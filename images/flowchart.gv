@@ -1,11 +1,11 @@
 digraph {
     graph [truecolor=true, bgcolor="#ff000000"];
-    node [fontname="Roboto", fontsize=12];
+    node [fontname="Roboto", fontsize=14, style="filled", fillcolor="#ffffff"];
 
     factorial [
         label="Factorial Design",
-        shape=box,
         style="filled",
+        shape=box,
         fillcolor="#C7DFFF",
         color="#2666ba",
         fontcolor="#184074"
