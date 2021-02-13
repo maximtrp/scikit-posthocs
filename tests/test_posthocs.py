@@ -67,14 +67,12 @@ class TestPosthocs(unittest.TestCase):
                       [0.00119517, 1., 0.18672227],
                       [0.00278329, 0.18672227, 1.]])
         a, cbar = splt.sign_plot(x, cbar=True, labels=False)
-        #x_df = DataFrame(x)
-        #_a, _cbar = splt.sign_plot(x_df, cbar=True, labels=False)
 
         with self.assertRaises(ValueError):
             splt.sign_plot(x, cmap=[1, 1], labels=False)
         with self.assertRaises(ValueError):
-            splt.sign_plot(x.astype(np.integer), labels=False)
-        #self.assertTrue(isinstance(_a, ma._subplots.Axes) and isinstance(_cbar, mpl.colorbar.ColorbarBase))
+            splt.sign_plot(x.astype(np.int64), labels=False)
+
         self.assertTrue(isinstance(a, ma._subplots.Axes) and isinstance(cbar, mpl.colorbar.ColorbarBase))
 
     # Outliers tests
@@ -282,7 +280,7 @@ class TestPosthocs(unittest.TestCase):
                               [0.9986057, 0.9995081, 0.9931275, 0.9986057, 0.9986057,  0.6553018, 1.000000]])
         p_results[p_results > 0.9] = 0.9
         tri_upper = np.triu_indices(p_results.shape[0], 1)
-        p_results[tri_upper] = p_results.T[tri_upper]
+        p_results[tri_upper] = np.transpose(p_results)[tri_upper]
         np.fill_diagonal(p_results, 1)
         self.assertTrue(np.allclose(results, p_results, atol=3.e-2))
 
@@ -366,7 +364,7 @@ class TestPosthocs(unittest.TestCase):
                               [ 0.0005066018, 0.003634715, 0.1459133, 0.1139777, 0.08782032,1.00000000, np.nan],
                               [ 0.0766885196, 0.229662468, 0.8003530, 0.8993796, 1.00000000, 0.08782032,1.00000000]])
         tri_upper = np.triu_indices(p_results.shape[0], 1)
-        p_results[tri_upper] = p_results.T[tri_upper]
+        p_results[tri_upper] = np.transpose(p_results)[tri_upper]
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_npm_test(self):

@@ -35,7 +35,7 @@ def outliers_iqr(x, ret='filtered', coef = 1.5):
 
     indices : np.ndarray, optional
         Array with indices of elements lying within the specified limits.
-    
+
     outliers : np.ndarray, optional
         Array with outliers.
 
@@ -190,15 +190,15 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
         E = np.sum((z[:-k_] - z[:-k_].mean()) ** 2) / np.sum((z - x_mean) ** 2)
         return E
 
-    E_x = tietjen(arr, k)
-    E_norm = np.zeros(10000)
+    e_x = tietjen(arr, k)
+    e_norm = np.zeros(10000)
 
     for i in np.arange(10000):
         norm = np.random.normal(size=n)
-        E_norm[i] = tietjen(norm, k)
+        e_norm[i] = tietjen(norm, k)
 
-    CV = np.percentile(E_norm, alpha * 100)
-    result = E_x < CV
+    CV = np.percentile(e_norm, alpha * 100)
+    result = e_x < CV
 
     if hypo:
         return result
@@ -287,7 +287,7 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
 
     """
 
-    Rs, ls = np.zeros(outliers, dtype = np.float), np.zeros(outliers, dtype = np.float)
+    rs, ls = np.zeros(outliers, dtype = np.float), np.zeros(outliers, dtype = np.float)
     ms = []
 
     data_proc = np.copy(x)
@@ -300,7 +300,7 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
 
         # R-value calculation
         R = np.max(abs_d) / np.std(data_proc, ddof=1)
-        Rs[i] = R
+        rs[i] = R
 
         # Masked values
         lms = ms[-1] if len(ms) > 0 else []
@@ -329,7 +329,7 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
                   "Outliers, i      Value, Ri          5 %",
                   "---------------------------------------"]
 
-        for i, (r, l) in enumerate(zip(Rs, ls)):
+        for i, (r, l) in enumerate(zip(rs, ls)):
             report.append('{: >11s}'.format(str(i+1)) + \
                           '{: >15s}'.format(str(np.round(r, 3))) + \
                           '{: >13s}'.format(str(np.round(l, 3))) + (" *" if r > l else ""))
@@ -341,7 +341,7 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
         # for which the test statistic is greater
         # than the critical value and return the result
 
-        if any(Rs > ls):
-            data = np.delete(data, ms[np.max(np.where(Rs > ls))])
+        if any(rs > ls):
+            data = np.delete(data, ms[np.max(np.where(rs > ls))])
 
         return data

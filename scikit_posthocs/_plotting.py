@@ -239,11 +239,6 @@ def sign_plot(
             hax.set_xlabel('')
             hax.set_ylabel('')
 
-        #hax.set_xticks(np.arange(df.shape[1]) + 0.5)
-        #hax.set_yticks(np.arange(df.shape[0]) + 0.5)
-        #hax.set_xticklabels(df.columns.values)
-        #hax.set_yticklabels(df.index.values)
-
         cbar_ax = hax.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
         cbar = ColorbarBase(cbar_ax, cmap=ListedColormap(cmap[2:] + [cmap[1]]),
                             boundaries=[0, 1, 2, 3, 4])

@@ -6,10 +6,10 @@ import itertools as it
 from statsmodels.sandbox.stats.multicomp import multipletests
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
-from pandas import DataFrame, Categorical
+from pandas import DataFrame
 
 
-def __convert_to_df(a, val_col=None, group_col=None, val_id=None, group_id=None):
+def __convert_to_df(a, val_col='vals', group_col='groups', val_id=None, group_id=None):
 
     '''Hidden helper method to create a DataFrame with input data for further
     processing.
@@ -144,7 +144,7 @@ def __convert_to_block_df(a, y_col=None, group_col=None, block_col=None, melted=
             block_col = 'blocks'
             y_col = 'y'
 
-    return x, 'y', 'groups', 'blocks'
+    return x, y_col, group_col, block_col
 
 
 def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
@@ -212,7 +212,7 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
     def compare_conover(i, j):
         diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
         B = (1. / x_lens.loc[i] + 1. / x_lens.loc[j])
-        D = (n - 1. - H_cor) / (n - x_len)
+        D = (n - 1. - h_cor) / (n - x_len)
         t_value = diff / np.sqrt(S2 * B * D)
         p_value = 2. * ss.t.sf(np.abs(t_value), df=n-x_len)
         return p_value
@@ -237,8 +237,8 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
     tie_sum = 0 if not tie_sum else tie_sum
     x_ties = np.min([1., 1. - tie_sum / (n ** 3. - n)])
 
-    H = (12. / (n * (n + 1.))) * np.sum(x_ranks_sum**2 / x_lens) - 3. * (n + 1.)
-    H_cor = H / x_ties
+    h = (12. / (n * (n + 1.))) * np.sum(x_ranks_sum**2 / x_lens) - 3. * (n + 1.)
+    h_cor = h / x_ties
 
     if x_ties == 1:
         S2 = n * (n + 1.) / 12.
@@ -257,7 +257,7 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
 
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
@@ -365,7 +365,7 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
 
@@ -472,7 +472,7 @@ def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
 
         vs[tri_upper] = psturng(vs[tri_upper], x_len, np.inf)
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
 
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
@@ -563,9 +563,6 @@ def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
     x, _y_col, _group_col, _block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
-    # if not sort:
-    #    x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-    #    x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
     if sort:
         x.sort_values(by=[_group_col, _block_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
@@ -588,7 +585,7 @@ def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
     vs *= np.sqrt(2.)
     vs[tri_upper] = psturng(vs[tri_upper], k, np.inf)
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -695,9 +692,6 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
     x, _y_col, _group_col, _block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
-    # if not sort:
-    #    x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-    #    x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
     if sort:
         x.sort_values(by=[_group_col, _block_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
@@ -732,7 +726,7 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
         if p_adjust is not None:
             vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -805,13 +799,12 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
-    # if not sort:
-    #    x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
     if sort:
         x.sort_values(by=[_group_col], ascending=True, inplace=True)
+
     groups = x[_group_col].unique()
     x['ranks'] = x[_val_col].rank()
-    Ri = x.groupby(_group_col)['ranks'].mean()
+    ri = x.groupby(_group_col)['ranks'].mean()
     ni = x.groupby(_group_col)[_val_col].count()
     k = groups.size
     n = x.shape[0]
@@ -819,7 +812,7 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
     df = np.inf
 
     def compare(m, u):
-        a = [(Ri.loc[groups[u]]-Ri.loc[groups[_mi]])/(sigma/np.sqrt(2)*np.sqrt(1./ni.loc[groups[_mi]] + 1./ni.loc[groups[u]])) for _mi in m]
+        a = [(ri.loc[groups[u]]-ri.loc[groups[_mi]])/(sigma/np.sqrt(2)*np.sqrt(1./ni.loc[groups[_mi]] + 1./ni.loc[groups[u]])) for _mi in m]
         return np.array(a)
 
     stat = np.zeros((k, k))
@@ -836,9 +829,6 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
     p_values = psturng(stat, k, df)
     tri_lower = np.tril_indices(p_values.shape[0], -1)
     p_values[tri_lower] = p_values.T[tri_lower]
-
-    # if p_adjust:
-    #    p_values[tri_upper] = multipletests(p_values[tri_upper], method = p_adjust)[1]
 
     np.fill_diagonal(p_values, 1)
     return DataFrame(p_values, index=groups, columns=groups)
@@ -928,9 +918,6 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
 
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
-    # if not sort:
-    #    x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-    #    x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
     if sort:
         x.sort_values(by=[group_col, block_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
@@ -957,7 +944,7 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -1039,9 +1026,6 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
 
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
-    # if not sort:
-    #    x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-    #    x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
     if sort:
         x.sort_values(by=[group_col, block_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
@@ -1056,7 +1040,6 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
     vs = np.zeros((k, k), dtype=np.float)
     combs = it.combinations(range(k), 2)
 
-    # tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
 
@@ -1065,7 +1048,7 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
     vs = vs ** 2
     vs = ss.chi2.sf(vs, k - 1)
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -1147,14 +1130,11 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
     def compare_stats(i, j):
-        dif = np.abs(Rj[groups[i]] - Rj[groups[j]])
+        dif = np.abs(rj[groups[i]] - rj[groups[j]])
         tval = dif / denom
         pval = 2. * ss.t.sf(np.abs(tval), df=df)
         return pval
 
-    # if not sort:
-    #     x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-    #     x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
     if sort:
         x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
@@ -1165,10 +1145,10 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
     r = b
     k = t
     x['y_ranked'] = x.groupby(block_col)[y_col].rank()
-    Rj = x.groupby(group_col)['y_ranked'].sum()
+    rj = x.groupby(group_col)['y_ranked'].sum()
     A = (x['y_ranked'] ** 2).sum()
     C = (b * k * (k + 1) ** 2) / 4.
-    D = (Rj ** 2).sum() - r * C
+    D = (rj ** 2).sum() - r * C
     T1 = (t - 1) / (A - C) * D
     denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1) * (1 - T1 / (b * (k - 1))))
     df = b * k - b - t + 1
@@ -1186,7 +1166,7 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -1271,7 +1251,7 @@ def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -1374,9 +1354,6 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
 
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
-    # if not sort:
-    #     x[group_col] = Categorical(x[group_col], categories=x[group_col].unique(), ordered=True)
-    #     x[block_col] = Categorical(x[block_col], categories=x[block_col].unique(), ordered=True)
     if sort:
         x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
     x.dropna(inplace=True)
@@ -1420,7 +1397,7 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -1510,7 +1487,6 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=Non
     nj = x.groupby(_group_col)['z_scores'].count()
     s2 = (1. / (n - 1.)) * (x['z_scores'] ** 2.).sum()
     sts = (1. / s2) * np.sum(aj ** 2. / nj)
-    # param = k - 1
     A = aj / nj
 
     vs = np.zeros((k, k), dtype=np.float)
@@ -1533,7 +1509,7 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=Non
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -1649,7 +1625,7 @@ def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -1704,7 +1680,7 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
     vsu = np.triu(vs)
     np.fill_diagonal(vsu, 1)
     tri_lower = np.tril_indices(vsu.shape[0], -1)
-    vsu[tri_lower] = vsu.T[tri_lower]
+    vsu[tri_lower] = np.transpose(vsu)[tri_lower]
     return DataFrame(vsu, index=groups, columns=groups)
 
 
@@ -1797,7 +1773,7 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -1894,7 +1870,7 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
@@ -1983,7 +1959,7 @@ def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
     for i,j in combs:
         vs[i, j] = compare(groups[i], groups[j])
 
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     p_values = ss.f.sf(vs, groups.size - 1., n - groups.size)
 
     np.fill_diagonal(p_values, 1)
@@ -2056,10 +2032,8 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
     groups = x[_group_col].unique()
     x_grouped = x.groupby(_group_col)[_val_col]
     ni = x_grouped.count()
-    #n = ni.sum()
     xi = x_grouped.mean()
     si = x_grouped.var()
-    #sin = 1. / (n - groups.size) * np.sum(si * (ni - 1))
 
     def compare(i, j):
         dif = xi[i] - xi[j]
@@ -2096,7 +2070,7 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
         vs[i, j] = compare(groups[i], groups[j])
 
     vs[tri_upper] = 1. - (1. - vs[tri_upper]) ** groups.size
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
     vs[vs > 1] = 1
 
     np.fill_diagonal(vs, 1)
@@ -2186,7 +2160,7 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
         vs[i, j] = compare(groups[i], groups[j])
 
     vs[tri_upper] = psturng(np.abs(vs[tri_upper]), groups.size, n - groups.size)
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
 
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
@@ -2289,7 +2263,7 @@ def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
         vs[i, j] = compare(groups[i], groups[j])
 
     vs[tri_upper] = psturng(np.abs(vs[tri_upper]), k, np.inf)
-    vs[tri_lower] = vs.T[tri_lower]
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
 
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)

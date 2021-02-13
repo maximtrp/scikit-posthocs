@@ -148,17 +148,15 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
         var = np.array([_var_at(i, n) for i in range(k)]).ravel()
         A = (Ap - mean) / np.sqrt(var)
         stat = np.max(A)
-        p = A == stat
-        est = None
 
         mt = []
         for _ in range(n_perm):
 
             ix = Series(np.random.permutation(Rij))
-            Uix = _ustat(ix, x[_group_col], k)
-            Apix = np.array([_ap(i, Uix) for i in range(k)])
-            Astarix = (Apix - mean) / np.sqrt(var)
-            mt.append(np.max(Astarix))
+            uix = _ustat(ix, x[_group_col], k)
+            apix = np.array([_ap(i, uix) for i in range(k)])
+            astarix = (apix - mean) / np.sqrt(var)
+            mt.append(np.max(astarix))
 
         mt = np.array(mt)
         p_value = mt[mt > stat] / n_perm
