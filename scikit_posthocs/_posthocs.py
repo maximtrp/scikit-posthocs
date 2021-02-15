@@ -9,22 +9,22 @@ from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame
 
 
-def __convert_to_df(a, val_col='vals', group_col='groups', val_id=None, group_id=None):
-
+def __convert_to_df(a, val_col: str = 'vals', group_col: str = 'groups',
+                    val_id: int = None, group_id: int = None) -> DataFrame:
     '''Hidden helper method to create a DataFrame with input data for further
     processing.
 
     Parameters
     ----------
     a : array_like or pandas DataFrame object
-        An array, any object exposing the array interface or a pandas DataFrame.
-        Array must be two-dimensional. Second dimension may vary,
-        i.e. groups may have different lengths.
+        An array, any object exposing array interface or a pandas DataFrame.
+        Array must be two-dimensional. Second dimension may vary, i.e. groups
+        may have different lengths.
 
     val_col : str, optional
-        Name of a DataFrame column that contains dependent variable values (test
-        or response variable). Values should have a non-nominal scale. Must be
-        specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values
+        (test or response variable). Values should have a non-nominal scale.
+        Must be specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
         Name of a DataFrame column that contains independent variable values
@@ -59,7 +59,6 @@ def __convert_to_df(a, val_col='vals', group_col='groups', val_id=None, group_id
     -----
     Inferrence algorithm for determining `val_id` and `group_id` args is rather
     simple, so it is better to specify them explicitly to prevent errors.
-
     '''
 
     if not group_col:
@@ -148,7 +147,6 @@ def __convert_to_block_df(a, y_col=None, group_col=None, block_col=None, melted=
 
 
 def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
-
     '''Post hoc pairwise test for multiple comparisons of mean rank sums
     (Conover's test). May be used after Kruskal-Wallis one-way analysis of
     variance by ranks to do pairwise comparisons [1]_.
@@ -264,7 +262,6 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
 
 
 def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
-
     '''Post hoc pairwise test for multiple comparisons of mean rank sums
     (Dunn's test). May be used after Kruskal-Wallis one-way analysis of
     variance by ranks to do pairwise comparisons [1]_, [2]_.
@@ -371,7 +368,6 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
 
 
 def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
-
     '''Post hoc pairwise test for multiple comparisons of mean rank sums
     (Nemenyi's test). May be used after Kruskal-Wallis one-way analysis of
     variance by ranks to do pairwise comparisons [1]_.
@@ -479,7 +475,6 @@ def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
 
 
 def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False):
-
     '''Calculate pairwise comparisons using Nemenyi post hoc test for
     unreplicated blocked data. This test is usually conducted post hoc if
     significant results of the Friedman's test are obtained. The statistics
@@ -553,7 +548,6 @@ def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melt
     >>> # and columns are groups.
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_nemenyi_friedman(x)
-
     '''
 
     def compare_stats(i, j):
@@ -591,7 +585,6 @@ def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
 
 def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False, p_adjust=None):
-
     '''Calculate pairwise comparisons using Conover post hoc test for unreplicated
     blocked data. This test is usually conducted post hoc after
     significant results of the Friedman test. The statistics refer to
@@ -675,7 +668,6 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_conover_friedman(x)
-
     '''
 
     def compare_stats(i, j):
@@ -732,7 +724,6 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
 
 def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None):
-
     '''Calculate pairwise comparisons using Nashimoto and Wright's all-pairs
     comparison procedure (NPM test) for simply ordered mean ranksums.
 
@@ -835,7 +826,6 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
 
 
 def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False, p_adjust=None):
-
     '''Siegel and Castellan's All-Pairs Comparisons Test for Unreplicated Blocked
     Data. See authors' paper for additional information [1]_.
 
@@ -908,7 +898,6 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_siegel_friedman(x)
-
     '''
 
     def compare_stats(i, j):
@@ -950,7 +939,6 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
 
 
 def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False):
-
     '''Miller's All-Pairs Comparisons Test for Unreplicated Blocked Data.
     The p-values are computed from the chi-square distribution [1]_, [2]_,
     [3]_.
@@ -1016,7 +1004,6 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_miller_friedman(x)
-
     '''
 
     def compare_stats(i, j):
@@ -1054,7 +1041,6 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
 
 
 def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False, p_adjust=None):
-
     '''Pairwise post hoc test for multiple comparisons of rank sums according to
     Durbin and Conover for a two-way balanced incomplete block design (BIBD). See
     references for additional information [1]_, [2]_.
@@ -1124,7 +1110,6 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_durbin(x)
-
     '''
 
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
@@ -1172,7 +1157,6 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
 
 
 def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, p_adjust=None):
-
     '''Anderson-Darling Pairwise Test for k-samples. Tests the null hypothesis
     that k-samples are drawn from the same population without having to specify
     the distribution function of that population [1]_.
@@ -1228,7 +1212,6 @@ def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, 
     --------
     >>> x = np.array([[2.9, 3.0, 2.5, 2.6, 3.2], [3.8, 2.7, 4.0, 2.4], [2.8, 3.4, 3.7, 2.2, 2.0]])
     >>> sp.posthoc_anderson(x)
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -1257,7 +1240,6 @@ def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, 
 
 
 def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melted=False, sort=False, p_adjust=None):
-
     '''Calculate pairwise comparisons using Quade's post hoc test for
     unreplicated blocked data. This test is usually conducted if significant
     results were obtained by the omnibus test [1]_, [2]_, [3]_.
@@ -1403,7 +1385,6 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
 
 
 def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=None):
-
     '''Van der Waerden's test for pairwise multiple comparisons between group
     levels. See references for additional information [1]_, [2]_.
 
@@ -1469,7 +1450,6 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=Non
     --------
     >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
     >>> sp.posthoc_vanwaerden(x, val_col = 0, group_col = 1)
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -1515,7 +1495,6 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=Non
 
 
 def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True, p_adjust=None, sort=False):
-
     '''Pairwise T test for multiple comparisons of independent groups. May be
     used after a parametric ANOVA to do pairwise comparisons.
 
@@ -1585,7 +1564,6 @@ def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True
     array([[-1.        ,  0.04600899,  0.31269089],
            [ 0.04600899, -1.        ,  0.6327077 ],
            [ 0.31269089,  0.6327077 , -1.        ]])
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -1629,8 +1607,8 @@ def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
-def posthoc_tukey_hsd(x, g, alpha=0.05):
 
+def posthoc_tukey_hsd(x, g, alpha=0.05):
     '''Pairwise comparisons with TukeyHSD confidence intervals. This is a
     convenience function to make statsmodels `pairwise_tukeyhsd` method more
     applicable for further use.
@@ -1685,7 +1663,6 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
 
 
 def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, alternative='two-sided', p_adjust=None, sort=True):
-
     '''Pairwise comparisons with Mann-Whitney rank test.
 
     Parameters
@@ -1745,7 +1722,6 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
     --------
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> sp.posthoc_mannwhitney(x, p_adjust = 'holm')
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -1759,11 +1735,11 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
     xg = x.groupby(_group_col)[_val_col]
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
-    vs[:,:] = 0
+    vs[:, :] = 0
 
     combs = it.combinations(range(x_len), 2)
 
-    for i,j in combs:
+    for i, j in combs:
         vs[i, j] = ss.mannwhitneyu(
             xg.get_group(groups[i]),
             xg.get_group(groups[j]),
@@ -1779,7 +1755,6 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
 
 
 def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', correction=False, p_adjust=None, sort=False):
-
     '''Pairwise comparisons with Wilcoxon signed-rank test. It is a non-parametric
     version of the paired T-test for use with non-parametric ANOVA.
 
@@ -1843,7 +1818,6 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
     --------
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> sp.posthoc_wilcoxon(x)
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -1861,7 +1835,7 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
 
     combs = it.combinations(range(x_len), 2)
 
-    for i,j in combs:
+    for i, j in combs:
         vs[i, j] = ss.wilcoxon(
             xg.get_group(groups[i]),
             xg.get_group(groups[j]),
@@ -1876,7 +1850,6 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
 
 
 def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
-
     '''Scheffe's all-pairs comparisons test for normally distributed data with equal
     group variances. For all-pairs comparisons in an one-factorial layout with
     normally distributed residuals and equal variances Scheffe's test can be
@@ -1929,7 +1902,6 @@ def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_scheffe(x, val_col='values', group_col='groups')
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -1952,11 +1924,11 @@ def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
 
     vs = np.zeros((groups.size, groups.size), dtype=float)
     tri_lower = np.tril_indices(vs.shape[0], -1)
-    vs[:,:] = 0
+    vs[:, :] = 0
 
     combs = it.combinations(range(groups.size), 2)
 
-    for i,j in combs:
+    for i, j in combs:
         vs[i, j] = compare(groups[i], groups[j])
 
     vs[tri_lower] = np.transpose(vs)[tri_lower]
@@ -1967,7 +1939,6 @@ def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
 
 
 def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
-
     '''Tamhane's T2 all-pairs comparison test for normally distributed data with
     unequal variances. Tamhane's T2 test can be performed for all-pairs
     comparisons in an one-factorial layout with normally distributed residuals
@@ -2021,7 +1992,6 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_tamhane(x, val_col='values', group_col='groups')
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -2042,7 +2012,7 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
         if welch:
             df = A ** 2. / (si[i] ** 2. / (ni[i] ** 2. * (ni[i] - 1.)) + si[j] ** 2. / (ni[j] ** 2. * (ni[j] - 1.)))
         else:
-            ## checks according to Tamhane (1979, p. 474)
+            # checks according to Tamhane (1979, p. 474)
             ok1 = (9./10. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 10./9.)
             ok2 = (9./10. <= (si[i] / ni[i]) / (si[j] / ni[j])) and\
                 ((si[i] / ni[i]) / (si[j] / ni[j]) <= 10./9.)
@@ -2062,11 +2032,11 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
     vs = np.zeros((groups.size, groups.size), dtype=float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
-    vs[:,:] = 0
+    vs[:, :] = 0
 
     combs = it.combinations(range(groups.size), 2)
 
-    for i,j in combs:
+    for i, j in combs:
         vs[i, j] = compare(groups[i], groups[j])
 
     vs[tri_upper] = 1. - (1. - vs[tri_upper]) ** groups.size
@@ -2077,8 +2047,8 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
     return DataFrame(vs, index=groups, columns=groups)
 
 
-def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
-
+def posthoc_tukey(a, val_col: str = None,
+                  group_col: str = None, sort: bool = False) -> DataFrame:
     '''Performs Tukey's all-pairs comparisons test for normally distributed data
     with equal group variances. For all-pairs comparisons in an
     one-factorial layout with normally distributed residuals and equal variances
@@ -2127,7 +2097,6 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_tukey(x, val_col='values', group_col='groups')
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -2152,11 +2121,11 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
     vs = np.zeros((groups.size, groups.size), dtype=float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
-    vs[:,:] = 0
+    vs[:, :] = 0
 
     combs = it.combinations(range(groups.size), 2)
 
-    for i,j in combs:
+    for i, j in combs:
         vs[i, j] = compare(groups[i], groups[j])
 
     vs[tri_upper] = psturng(np.abs(vs[tri_upper]), groups.size, n - groups.size)
@@ -2167,7 +2136,6 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
 
 
 def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
-
     '''Dwass, Steel, Critchlow and Fligner all-pairs comparison test for a
     one-factorial layout with non-normally distributed residuals. As opposed to
     the all-pairs comparison procedures that depend on Kruskal ranks, the DSCF
@@ -2221,7 +2189,6 @@ def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_dscf(x, val_col='values', group_col='groups')
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)

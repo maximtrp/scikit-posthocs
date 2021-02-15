@@ -1,10 +1,9 @@
-from numpy import array, ndarray, sum, mean, log
+from numpy import array, ndarray, log
 from scipy.stats import rankdata, chi2
 from typing import Union, List, Tuple
 
 
 def global_simes_test(x: Union[List, ndarray]) -> float:
-
     '''Global Simes test of the intersection null hypothesis. Computes
     the combined p value as min(np(i)/i), where p(1), ..., p(n)
     are the ordered p values.
@@ -28,7 +27,6 @@ def global_simes_test(x: Union[List, ndarray]) -> float:
     --------
     >>> x = [0.04, 0.03, 0.98, 0.01, 0.43, 0.99, 1.0, 0.002]
     >>> sp.global_simes_test(x)
-
     '''
 
     arr = array(x)
@@ -39,7 +37,6 @@ def global_simes_test(x: Union[List, ndarray]) -> float:
 
 def global_f_test(x: Union[List, ndarray],
                   stat: bool = False) -> Tuple[float, float]:
-
     '''Fisher's combination test for global null hypothesis. Computes
     the combined p value using chi-squared distribution and
     T statistic: -2 * sum(log(x)).
@@ -67,7 +64,6 @@ def global_f_test(x: Union[List, ndarray],
     --------
     >>> x = [0.04, 0.03, 0.98, 0.01, 0.43, 0.99, 1.0, 0.002]
     >>> sp.global_f_test(x)
-
     '''
 
     arr = array(x)
