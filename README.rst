@@ -62,6 +62,7 @@ Features
 --------
 
 .. image:: images/flowchart.png
+  :alt: Tests Flowchart
 
 - *Omnibox* tests:
 

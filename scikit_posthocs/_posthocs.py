@@ -929,7 +929,7 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
     x['mat'] = x.groupby(block_col)[y_col].rank()
     R = x.groupby(group_col)['mat'].mean()
 
-    vs = np.zeros((k, k), dtype=np.float)
+    vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -1037,7 +1037,7 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
     x['mat'] = x.groupby(block_col)[y_col].rank()
     R = x.groupby(group_col)['mat'].mean()
 
-    vs = np.zeros((k, k), dtype=np.float)
+    vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
 
     tri_lower = np.tril_indices(vs.shape[0], -1)
@@ -1153,7 +1153,7 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
     denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1) * (1 - T1 / (b * (k - 1))))
     df = b * k - b - t + 1
 
-    vs = np.zeros((t, t), dtype=np.float)
+    vs = np.zeros((t, t), dtype=float)
     combs = it.combinations(range(t), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -1238,7 +1238,7 @@ def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, 
 
     groups = x[_group_col].unique()
     k = groups.size
-    vs = np.zeros((k, k), dtype=np.float)
+    vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -1373,7 +1373,7 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
     B = np.sum(S ** 2) / b
     W = x.groupby(group_col)['w'].sum()
 
-    vs = np.zeros((k, k), dtype=np.float)
+    vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -1489,7 +1489,7 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=Non
     sts = (1. / s2) * np.sum(aj ** 2. / nj)
     A = aj / nj
 
-    vs = np.zeros((k, k), dtype=np.float)
+    vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
 
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -1596,7 +1596,7 @@ def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True
     k = groups.size
     xg = x.groupby(by=_group_col)[_val_col]
 
-    vs = np.zeros((k, k), dtype=np.float)
+    vs = np.zeros((k, k), dtype=float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
@@ -1665,10 +1665,10 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
     '''
 
     result = pairwise_tukeyhsd(x, g, alpha=0.05)
-    groups = np.array(result.groupsunique, dtype=np.str)
+    groups = np.array(result.groupsunique, dtype=str)
     groups_len = len(groups)
 
-    vs = np.zeros((groups_len, groups_len), dtype=np.int)
+    vs = np.zeros((groups_len, groups_len), dtype=int)
 
     for a in result.summary()[1:]:
         a0 = str(a[0])
@@ -1950,7 +1950,7 @@ def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
         f_val = dif ** 2. / A
         return f_val
 
-    vs = np.zeros((groups.size, groups.size), dtype=np.float)
+    vs = np.zeros((groups.size, groups.size), dtype=float)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
 
@@ -2059,7 +2059,7 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
         p_val = 2. * ss.t.sf(np.abs(t_val), df=df)
         return p_val
 
-    vs = np.zeros((groups.size, groups.size), dtype=np.float)
+    vs = np.zeros((groups.size, groups.size), dtype=float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0
@@ -2149,7 +2149,7 @@ def posthoc_tukey(a, val_col = None, group_col = None, sort = False):
         q_val = dif / np.sqrt(A)
         return q_val
 
-    vs = np.zeros((groups.size, groups.size), dtype=np.float)
+    vs = np.zeros((groups.size, groups.size), dtype=float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:,:] = 0

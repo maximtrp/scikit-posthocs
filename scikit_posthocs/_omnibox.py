@@ -3,12 +3,15 @@
 import numpy as np
 import itertools as it
 import scipy.stats as ss
+from typing import Union, List, Tuple
 from statsmodels.stats.libqsturng import psturng
-from pandas import Categorical, Series
+from pandas import DataFrame, Categorical, Series
 from scikit_posthocs._posthocs import __convert_to_df, __convert_to_block_df
 
 
-def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=False):
+def test_mackwolfe(a: Union[List, np.ndarray, DataFrame], val_col: str = None,
+                   group_col: str = None, p: int = None, n_perm: int = 100,
+                   sort: bool = False) -> Tuple[float, float]:
 
     '''Mack-Wolfe Test for Umbrella Alternatives.
 
@@ -28,9 +31,9 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column that contains dependent variable values (test
-        or response variable). Values should have a non-nominal scale. Must be
-        specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values
+        (test or response variable). Values should have a non-nominal scale.
+        Must be specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
         Name of a DataFrame column that contains independent variable values
@@ -39,7 +42,8 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
 
     p : int, optional
         The a-priori known peak as an ordinal number of the treatment group
-        including the zero dose level, i.e. p = {0, ..., k-1}. Defaults to None.
+        including the zero dose level, i.e. p = {0, ..., k-1}.
+        Defaults to None.
 
     sort : bool, optional
         If True, sort data by block and group columns.
@@ -60,7 +64,7 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
 
     Examples
     --------
-    >>> x = x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
+    >>> x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
     >>> sp.posthoc_mackwolfe(x)
 
     '''
@@ -164,7 +168,7 @@ def test_mackwolfe(a, val_col=None, group_col=None, p=None, n_perm=100, sort=Fal
     return p_value, stat
 
 
-def test_osrt(a, val_col=None, group_col=None, sort=False):
+def test_osrt(a, val_col: str = None, group_col: str = None, sort: bool = False):
 
     '''Hayter's one-sided studentised range test (OSRT) against an ordered
     alternative for normal data with equal variances [1]_.
@@ -243,7 +247,7 @@ def test_osrt(a, val_col=None, group_col=None, sort=False):
         qval = np.abs(dif) / A
         return qval
 
-    vs = np.zeros((k, k), dtype=np.float)
+    vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
 
     for i, j in combs:

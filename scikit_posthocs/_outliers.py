@@ -287,7 +287,7 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
 
     """
 
-    rs, ls = np.zeros(outliers, dtype = np.float), np.zeros(outliers, dtype = np.float)
+    rs, ls = np.zeros(outliers, dtype = float), np.zeros(outliers, dtype = float)
     ms = []
 
     data_proc = np.copy(x)

@@ -1,8 +1,10 @@
-import numpy as np
-import scipy.stats as ss
+from numpy import array, ndarray, sum, mean, log
+from scipy.stats import rankdata, chi2
+from typing import Union, List, Tuple
 
 
-def global_simes_test(x):
+def global_simes_test(x: Union[List, ndarray]) -> float:
+
     '''Global Simes test of the intersection null hypothesis. Computes
     the combined p value as min(np(i)/i), where p(1), ..., p(n)
     are the ordered p values.
@@ -29,13 +31,15 @@ def global_simes_test(x):
 
     '''
 
-    arr = np.array(x)
-    ranks = ss.rankdata(arr)
-    p = np.min(arr.size * arr / ranks)
+    arr = array(x)
+    ranks = rankdata(arr)
+    p = min(arr.size * arr / ranks)
     return p
 
 
-def global_f_test(x, stat=False):
+def global_f_test(x: Union[List, ndarray],
+                  stat: bool = False) -> Tuple[float, float]:
+
     '''Fisher's combination test for global null hypothesis. Computes
     the combined p value using chi-squared distribution and
     T statistic: -2 * sum(log(x)).
@@ -52,7 +56,7 @@ def global_f_test(x, stat=False):
     p : float
         Global p value.
     T : float
-        Statistic (optional).
+        Statistic.
 
     References
     ----------
@@ -66,7 +70,7 @@ def global_f_test(x, stat=False):
 
     '''
 
-    arr = np.array(x)
-    T = -2 * np.sum(np.log(arr))
-    p = ss.chi2.sf(T, df=2*len(arr))
-    return p, T if stat else p
+    arr = array(x)
+    T = -2 * sum(log(arr))
+    p = chi2.sf(T, df=2 * len(arr))
+    return p, T

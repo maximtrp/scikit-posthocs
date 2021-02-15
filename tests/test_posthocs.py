@@ -58,7 +58,7 @@ class TestPosthocs(unittest.TestCase):
                       [1, 0, 1]])
         a = splt.sign_plot(x, flat=True, labels=False)
         with self.assertRaises(ValueError):
-            splt.sign_plot(x.astype(np.float), flat=True, labels=False)
+            splt.sign_plot(x.astype(float), flat=True, labels=False)
         self.assertTrue(isinstance(a, ma._subplots.Axes))
 
     def test_sign_plot_nonflat(self):
@@ -164,7 +164,7 @@ class TestPosthocs(unittest.TestCase):
                        [2, 5, 5],
                        [0, 6, 3],
                        [1, 6, 7],
-                       [2, 6, 1]], dtype=np.float)
+                       [2, 6, 1]], dtype=float)
 
         result = sp.posthoc_nemenyi_friedman(a, y_col=2, group_col=1, block_col=0, melted=True)[0].values
         result2 = sp.posthoc_nemenyi_friedman(self.df_bn)[0].values

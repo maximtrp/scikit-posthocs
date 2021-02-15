@@ -87,7 +87,7 @@ def sign_table(p_values, lower=True, upper=True):
         raise ValueError("Either lower or upper triangle must be returned")
 
     if not isinstance(p_values, DataFrame):
-        p_values = np.array(p_values, dtype=np.float)
+        p_values = np.array(p_values, dtype=float)
 
     ns = p_values > 0.05
     three = (p_values < 0.001) & (p_values >= 0)
