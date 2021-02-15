@@ -1,0 +1,27 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@1.2.1
+
+jobs:
+  build:
+    executor: python/default
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - python/install-packages:
+          args: codecov coverage
+          pkg-manager: pip
+          pypi-cache: false
+      - run:
+          command: coverage run --source scikit_posthocs setup.py test
+          name: Coverage
+      - run:
+          command: codecov
+          name: Codecov
+
+workflows:
+  main:
+    jobs:
+      - build
