@@ -209,7 +209,7 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
         else:
             return arr
 
-def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
+def outliers_gesd(x, outliers = 5, hypo = False, report = False, alpha=0.05):
 
     """
     The generalized (Extreme Studentized Deviate) ESD test is used
@@ -225,6 +225,13 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
     outliers : int, optional
         Number of potential outliers to test for. Test is two-tailed, i.e.
         maximum and minimum values are checked for potential outliers.
+
+    hypo : bool, optional
+        Specifies whether to return a bool value of a hypothesis test result.
+        Returns True when we can reject the null hypothesis. Otherwise, False.
+        Available options are:
+        1) True - return a hypothesis test result
+        2) False - return a filtered array without an outlier (default)
 
     report : bool, optional
         Specifies whether to return a summary table of the test.
@@ -342,6 +349,11 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
         # than the critical value and return the result
 
         if any(rs > ls):
-            data = np.delete(data, ms[np.max(np.where(rs > ls))])
-
+            if hypo:
+                data = data.astype('bool')
+                data[:] = False
+                data[ms[np.max(np.where(rs > ls))]] = True
+            else:
+                data = np.delete(data, ms[np.max(np.where(rs > ls))])
+        
         return data
