@@ -298,7 +298,8 @@ def outliers_gesd(x, outliers = 5, hypo = False, report = False, alpha=0.05):
     ms = []
 
     data_proc = np.copy(x)
-    data = np.sort(data_proc)
+    argsort_index = np.argsort(data_proc)
+    data = data_proc[argsort_index]
     n = data_proc.size
 
     for i in np.arange(outliers):
@@ -350,9 +351,12 @@ def outliers_gesd(x, outliers = 5, hypo = False, report = False, alpha=0.05):
 
         if any(rs > ls):
             if hypo:
-                data = data.astype('bool')
                 data[:] = False
                 data[ms[np.max(np.where(rs > ls))]] = True
+                # rearrange data so mask is in same order as incoming data
+                data = np.vstack((data, np.arange(0, data.shape[0])[argsort_index]))
+                data = data[0, data.argsort()[1,]]
+                data = data.astype('bool')
             else:
                 data = np.delete(data, ms[np.max(np.where(rs > ls))])
         
