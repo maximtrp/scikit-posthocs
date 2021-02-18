@@ -2,16 +2,16 @@
 
 ===============
 
-.. image:: https://travis-ci.org/maximtrp/scikit-posthocs.svg?branch=master
-    :target: https://travis-ci.org/maximtrp/scikit-posthocs
+.. image:: https://img.shields.io/circleci/build/github/maximtrp/scikit-posthocs
+    :target: https://app.circleci.com/pipelines/github/maximtrp/scikit-posthocs
 .. image:: https://img.shields.io/readthedocs/scikit-posthocs.svg
     :target: https://scikit-posthocs.readthedocs.io
 .. image:: http://joss.theoj.org/papers/10.21105/joss.01169/status.svg
     :target: https://doi.org/10.21105/joss.01169
 .. image:: https://codecov.io/gh/maximtrp/scikit-posthocs/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/maximtrp/scikit-posthocs
-.. image:: https://api.codacy.com/project/badge/Grade/e172fecdc82d43a7b025527a3a7088e1
-    :target: https://www.codacy.com/app/maximtrp/scikit-posthocs?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=maximtrp/scikit-posthocs&amp;utm_campaign=Badge_Grade
+.. image:: https://app.codacy.com/project/badge/Grade/50d2a82a6dd84b51b515cebf931067d7
+    :target: https://www.codacy.com/gh/maximtrp/scikit-posthocs/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=maximtrp/scikit-posthocs&amp;utm_campaign=Badge_Grade
 .. image:: https://pepy.tech/badge/scikit-posthocs
     :target: https://pepy.tech/project/scikit-posthocs
 .. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg

@@ -223,6 +223,7 @@ def outliers_tietjen(
 def outliers_gesd(
         x: Union[List, np.ndarray],
         outliers: int = 5,
+        hypo: bool = False,
         report: bool = False,
         alpha: float = 0.05) -> Union[np.ndarray, str]:
     """The generalized (Extreme Studentized Deviate) ESD test is used
@@ -239,7 +240,14 @@ def outliers_gesd(
         Number of potential outliers to test for. Test is two-tailed, i.e.
         maximum and minimum values are checked for potential outliers.
 
-    report : bool
+    hypo : bool, optional
+        Specifies whether to return a bool value of a hypothesis test result.
+        Returns True when we can reject the null hypothesis. Otherwise, False.
+        Available options are:
+        1) True - return a hypothesis test result
+        2) False - return a filtered array without an outlier (default)
+
+    report : bool, optional
         Specifies whether to return a summary table of the test.
         Available options are:
         1) True - return a summary table
@@ -303,7 +311,8 @@ def outliers_gesd(
     ms = []
 
     data_proc = np.copy(x)
-    data = np.sort(data_proc)
+    argsort_index = np.argsort(data_proc)
+    data = data_proc[argsort_index]
     n = data_proc.size
 
     for i in np.arange(outliers):
@@ -357,6 +366,14 @@ def outliers_gesd(
         # than the critical value and return the result
 
         if any(rs > ls):
-            data = np.delete(data, ms[np.max(np.where(rs > ls))])
+            if hypo:
+                data[:] = False
+                data[ms[np.max(np.where(rs > ls))]] = True
+                # rearrange data so mask is in same order as incoming data
+                data = np.vstack((data, np.arange(0, data.shape[0])[argsort_index]))
+                data = data[0, data.argsort()[1,]]
+                data = data.astype('bool')
+            else:
+                data = np.delete(data, ms[np.max(np.where(rs > ls))])
 
         return data
