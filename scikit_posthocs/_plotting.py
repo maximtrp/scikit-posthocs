@@ -1,10 +1,15 @@
 import numpy as np
 from matplotlib.colors import ListedColormap
-from matplotlib.colorbar import ColorbarBase
+from matplotlib.colorbar import ColorbarBase, Colorbar
+from matplotlib.axes import SubplotBase
 from seaborn import heatmap
 from pandas import DataFrame
+from typing import Union, List, Tuple
 
-def sign_array(p_values, alpha=0.05):
+
+def sign_array(
+        p_values: Union[List, np.ndarray],
+        alpha: float = 0.05) -> np.ndarray:
     """
     Significance array
 
@@ -47,7 +52,10 @@ def sign_array(p_values, alpha=0.05):
     return p_values
 
 
-def sign_table(p_values, lower=True, upper=True):
+def sign_table(
+        p_values: Union[List, np.ndarray, DataFrame],
+        lower: bool = True,
+        upper: bool = True) -> Union[DataFrame, np.ndarray]:
     """
     Significance table
 
@@ -60,10 +68,10 @@ def sign_table(p_values, lower=True, upper=True):
         An array, any object exposing the array interface, containing
         p values.
 
-    lower : bool, optional
+    lower : bool
         Defines whether to return the lower triangle.
 
-    upper : bool, optional
+    upper : bool
         Defines whether to return the upper triangle.
 
     Returns
@@ -86,59 +94,62 @@ def sign_table(p_values, lower=True, upper=True):
     if not any([lower, upper]):
         raise ValueError("Either lower or upper triangle must be returned")
 
-    if not isinstance(p_values, DataFrame):
-        p_values = np.array(p_values, dtype=float)
+    pv = DataFrame(p_values, copy=True)\
+        if not isinstance(p_values, DataFrame)\
+        else p_values.copy()
 
-    ns = p_values > 0.05
-    three = (p_values < 0.001) & (p_values >= 0)
-    two = (p_values < 0.01) & (p_values >= 0.001)
-    one = (p_values < 0.05) & (p_values >= 0.01)
+    ns = pv > 0.05
+    three = (pv < 0.001) & (pv >= 0)
+    two = (pv < 0.01) & (pv >= 0.001)
+    one = (pv < 0.05) & (pv >= 0.01)
 
-    p_values = p_values.astype(object)
-    p_values[ns] = 'NS'
-    p_values[three] = '***'
-    p_values[two] = '**'
-    p_values[one] = '*'
+    pv = pv.astype(str)
+    pv[ns] = 'NS'
+    pv[three] = '***'
+    pv[two] = '**'
+    pv[one] = '*'
 
-    pv = p_values.values if isinstance(p_values, DataFrame) else p_values
-    np.fill_diagonal(pv, '-')
+    np.fill_diagonal(pv.values, '-')
     if not lower:
-        pv[np.tril_indices(pv.shape[0], -1)] = ''
+        pv.values[np.tril_indices(pv.shape[0], -1)] = ''
     elif not upper:
-        pv[np.triu_indices(pv.shape[0], 1)] = ''
+        pv.values[np.triu_indices(pv.shape[0], 1)] = ''
 
-    return DataFrame(pv, index=p_values.index, columns=p_values.columns)\
-        if isinstance(p_values, DataFrame) else pv
+    return pv
 
 
 def sign_plot(
-    x, g=None, flat=False, labels=True, cmap=None,
-    cbar_ax_bbox=None, ax=None, **kwargs
-):
-    """
-    Significance plot, a heatmap of p values (based on Seaborn).
+        x: Union[List, np.ndarray, DataFrame],
+        g: Union[List, np.ndarray] = None,
+        flat: bool = False,
+        labels: bool = True,
+        cmap: List = None,
+        cbar_ax_bbox: List = None,
+        ax: SubplotBase = None,
+        **kwargs) -> Union[SubplotBase, Tuple[SubplotBase, Colorbar]]:
+    """Significance plot, a heatmap of p values (based on Seaborn).
 
     Parameters
     ----------
-    x : array_like, ndarray or DataFrame
+    x : Union[List, np.ndarray, DataFrame]
         If flat is False (default), x must be an array, any object exposing
         the array interface, containing p values. If flat is True, x must be
         a sign_array (returned by `scikit_posthocs.sign_array` function)
 
-    g : array_like or ndarray, optional
+    g : Union[List, np.ndarray]
         An array, any object exposing the array interface, containing
         group names.
 
-    flat : bool, optional
+    flat : bool
         If `flat` is True, plots a significance array as a heatmap using
         seaborn. If `flat` is False (default), plots an array of p values.
         Non-flat mode is useful if you need to  differentiate significance
         levels visually. It is the preferred mode.
 
-    labels : bool, optional
+    labels : bool
         Plot axes labels (default) or not.
 
-    cmap : list, optional
+    cmap : list
         1) If flat is False (default):
         List consisting of five elements, that will be exported to
         ListedColormap method of matplotlib. First is for diagonal
@@ -152,13 +163,13 @@ def sign_plot(
         significant ones.
         3) If not defined, default colormaps will be used.
 
-    cbar_ax_bbox : list, optional
+    cbar_ax_bbox : list
         Colorbar axes position rect [left, bottom, width, height] where
         all quantities are in fractions of figure width and height.
         Refer to `matplotlib.figure.Figure.add_axes` for more information.
         Default is [0.95, 0.35, 0.04, 0.3].
 
-    ax : matplotlib Axes, optional
+    ax : SubplotBase
         Axes in which to draw the plot, otherwise use the currently-active
         Axes.
 
@@ -169,10 +180,10 @@ def sign_plot(
     Returns
     -------
     ax : matplotlib.axes._subplots.AxesSubplot
-        Axes object with the heatmap
+        Axes object with the heatmap.
 
-    cbar : matplotlib.colorbar.Colorbar, optional
-        ColorBar object of cbar if `flat` is set to False.
+    cbar : matplotlib.colorbar.Colorbar
+        ColorBar object if `flat` is set to False.
 
     Examples
     --------
@@ -180,7 +191,6 @@ def sign_plot(
                       [ 1, 1, 0],
                       [ 1, 0, 1]])
     >>> ph.sign_plot(x, flat = True)
-
     """
 
     for key in ['cbar', 'vmin', 'vmax', 'center']:
@@ -210,8 +220,8 @@ def sign_plot(
 
     if flat:
         np.fill_diagonal(df.values, -1)
-        hax = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax,
-                    **kwargs)
+        hax = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap),
+                      cbar=False, ax=ax, **kwargs)
         if not labels:
             hax.set_xlabel('')
             hax.set_ylabel('')
@@ -229,9 +239,8 @@ def sign_plot(
             raise ValueError("Cmap list must contain 5 items")
 
         hax = heatmap(
-            df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1, cbar=False,
-            ax=ax, **kwargs
-        )
+            df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1,
+            cbar=False, ax=ax, **kwargs)
         if not labels:
             hax.set_xlabel('')
             hax.set_ylabel('')

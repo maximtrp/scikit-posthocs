@@ -1,12 +1,14 @@
 import numpy as np
 from scipy.stats import t
+from typing import Union, List
 
-def outliers_iqr(x, ret='filtered', coef = 1.5):
 
-    """
-    Simple detection of potential outliers based on interquartile range (IQR).
-
-    Data that lie within the lower and upper limits are considered
+def outliers_iqr(
+        x: Union[List, np.ndarray],
+        ret: str = 'filtered',
+        coef: float = 1.5) -> np.ndarray:
+    """Simple detection of potential outliers based on interquartile range
+    (IQR). Data that lie within the lower and upper limits are considered
     non-outliers. The lower limit is the number that lies 1.5 IQRs below
     (coefficient may be changed with an argument, see Parameters)
     the first quartile; the upper limit is the number that lies 1.5 IQRs
@@ -14,18 +16,18 @@ def outliers_iqr(x, ret='filtered', coef = 1.5):
 
     Parameters
     ----------
-    x : array_like or np.ndarray, 1d
+    x : Union[List, np.ndarray]
         An array, any object exposing the array interface, containing
         p values.
 
-    ret : str, optional
+    ret : str
         Specifies object to be returned. Available options are:
         'filtered' : return a filtered array (default)
         'outliers' : return outliers
         'indices' : return indices of non-outliers
         'outliers_indices' : return indices of outliers
 
-    coef : float, optional
+    coef : float
         Coefficient by which IQR is multiplied. Default is 1.5.
 
     Returns
@@ -33,13 +35,13 @@ def outliers_iqr(x, ret='filtered', coef = 1.5):
     filtered : np.ndarray
         Filtered array (default).
 
-    indices : np.ndarray, optional
+    indices : np.ndarray
         Array with indices of elements lying within the specified limits.
 
-    outliers : np.ndarray, optional
+    outliers : np.ndarray
         Array with outliers.
 
-    outliers_indices : np.ndarray, optional
+    outliers_indices : np.ndarray
         Array with indices of outlier elements.
 
     Examples
@@ -47,7 +49,6 @@ def outliers_iqr(x, ret='filtered', coef = 1.5):
     >>> x = np.array([4, 5, 6, 10, 12, 4, 3, 1, 2, 3, 23, 5, 3])
     >>> outliers_iqr(x, ret = 'outliers')
     array([12, 23])
-
     """
 
     arr = np.copy(x)
@@ -66,12 +67,14 @@ def outliers_iqr(x, ret='filtered', coef = 1.5):
     else:
         return x[(x > ll) & (x < ul)]
 
-def outliers_grubbs(x, hypo = False, alpha = 0.05):
 
-    """
-    Grubbs' Test for Outliers [1]_. This is the two-sided version of the test.
-
-    The null hypothesis implies that there are no outliers in the data set.
+def outliers_grubbs(
+        x: Union[List, np.ndarray],
+        hypo: bool = False,
+        alpha: float = 0.05) -> Union[np.ndarray, bool]:
+    """Grubbs' Test for Outliers [1]_. This is the two-sided version
+    of the test. The null hypothesis implies that there are no outliers
+    in the data set.
 
     Parameters
     ----------
@@ -95,8 +98,8 @@ def outliers_grubbs(x, hypo = False, alpha = 0.05):
         Filtered array if alternative hypo is True, otherwise an unfiltered
         array.
 
-    hypo : bool, optional
-        Null hypothesis test result.
+    hypo : bool
+        Null hypothesis test result. Returned if repr(hypo) is set to True.
 
     Notes
     -----
@@ -115,7 +118,10 @@ def outliers_grubbs(x, hypo = False, alpha = 0.05):
     ind = np.argmax(np.abs(arr - np.mean(arr)))
     G = val / np.std(arr, ddof=1)
     N = len(arr)
-    result = G > (N - 1)/np.sqrt(N) * np.sqrt((t.ppf(1-alpha/(2*N), N-2) ** 2) / (N - 2 + t.ppf(1-alpha/(2*N), N-2) ** 2))
+    result = G > (N-1) / np.sqrt(N) *\
+        np.sqrt(
+            (t.ppf(1-alpha/(2*N), N-2) ** 2) /
+            (N - 2 + t.ppf(1-alpha/(2*N), N-2) ** 2))
 
     if hypo:
         return result
@@ -125,10 +131,13 @@ def outliers_grubbs(x, hypo = False, alpha = 0.05):
         else:
             return arr
 
-def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
-    """
-    Tietjen-Moore test [1]_ to detect multiple outliers in a univariate
+def outliers_tietjen(
+        x: Union[List, np.ndarray],
+        k: int,
+        hypo: bool = False,
+        alpha: float = 0.05) -> Union[np.ndarray, bool]:
+    """Tietjen-Moore test [1]_ to detect multiple outliers in a univariate
     data set that follows an approximately normal distribution.
     The Tietjen-Moore test [2]_ is a generalization of the Grubbs' test to
     the case of multiple outliers. If testing for a single outlier,
@@ -138,7 +147,7 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
     Parameters
     ----------
-    x : array_like or np.ndarray, 1d
+    x : Union[List, np.ndarray]
         An array, any object exposing the array interface, containing
         data to test for an outlier in.
 
@@ -146,14 +155,14 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
         Number of potential outliers to test for. Function tests for
         outliers in both tails.
 
-    hypo : bool, optional
+    hypo : bool
         Specifies whether to return a bool value of a hypothesis test result.
         Returns True when we can reject the null hypothesis. Otherwise, False.
         Available options are:
         1) True - return a hypothesis test result
         2) False - return a filtered array without outliers (default)
 
-    alpha : float, optional
+    alpha : float
         Significance level for a hypothesis test. Default is 0.05.
 
     Returns
@@ -162,7 +171,7 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
         Filtered array if alternative hypo is True, otherwise an unfiltered
         array.
 
-    hypo : bool, optional
+    hypo : bool
         Null hypothesis test result.
 
     Notes
@@ -183,6 +192,7 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
 
     arr = np.copy(x)
     n = arr.size
+
     def tietjen(x_, k_):
         x_mean = x_.mean()
         r = np.abs(x_ - x_mean)
@@ -209,30 +219,33 @@ def outliers_tietjen(x, k, hypo = False, alpha = 0.05):
         else:
             return arr
 
-def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
 
-    """
-    The generalized (Extreme Studentized Deviate) ESD test is used
+def outliers_gesd(
+        x: Union[List, np.ndarray],
+        outliers: int = 5,
+        report: bool = False,
+        alpha: float = 0.05) -> Union[np.ndarray, str]:
+    """The generalized (Extreme Studentized Deviate) ESD test is used
     to detect one or more outliers in a univariate data set that follows
     an approximately normal distribution [1]_.
 
     Parameters
     ----------
-    x : array_like or np.ndarray, 1d
+    x : Union[List, np.ndarray]
         An array, any object exposing the array interface, containing
         data to test for outliers.
 
-    outliers : int, optional
+    outliers : int
         Number of potential outliers to test for. Test is two-tailed, i.e.
         maximum and minimum values are checked for potential outliers.
 
-    report : bool, optional
+    report : bool
         Specifies whether to return a summary table of the test.
         Available options are:
         1) True - return a summary table
         2) False - return the array with outliers removed. (default)
 
-    alpha : float, optional
+    alpha : float
         Significance level for a hypothesis test. Default is 0.05.
 
     Returns
@@ -240,8 +253,8 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
     result : np.ndarray
         Filtered array if alternative hypo is True, otherwise an unfiltered
         (input) array.
-    
-    report : str, optional
+
+    report : str
         If `report` argument is True, test report is returned instead of
         the result.
 
@@ -284,10 +297,9 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
               3          3.179        3.144 *
               4           2.81        3.136
               5          2.816        3.128
-
     """
 
-    rs, ls = np.zeros(outliers, dtype = float), np.zeros(outliers, dtype = float)
+    rs, ls = np.zeros(outliers, dtype=float), np.zeros(outliers, dtype=float)
     ms = []
 
     data_proc = np.copy(x)
@@ -304,13 +316,15 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
 
         # Masked values
         lms = ms[-1] if len(ms) > 0 else []
-        ms.append(lms + np.where(data == data_proc[np.argmax(abs_d)])[0].tolist())
+        ms.append(
+            lms + np.where(data == data_proc[np.argmax(abs_d)])[0].tolist())
 
         # Lambdas calculation
         p = 1 - alpha / (2 * (n - i))
         df = n - i - 2
         t_ppr = t.ppf(p, df)
-        lambd = ((n - i - 1) * t_ppr) / np.sqrt((n - i - 2 + t_ppr**2) * (n - i))
+        lambd = ((n - i - 1) * t_ppr) /\
+            np.sqrt((n - i - 2 + t_ppr**2) * (n - i))
         ls[i] = lambd
 
         # Remove the observation that maximizes |xi − xmean|
@@ -330,9 +344,10 @@ def outliers_gesd(x, outliers = 5, report = False, alpha=0.05):
                   "---------------------------------------"]
 
         for i, (r, l) in enumerate(zip(rs, ls)):
-            report.append('{: >11s}'.format(str(i+1)) + \
-                          '{: >15s}'.format(str(np.round(r, 3))) + \
-                          '{: >13s}'.format(str(np.round(l, 3))) + (" *" if r > l else ""))
+            report.append('{: >11s}'.format(str(i+1)) +
+                          '{: >15s}'.format(str(np.round(r, 3))) +
+                          '{: >13s}'.format(str(np.round(l, 3))) +
+                          (" *" if r > l else ""))
 
         return "\n".join(report)
 
