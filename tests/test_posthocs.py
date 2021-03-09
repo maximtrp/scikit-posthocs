@@ -6,6 +6,7 @@ import scikit_posthocs._posthocs as sp
 import scikit_posthocs._omnibus as som
 import scikit_posthocs._outliers as so
 import scikit_posthocs._plotting as splt
+import scikit_posthocs._global as spg
 import seaborn as sb
 import numpy as np
 import matplotlib.axes as ma
@@ -17,6 +18,17 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 class TestPosthocs(unittest.TestCase):
+
+    # Global tests
+    def test_global_simes_test(self):
+        a = np.array([0.9, 0.1, 0.01, 0.99, 1., 0.02, 0.04])
+        result = spg.global_simes_test(a)
+        self.assertAlmostEqual(result, 0.07)
+
+    def test_global_f_test(self):
+        a = np.array([0.9, 0.1, 0.01, 0.99, 1., 0.02, 0.04])
+        result, _ = spg.global_f_test(a)
+        self.assertAlmostEqual(result, 0.01294562)
 
     # Plotting tests
     def test_sign_array(self):
