@@ -216,9 +216,7 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
         return p_value
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-
-    if sort:
-        x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
     n = len(x.index)
     x_groups_unique = x[_group_col].unique()
@@ -322,7 +320,6 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_dunn(x, p_adjust = 'holm')
     '''
-
     def compare_dunn(i, j):
         diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
         A = n * (n + 1.) / 12.
@@ -332,8 +329,7 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
         return p_value
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-    if sort:
-        x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
     n = len(x.index)
     x_groups_unique = x[_group_col].unique()
@@ -431,9 +427,7 @@ def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
         return q
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-
-    if sort:
-        x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
     n = len(x.index)
     x_groups_unique = x[_group_col].unique()
@@ -556,9 +550,7 @@ def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melt
         return qval
 
     x, _y_col, _group_col, _block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
-
-    if sort:
-        x.sort_values(by=[_group_col, _block_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[_group_col].unique()
@@ -683,9 +675,7 @@ def posthoc_conover_friedman(a, y_col=None, block_col=None, group_col=None, melt
         return pval
 
     x, _y_col, _group_col, _block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
-
-    if sort:
-        x.sort_values(by=[_group_col, _block_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[_group_col].unique()
@@ -789,9 +779,7 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-
-    if sort:
-        x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
     x['ranks'] = x[_val_col].rank()
@@ -906,9 +894,7 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
         return zval
 
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
-
-    if sort:
-        x.sort_values(by=[group_col, block_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[group_col, block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[group_col].unique()
@@ -1012,9 +998,7 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
         return qval
 
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
-
-    if sort:
-        x.sort_values(by=[group_col, block_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[group_col, block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[group_col].unique()
@@ -1120,8 +1104,7 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
         pval = 2. * ss.t.sf(np.abs(tval), df=df)
         return pval
 
-    if sort:
-        x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[block_col, group_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[group_col].unique()
@@ -1215,9 +1198,7 @@ def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, 
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-
-    if sort:
-        x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
     k = groups.size
@@ -1336,8 +1317,7 @@ def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melte
 
     x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
 
-    if sort:
-        x.sort_values(by=[block_col, group_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[block_col, group_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[group_col].unique()
@@ -1453,9 +1433,7 @@ def posthoc_vanwaerden(a, val_col=None, group_col=None, sort=False, p_adjust=Non
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-
-    if sort:
-        x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
     n = x[_val_col].size
@@ -1565,10 +1543,8 @@ def posthoc_ttest(a, val_col=None, group_col=None, pool_sd=False, equal_var=True
            [ 0.04600899, -1.        ,  0.6327077 ],
            [ 0.31269089,  0.6327077 , -1.        ]])
     '''
-
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-    if sort:
-        x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
     k = groups.size
@@ -1641,7 +1617,6 @@ def posthoc_tukey_hsd(x, g, alpha=0.05):
     >>> g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
     >>> sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
     '''
-
     result = pairwise_tukeyhsd(x, g, alpha=0.05)
     groups = np.array(result.groupsunique, dtype=str)
     groups_len = len(groups)
@@ -1725,9 +1700,7 @@ def posthoc_mannwhitney(a, val_col=None, group_col=None, use_continuity=True, al
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-
-    if sort:
-        x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
     x_len = groups.size
@@ -1821,9 +1794,7 @@ def posthoc_wilcoxon(a, val_col=None, group_col=None, zero_method='wilcox', corr
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-
-    if sort:
-        x.sort_values(by=[_group_col, _val_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
     x_len = groups.size
@@ -1905,8 +1876,7 @@ def posthoc_scheffe(a, val_col=None, group_col=None, sort=False, p_adjust=None):
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-    if sort:
-        x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
     x_grouped = x.groupby(_group_col)[_val_col]
@@ -1995,9 +1965,7 @@ def posthoc_tamhane(a, val_col=None, group_col=None, welch=True, sort=False):
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-
-    if sort:
-        x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
     x_grouped = x.groupby(_group_col)[_val_col]
@@ -2100,9 +2068,7 @@ def posthoc_tukey(a, val_col: str = None,
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-
-    if sort:
-        x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     groups = x[_group_col].unique()
     x_grouped = x.groupby(_group_col)[_val_col]
 
@@ -2192,9 +2158,7 @@ def posthoc_dscf(a, val_col=None, group_col=None, sort=False):
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-
-    if sort:
-        x.sort_values(by=[_group_col], ascending=True, inplace=True)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     groups = x[_group_col].unique()
     x_grouped = x.groupby(_group_col)[_val_col]
     n = x_grouped.count()

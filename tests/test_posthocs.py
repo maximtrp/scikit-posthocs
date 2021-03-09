@@ -135,8 +135,10 @@ class TestPosthocs(unittest.TestCase):
             2.24, 2.26, 2.35, 2.37, 2.4, 2.47, 2.54, 2.62, 2.64, 2.9, 2.92,
             2.92, 2.93, 3.21, 3.26, 3.3, 3.59, 3.68, 4.3, 4.64, 5.34, 5.42,
             6.01])
-
+        correct_mask = np.zeros_like(x, dtype=bool)
+        correct_mask[-3:] = True
         test_results = so.outliers_gesd(x, 5)
+        test_mask_results = so.outliers_gesd(x, 5, hypo=True)
         correct_results = np.array([-0.25, 0.68, 0.94, 1.15, 1.2, 1.26,
             1.26,  1.34,  1.38,  1.43,  1.49,  1.49,  1.55,  1.56,  1.58,
             1.65,  1.69,  1.7 ,  1.76,  1.77,  1.81,  1.91,  1.94,  1.96,
@@ -145,6 +147,7 @@ class TestPosthocs(unittest.TestCase):
             2.92,  2.93,  3.21,  3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
         self.assertTrue(isinstance(so.outliers_gesd(x, 5, report=True), str))
         self.assertTrue(np.all(test_results == correct_results))
+        self.assertTrue(np.all(test_mask_results == correct_mask))
 
 
     # Statistical tests
