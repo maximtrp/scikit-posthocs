@@ -1,9 +1,7 @@
+Global Tests API reference
+--------------------------
 
 .. currentmodule:: scikit_posthocs
-
-Global Tests API reference
-==========================
-
 .. autosummary::
     :toctree: generated
 

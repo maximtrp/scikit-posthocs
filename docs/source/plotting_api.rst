@@ -1,9 +1,7 @@
+Plotting API reference
+----------------------
 
 .. currentmodule:: scikit_posthocs
-
-Plotting API reference
-======================
-
 .. autosummary::
     :toctree: generated
 

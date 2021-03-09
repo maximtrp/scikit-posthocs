@@ -1,9 +1,7 @@
+Outliers API reference
+----------------------
 
 .. currentmodule:: scikit_posthocs
-
-Outliers API reference
-======================
-
 .. autosummary::
     :toctree: generated
 
