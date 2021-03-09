@@ -64,9 +64,11 @@ Features
 .. image:: images/flowchart.png
   :alt: Tests Flowchart
 
-- *Omnibox* tests:
+- *Omnibus* tests:
 
-  - Durbin test (for BIBD).
+  - Durbin test (for balanced incomplete block design).
+  - Mack-Wolfe test.
+  - Hayter (OSRT) test.
 
 - *Parametric* pairwise multiple comparisons tests:
 
@@ -95,18 +97,21 @@ Features
   - Quade test.
   - Siegel test.
 
-- Other tests:
-
-  - Anderson-Darling test.
-  - Mack-Wolfe test.
-  - Hayter (OSRT) test.
-
 - Outliers detection tests:
 
   - Simple test based on interquartile range (IQR).
   - Grubbs test.
   - Tietjen-Moore test.
   - Generalized Extreme Studentized Deviate test (ESD test).
+
+- Other tests:
+
+  - Anderson-Darling test.
+
+- Global null hypothesis tests:
+  
+  - Fisher's combination test.
+  - Simes test.
 
 - Plotting functionality (e.g. significance plots).
 
@@ -134,7 +139,7 @@ You can install the package from PyPi:
 
 .. code:: bash
 
-  $ pip install scikit-posthocs
+  pip install scikit-posthocs
 
 
 Examples

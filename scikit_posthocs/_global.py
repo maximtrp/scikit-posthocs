@@ -6,11 +6,11 @@ from typing import Union, List, Tuple
 def global_simes_test(x: Union[List, ndarray]) -> float:
     '''Global Simes test of the intersection null hypothesis. Computes
     the combined p value as min(np(i)/i), where p(1), ..., p(n)
-    are the ordered p values.
+    are the ordered p values [1]_.
 
     Parameters
     ----------
-    x : array_like
+    x : Union[List, ndarray]
         An array of p values.
 
     Returns
@@ -39,12 +39,12 @@ def global_f_test(x: Union[List, ndarray],
                   stat: bool = False) -> Tuple[float, float]:
     '''Fisher's combination test for global null hypothesis. Computes
     the combined p value using chi-squared distribution and
-    T statistic: -2 * sum(log(x)).
+    T statistic: -2 * sum(log(x)) [1]_.
 
     Parameters
     ----------
-    x : array_like
-        An array of p values.
+    x : Union[List, ndarray]
+        An array or a list of p values.
     stat : bool
         Defines if statistic should be returned.
 

@@ -19,11 +19,11 @@ def sign_array(
 
     Parameters
     ----------
-    p_values : array_like or ndarray
-        An array, any object exposing the array interface, containing
+    p_values : Union[List, np.ndarray]
+        Any object exposing the array interface and containing
         p values.
 
-    alpha : float, optional
+    alpha : float = 0.05
         Significance level. Default is 0.05.
 
     Returns
@@ -42,7 +42,6 @@ def sign_array(
     array([[1, 1, 1],
            [1, 1, 0],
            [1, 0, 1]])
-
     """
 
     p_values = np.array(p_values)
@@ -56,16 +55,15 @@ def sign_table(
         p_values: Union[List, np.ndarray, DataFrame],
         lower: bool = True,
         upper: bool = True) -> Union[DataFrame, np.ndarray]:
-    """
-    Significance table
+    """Significance table.
 
     Returns table that can be used in a publication. P values are replaced
-    with asterisks: * - p < 0.05, ** - p < 0.01, *** - p < 0.001.
+    with asterisks: \\* - p < 0.05, \\*\\* - p < 0.01, \\*\\*\\* - p < 0.001.
 
     Parameters
     ----------
-    p_values : array_like, or numpy.ndarray, or pandas.DataFrame
-        An array, any object exposing the array interface, containing
+    p_values : Union[List, np.ndarray, DataFrame]
+        Any object exposing the array interface and containing
         p values.
 
     lower : bool
@@ -76,7 +74,7 @@ def sign_table(
 
     Returns
     -------
-    result : numpy.ndarray or pandas.DataFrame
+    result : Union[DataFrame, np.ndarray]
         P values masked with asterisks.
 
     Examples

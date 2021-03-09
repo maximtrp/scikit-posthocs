@@ -20,29 +20,28 @@ def outliers_iqr(
         An array, any object exposing the array interface, containing
         p values.
 
-    ret : str
+    ret : str = 'filtered'
         Specifies object to be returned. Available options are:
-        'filtered' : return a filtered array (default)
-        'outliers' : return outliers
-        'indices' : return indices of non-outliers
-        'outliers_indices' : return indices of outliers
 
-    coef : float
-        Coefficient by which IQR is multiplied. Default is 1.5.
+        - ``filtered``: return a filtered array (default)
+        - ``outliers``: return outliers
+        - ``indices``: return indices of non-outliers
+        - ``outliers_indices``: return indices of outliers
+
+    coef : float = 1.5
+        Coefficient by which IQR is multiplied.
 
     Returns
     -------
-    filtered : np.ndarray
-        Filtered array (default).
+    np.ndarray
+        One of the following objects:
 
-    indices : np.ndarray
-        Array with indices of elements lying within the specified limits.
-
-    outliers : np.ndarray
-        Array with outliers.
-
-    outliers_indices : np.ndarray
-        Array with indices of outlier elements.
+        - Filtered array (default) if ``ret`` is set to ``filtered``.
+        - Array with indices of elements lying within the specified limits
+          if ``ret`` is set to ``indices``.
+        - Array with outliers if ``ret`` is set to ``outliers``.
+        - Array with indices of outlier elements
+          if ``ret`` is set to ``outliers_indices``.
 
     Examples
     --------
@@ -50,7 +49,6 @@ def outliers_iqr(
     >>> outliers_iqr(x, ret = 'outliers')
     array([12, 23])
     """
-
     arr = np.copy(x)
 
     q1, q3 = np.percentile(arr, [25, 75])
@@ -78,28 +76,27 @@ def outliers_grubbs(
 
     Parameters
     ----------
-    x : array_like or ndarray, 1d
+    x : Union[List, np.ndarray]
         An array, any object exposing the array interface, containing
         data to test for an outlier in.
 
-    hypo : bool, optional
+    hypo : bool = False
         Specifies whether to return a bool value of a hypothesis test result.
-        Returns True when we can reject the null hypothesis. Otherwise, False.
-        Available options are:
-        1) True - return a hypothesis test result
-        2) False - return a filtered array without an outlier (default)
+        Returns ``True`` when we can reject the null hypothesis.
+        Otherwise, ``False``. Available options are:
 
-    alpha : float, optional
-        Significance level for a hypothesis test. Default is 0.05.
+        - ``True``: return a hypothesis test result
+        - ``False``: return a filtered array without an outlier (default)
+
+    alpha : float = 0.05
+        Significance level for a hypothesis test.
 
     Returns
     -------
-    arr : np.ndarray
-        Filtered array if alternative hypo is True, otherwise an unfiltered
-        array.
-
-    hypo : bool
-        Null hypothesis test result. Returned if repr(hypo) is set to True.
+    Union[np.ndarray, bool]
+        Returns a filtered array if alternative hypothesis is true, otherwise
+        an unfiltered array. Returns null hypothesis test result instead of an
+        array if ``hypo`` argument is set to ``True``.
 
     Notes
     -----
@@ -107,12 +104,10 @@ def outliers_grubbs(
 
     Examples
     --------
-
     >>> x = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18,245.57])
     >>> ph.outliers_grubbs(x)
     array([ 199.31,  199.53,  200.19,  200.82,  201.92,  201.95,  202.18])
     """
-
     arr = np.copy(x)
     val = np.max(np.abs(arr - np.mean(arr)))
     ind = np.argmax(np.abs(arr - np.mean(arr)))
@@ -155,24 +150,23 @@ def outliers_tietjen(
         Number of potential outliers to test for. Function tests for
         outliers in both tails.
 
-    hypo : bool
+    hypo : bool = False
         Specifies whether to return a bool value of a hypothesis test result.
-        Returns True when we can reject the null hypothesis. Otherwise, False.
-        Available options are:
-        1) True - return a hypothesis test result
-        2) False - return a filtered array without outliers (default)
+        Returns ``True`` when we can reject the null hypothesis.
+        Otherwise, ``False``. Available options are:
 
-    alpha : float
-        Significance level for a hypothesis test. Default is 0.05.
+        - ``True``: return a hypothesis test result
+        - ``False``: return a filtered array without outliers (default).
+
+    alpha : float = 0.05
+        Significance level for a hypothesis test.
 
     Returns
     -------
-    arr : np.ndarray
-        Filtered array if alternative hypo is True, otherwise an unfiltered
-        array.
-
-    hypo : bool
-        Null hypothesis test result.
+    Union[np.ndarray, bool]
+        Returns a filtered array if alternative hypothesis is true, otherwise
+        an unfiltered array. Returns null hypothesis test result instead of an
+        array if ``hypo`` argument is set to True.
 
     Notes
     -----
@@ -187,9 +181,7 @@ def outliers_tietjen(
     >>> outliers_tietjen(x, 2)
     array([-0.44, -0.3 , -0.24, -0.22, -0.13, -0.05,  0.06,  0.1 ,  0.18,
     0.2 ,  0.39,  0.48,  0.63])
-
     """
-
     arr = np.copy(x)
     n = arr.size
 
@@ -236,35 +228,32 @@ def outliers_gesd(
         An array, any object exposing the array interface, containing
         data to test for outliers.
 
-    outliers : int
+    outliers : int = 5
         Number of potential outliers to test for. Test is two-tailed, i.e.
         maximum and minimum values are checked for potential outliers.
 
-    hypo : bool, optional
+    hypo : bool = False
         Specifies whether to return a bool value of a hypothesis test result.
         Returns True when we can reject the null hypothesis. Otherwise, False.
         Available options are:
-        1) True - return a hypothesis test result
-        2) False - return a filtered array without an outlier (default)
+        1) True - return a hypothesis test result.
+        2) False - return a filtered array without an outlier (default).
 
-    report : bool, optional
+    report : bool = False
         Specifies whether to return a summary table of the test.
         Available options are:
-        1) True - return a summary table
-        2) False - return the array with outliers removed. (default)
+        1) True - return a summary table.
+        2) False - return the array with outliers removed (default).
 
-    alpha : float
-        Significance level for a hypothesis test. Default is 0.05.
+    alpha : float = 0.05
+        Significance level for a hypothesis test.
 
     Returns
     -------
-    result : np.ndarray
-        Filtered array if alternative hypo is True, otherwise an unfiltered
-        (input) array.
-
-    report : str
-        If `report` argument is True, test report is returned instead of
-        the result.
+    Union[np.ndarray, str]
+        Returns the filtered array if alternative hypo is True, otherwise an
+        unfiltered (input) array. If ``report`` argument is True,
+        test report is returned instead of the result.
 
     Notes
     -----
@@ -279,7 +268,6 @@ def outliers_gesd(
         2.23, 2.24, 2.26, 2.35, 2.37, 2.4, 2.47, 2.54, 2.62, 2.64, 2.9,
         2.92, 2.92, 2.93, 3.21, 3.26, 3.3, 3.59, 3.68, 4.3, 4.64, 5.34,
         5.42, 6.01])
-
     >>> outliers_gesd(data, 5)
     array([-0.25,  0.68,  0.94,  1.15,  1.2 ,  1.26,  1.26,  1.34,  1.38,
             1.43,  1.49,  1.49,  1.55,  1.56,  1.58,  1.65,  1.69,  1.7 ,
@@ -287,13 +275,11 @@ def outliers_gesd(
             2.1 ,  2.14,  2.15,  2.23,  2.24,  2.26,  2.35,  2.37,  2.4 ,
             2.47,  2.54,  2.62,  2.64,  2.9 ,  2.92,  2.92,  2.93,  3.21,
             3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
-
     >>> outliers_gesd(data, outliers = 5, report = True)
     H0: no outliers in the data
     Ha: up to 5 outliers in the data
     Significance level:  α = 0.05
     Reject H0 if Ri > Critical Value (λi)
-
     Summary Table for Two-Tailed Test
     ---------------------------------------
           Exact           Test     Critical
@@ -306,7 +292,6 @@ def outliers_gesd(
               4           2.81        3.136
               5          2.816        3.128
     """
-
     rs, ls = np.zeros(outliers, dtype=float), np.zeros(outliers, dtype=float)
     ms = []
 
@@ -371,7 +356,7 @@ def outliers_gesd(
                 data[ms[np.max(np.where(rs > ls))]] = True
                 # rearrange data so mask is in same order as incoming data
                 data = np.vstack((data, np.arange(0, data.shape[0])[argsort_index]))
-                data = data[0, data.argsort()[1,]]
+                data = data[0, data.argsort()[1, ]]
                 data = data.astype('bool')
             else:
                 data = np.delete(data, ms[np.max(np.where(rs > ls))])

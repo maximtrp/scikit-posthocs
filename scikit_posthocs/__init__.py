@@ -1,7 +1,7 @@
-__version__ = '0.6.6'
+__version__ = '0.7.0'
 
 from scikit_posthocs._global import global_simes_test, global_f_test  # noqa
-from scikit_posthocs._omnibox import test_osrt, test_durbin, test_mackwolfe  # noqa
+from scikit_posthocs._omnibus import test_osrt, test_durbin, test_mackwolfe  # noqa
 
 from scikit_posthocs._posthocs \
 import posthoc_anderson, posthoc_conover, posthoc_conover_friedman,\

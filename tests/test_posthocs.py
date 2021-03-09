@@ -3,7 +3,7 @@ import sys
 import unittest
 import matplotlib as mpl
 import scikit_posthocs._posthocs as sp
-import scikit_posthocs._omnibox as som
+import scikit_posthocs._omnibus as som
 import scikit_posthocs._outliers as so
 import scikit_posthocs._plotting as splt
 import seaborn as sb
@@ -173,7 +173,7 @@ class TestPosthocs(unittest.TestCase):
     # Omnibox tests
     def test_osrt(self):
         df = DataFrame(dict(zip(['a', 'b', 'c'], self.df_bn.tolist()))).melt()
-        p,_ = som.test_osrt(df, val_col='value', group_col='variable')
+        p,_,_ = som.test_osrt(df, val_col='value', group_col='variable')
         result = 0.3157646
         self.assertTrue(np.allclose(p, result, atol=1.e-3))
 

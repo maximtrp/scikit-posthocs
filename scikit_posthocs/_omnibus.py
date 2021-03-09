@@ -9,9 +9,13 @@ from pandas import DataFrame, Categorical, Series
 from scikit_posthocs._posthocs import __convert_to_df, __convert_to_block_df
 
 
-def test_mackwolfe(a: Union[List, np.ndarray, DataFrame], val_col: str = None,
-                   group_col: str = None, p: int = None, n_perm: int = 100,
-                   sort: bool = False) -> Tuple[float, float]:
+def test_mackwolfe(
+        a: Union[List, np.ndarray, DataFrame],
+        val_col: str = None,
+        group_col: str = None,
+        p: int = None,
+        n_perm: int = 100,
+        sort: bool = False) -> Tuple[float, float]:
 
     '''Mack-Wolfe Test for Umbrella Alternatives.
 
@@ -26,34 +30,35 @@ def test_mackwolfe(a: Union[List, np.ndarray, DataFrame], val_col: str = None,
 
     Parameters
     ----------
-    a : array_like or pandas DataFrame object
+    a : Union[List, np.ndarray, DataFrame]
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str, optional
+    val_col : str = None
         Name of a DataFrame column that contains dependent variable values
         (test or response variable). Values should have a non-nominal scale.
-        Must be specified if `a` is a pandas DataFrame object.
+        Must be specified if ``a`` is a pandas DataFrame object.
 
-    group_col : str, optional
+    group_col : str = None
         Name of a DataFrame column that contains independent variable values
         (grouping or predictor variable). Values should have a nominal scale
-        (categorical). Must be specified if `a` is a pandas DataFrame object.
+        (categorical). Must be specified if ``a`` is a pandas DataFrame object.
 
-    p : int, optional
-        The a-priori known peak as an ordinal number of the treatment group
+    p : int = None
+        The a priori known peak as an ordinal number of the treatment group
         including the zero dose level, i.e. p = {0, ..., k-1}.
         Defaults to None.
 
-    sort : bool, optional
-        If True, sort data by block and group columns.
+    n_perm: int = 100
+        Permutations number.
+
+    sort : bool = False
+        If ``True``, sort data by block and group columns.
 
     Returns
     -------
-    p : float
-        P value.
-    stat : float
-        Statistic.
+    Tuple[float, float]
+        P value and statistic.
 
     References
     ----------
@@ -66,7 +71,6 @@ def test_mackwolfe(a: Union[List, np.ndarray, DataFrame], val_col: str = None,
     --------
     >>> x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
     >>> sp.posthoc_mackwolfe(x)
-
     '''
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -168,33 +172,38 @@ def test_mackwolfe(a: Union[List, np.ndarray, DataFrame], val_col: str = None,
     return p_value, stat
 
 
-def test_osrt(a, val_col: str = None, group_col: str = None, sort: bool = False):
+def test_osrt(
+        a: Union[List, np.ndarray, DataFrame],
+        val_col: str = None,
+        group_col: str = None,
+        sort: bool = False):
 
     '''Hayter's one-sided studentised range test (OSRT) against an ordered
     alternative for normal data with equal variances [1]_.
 
     Parameters
     ----------
-    a : array_like or pandas DataFrame object
+    a : Union[List, np.ndarray, DataFrame]
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-    val_col : str, optional
-        Name of a DataFrame column that contains dependent variable values (test
-        or response variable). Values should have a non-nominal scale. Must be
-        specified if `a` is a pandas DataFrame object.
+    val_col : str = None
+        Name of a DataFrame column that contains dependent variable values
+        (test or response variable). Values should have a non-nominal scale.
+        Must be specified if ``a`` is a pandas DataFrame object.
 
-    group_col : str, optional
+    group_col : str = None
         Name of a DataFrame column that contains independent variable values
         (grouping or predictor variable). Values should have a nominal scale
         (categorical). Must be specified if `a` is a pandas DataFrame object.
 
-    sort : bool, optional
+    sort : bool = False
         If True, sort data by block and group columns.
 
     Returns
     -------
-    P value, statistic.
+    Tuple[float, float, float]
+        P value, statistic, and number of degrees of freedom.
 
     Notes
     -----
@@ -213,9 +222,7 @@ def test_osrt(a, val_col: str = None, group_col: str = None, sort: bool = False)
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.test_osrt(x, val_col='values', group_col='groups')
-
     '''
-
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
 
     if not sort:
@@ -255,10 +262,16 @@ def test_osrt(a, val_col: str = None, group_col: str = None, sort: bool = False)
 
     stat = np.max(vs)
     pval = psturng(stat, k, df)
-    return pval, stat
+    return pval, stat, df
 
 
-def test_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, sort=True):
+def test_durbin(
+        a: Union[List, np.ndarray, DataFrame],
+        y_col: Union[str, int] = None,
+        block_col: Union[str, int] = None,
+        group_col: Union[str, int] = None,
+        melted: bool = False,
+        sort: bool = True):
 
     '''Durbin's test whether k groups (or treatments) in a two-way
     balanced incomplete block design (BIBD) have identical effects. See
@@ -270,40 +283,40 @@ def test_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, sor
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
-        If `melted` is set to False (default), `a` is a typical matrix of block design,
-        i.e. rows are blocks, and columns are groups. In this case you do
-        not need to specify col arguments.
+        If ``melted`` argument is set to False (default), ``a`` is a typical
+        matrix of block design, i.e. rows are blocks, and columns are groups.
+        In this case you do not need to specify col arguments.
 
-        If `a` is an array and `melted` is set to True,
+        If ``a`` is an array and ``melted`` is set to True,
         y_col, block_col and group_col must specify the indices of columns
         containing elements of correspondary type.
 
-        If `a` is a Pandas DataFrame and `melted` is set to True,
+        If ``a`` is a Pandas DataFrame and ``melted`` is set to True,
         y_col, block_col and group_col must specify columns names (string).
 
-    y_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
+    y_col : Union[str, int] = None
+        Must be specified if ``a`` is a pandas DataFrame object.
         Name of the column that contains y data.
 
-    block_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
+    block_col : Union[str, int] = None
+        Must be specified if ``a`` is a pandas DataFrame object.
         Name of the column that contains block names.
 
-    group_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
+    group_col : Union[str, int] = None
+        Must be specified if ``a`` is a pandas DataFrame object.
         Name of the column that contains group names.
 
-    melted : bool, optional
+    melted : bool = False
         Specifies if data are given as melted columns "y", "blocks", and
         "groups".
 
-    sort : bool, optional
+    sort : bool = False
         If True, sort data by block and group columns.
 
     Returns
     -------
-    pval : float
-
+    Tuple[float, float, float]
+        P value, statistic, and number of degrees of freedom.
 
     References
     ----------
@@ -317,9 +330,7 @@ def test_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, sor
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.test_durbin(x)
-
     '''
-
     if melted and not all([block_col, group_col, y_col]):
         raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
 
