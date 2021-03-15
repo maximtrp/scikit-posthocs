@@ -30,7 +30,7 @@ def test_mackwolfe(
 
     Parameters
     ----------
-    a : Union[List, np.ndarray, DataFrame]
+    a : Union[List, numpy.ndarray, DataFrame]
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
@@ -183,7 +183,7 @@ def test_osrt(
 
     Parameters
     ----------
-    a : Union[List, np.ndarray, DataFrame]
+    a : Union[List, numpy.ndarray, DataFrame]
         An array, any object exposing the array interface or a pandas
         DataFrame.
 
@@ -279,7 +279,7 @@ def test_durbin(
 
     Parameters
     ----------
-    a : array_like or pandas DataFrame object
+    a : Union[List, np.ndarray, DataFrame]
         An array, any object exposing the array interface or a pandas
         DataFrame.
 

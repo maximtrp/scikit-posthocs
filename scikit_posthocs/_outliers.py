@@ -33,7 +33,7 @@ def outliers_iqr(
 
     Returns
     -------
-    np.ndarray
+    numpy.ndarray
         One of the following objects:
 
         - Filtered array (default) if ``ret`` is set to ``filtered``.
@@ -163,7 +163,7 @@ def outliers_tietjen(
 
     Returns
     -------
-    Union[np.ndarray, bool]
+    Union[numpy.ndarray, bool]
         Returns a filtered array if alternative hypothesis is true, otherwise
         an unfiltered array. Returns null hypothesis test result instead of an
         array if ``hypo`` argument is set to True.
