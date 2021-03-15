@@ -1,4 +1,4 @@
-__version__ = '0.7.0'
+__version__ = '0.6.7'
 
 from scikit_posthocs._global import global_simes_test, global_f_test  # noqa
 from scikit_posthocs._omnibus import test_osrt, test_durbin, test_mackwolfe  # noqa
