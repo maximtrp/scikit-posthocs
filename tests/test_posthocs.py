@@ -180,10 +180,14 @@ class TestPosthocs(unittest.TestCase):
                        [0, 6, 3],
                        [1, 6, 7],
                        [2, 6, 1]], dtype=float)
+        df_a = DataFrame(a, columns=['blk_col', 'grp_col', 'y_col'])
 
         result = sp.posthoc_nemenyi_friedman(a, y_col=2, group_col=1, block_col=0, melted=True)[0].values
         result2 = sp.posthoc_nemenyi_friedman(self.df_bn)[0].values
+        result3 = sp.posthoc_nemenyi_friedman(df_a, y_col='y_col', group_col='grp_col', block_col='blk_col', melted=True)[0].values
         self.assertTrue(np.allclose(result, result2))
+        self.assertTrue(np.allclose(result, result3))
+        self.assertTrue(np.allclose(result2, result3))
 
     # Omnibox tests
     def test_osrt(self):

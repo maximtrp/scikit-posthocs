@@ -107,7 +107,7 @@ def __convert_to_df(a, val_col: str = 'vals', group_col: str = 'groups',
 
 
 def __convert_to_block_df(a, y_col=None, group_col=None, block_col=None, melted=False):
-
+    # TODO: refactor conversion of block data to DataFrame
     if melted and not all([i is not None for i in [block_col, group_col, y_col]]):
         raise ValueError('`block_col`, `group_col`, `y_col` should be explicitly specified if using melted data')
 
@@ -139,9 +139,10 @@ def __convert_to_block_df(a, y_col=None, group_col=None, block_col=None, melted=
 
         else:
             x.rename(columns={group_col: 'groups', block_col: 'blocks', y_col: 'y'}, inplace=True)
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
+
+    group_col = 'groups'
+    block_col = 'blocks'
+    y_col = 'y'
 
     return x, y_col, group_col, block_col
 
