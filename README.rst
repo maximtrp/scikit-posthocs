@@ -2,6 +2,8 @@
 
 ===============
 
+.. image:: https://img.shields.io/badge/PayPal-donate-blue?logo=paypal
+    :target: https://www.paypal.me/mterpilowski
 .. image:: https://img.shields.io/circleci/build/github/maximtrp/scikit-posthocs
     :target: https://app.circleci.com/pipelines/github/maximtrp/scikit-posthocs
 .. image:: https://img.shields.io/readthedocs/scikit-posthocs.svg
