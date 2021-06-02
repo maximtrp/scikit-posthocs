@@ -7,7 +7,13 @@ The latest version can be installed from PyPi using ``pip``:
 
   pip install scikit-posthocs
 
-You can also use ``pip`` to install the development version from GitHub (not recommended for general users):
+Or from conda-forge repository using ``conda``:
+
+.. code:: sh
+
+  conda install -c conda-forge scikit-posthocs
+
+You can also use ``pip`` to install the development version from GitHub:
 
 .. code:: sh
 
