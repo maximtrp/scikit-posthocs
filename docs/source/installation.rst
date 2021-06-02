@@ -1,15 +1,15 @@
 Installation
 ============
 
-The latest version can be installed from PyPi using ``pip``::
+The latest version can be installed from PyPi using ``pip``:
 
-.. code:: bash
+.. code:: sh 
 
   pip install scikit-posthocs
 
-You can also use ``pip`` to install the development version from GitHub (not recommended for general users)::
+You can also use ``pip`` to install the development version from GitHub (not recommended for general users):
 
-.. code:: bash
+.. code:: sh
 
   pip install git+https://github.com/maximtrp/scikit-posthocs.git
 
