@@ -137,12 +137,17 @@ Package is compatible with only Python 3.
 Install
 -------
 
-You can install the package from PyPi:
+You can install the package using ``pip`` (from PyPi):
 
 .. code:: bash
 
   pip install scikit-posthocs
 
+Or using ``conda`` (from conda-forge repo):
+
+.. code:: bash
+
+  conda install -c conda-forge scikit-posthocs
 
 Examples
 --------
