@@ -1,6 +1,6 @@
+from typing import Union, List
 import numpy as np
 from scipy.stats import t
-from typing import Union, List
 
 
 def outliers_iqr(

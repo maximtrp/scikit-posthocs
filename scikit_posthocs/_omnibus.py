@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-import itertools as it
-import scipy.stats as ss
 from typing import Union, List, Tuple
+import itertools as it
+import numpy as np
+import scipy.stats as ss
 from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame, Categorical, Series
 from scikit_posthocs._posthocs import __convert_to_df, __convert_to_block_df
 
 
 def test_mackwolfe(
-        a: Union[List, np.ndarray, DataFrame],
+        data: Union[List, np.ndarray, DataFrame],
         val_col: str = None,
         group_col: str = None,
         p: int = None,
@@ -30,9 +30,9 @@ def test_mackwolfe(
 
     Parameters
     ----------
-    a : Union[List, numpy.ndarray, DataFrame]
+    data : Union[List, numpy.ndarray, DataFrame]
         An array, any object exposing the array interface or a pandas
-        DataFrame.
+        DataFrame with data values.
 
     val_col : str = None
         Name of a DataFrame column that contains dependent variable values
@@ -72,11 +72,11 @@ def test_mackwolfe(
     >>> x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
     >>> sp.posthoc_mackwolfe(x)
     '''
-
-    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
 
     if not sort:
-        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
+        x[_group_col] = Categorical(
+            x[_group_col], categories=x[_group_col].unique(), ordered=True)
     x.sort_values(by=[_group_col], ascending=True, inplace=True)
 
     k = x[_group_col].unique().size
@@ -173,19 +173,20 @@ def test_mackwolfe(
 
 
 def test_osrt(
-        a: Union[List, np.ndarray, DataFrame],
+        data: Union[List, np.ndarray, DataFrame],
         val_col: str = None,
         group_col: str = None,
         sort: bool = False):
+    '''Hayter's one-sided studentised range test (OSRT)
 
-    '''Hayter's one-sided studentised range test (OSRT) against an ordered
-    alternative for normal data with equal variances [1]_.
+    Tests a hypothesis against an ordered alternative for normal data with
+    equal variances [1]_.
 
     Parameters
     ----------
-    a : Union[List, numpy.ndarray, DataFrame]
+    data : Union[List, numpy.ndarray, DataFrame]
         An array, any object exposing the array interface or a pandas
-        DataFrame.
+        DataFrame with data values.
 
     val_col : str = None
         Name of a DataFrame column that contains dependent variable values
@@ -223,7 +224,7 @@ def test_osrt(
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.test_osrt(x, val_col='values', group_col='groups')
     '''
-    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
 
     if not sort:
         x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
@@ -266,7 +267,7 @@ def test_osrt(
 
 
 def test_durbin(
-        a: Union[List, np.ndarray, DataFrame],
+        data: Union[List, np.ndarray, DataFrame],
         y_col: Union[str, int] = None,
         block_col: Union[str, int] = None,
         group_col: Union[str, int] = None,
@@ -279,9 +280,9 @@ def test_durbin(
 
     Parameters
     ----------
-    a : Union[List, np.ndarray, DataFrame]
+    data : Union[List, np.ndarray, DataFrame]
         An array, any object exposing the array interface or a pandas
-        DataFrame.
+        DataFrame with data values.
 
         If ``melted`` argument is set to False (default), ``a`` is a typical
         matrix of block design, i.e. rows are blocks, and columns are groups.
@@ -334,7 +335,7 @@ def test_durbin(
     if melted and not all([block_col, group_col, y_col]):
         raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
 
-    x, _y_col, _group_col, _block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
+    x, _y_col, _group_col, _block_col = __convert_to_block_df(data, y_col, group_col, block_col, melted)
 
     groups = x[_group_col].unique()
     blocks = x[_block_col].unique()

@@ -1,21 +1,22 @@
+from typing import Union, List, Tuple
 from numpy import array, ndarray, log
 from scipy.stats import rankdata, chi2
-from typing import Union, List, Tuple
 
 
-def global_simes_test(x: Union[List, ndarray]) -> float:
-    '''Global Simes test of the intersection null hypothesis. Computes
-    the combined p value as min(np(i)/i), where p(1), ..., p(n)
-    are the ordered p values [1]_.
+def global_simes_test(p_vals: Union[List, ndarray]) -> float:
+    '''Global Simes test of the intersection null hypothesis.
+
+    Computes the combined p value as min(np(i)/i), where p(1), ..., p(n) are
+    the ordered p values [1]_.
 
     Parameters
     ----------
-    x : Union[List, ndarray]
+    p_vals : Union[List, ndarray]
         An array of p values.
 
     Returns
     -------
-    p : float
+    p_value : float
         Global p value.
 
     References
@@ -25,34 +26,36 @@ def global_simes_test(x: Union[List, ndarray]) -> float:
 
     Examples
     --------
-    >>> x = [0.04, 0.03, 0.98, 0.01, 0.43, 0.99, 1.0, 0.002]
-    >>> sp.global_simes_test(x)
+    >>> arr = [0.04, 0.03, 0.98, 0.01, 0.43, 0.99, 1.0, 0.002]
+    >>> sp.global_simes_test(arr)
     '''
 
-    arr = array(x)
+    arr = array(p_vals)
     ranks = rankdata(arr)
-    p = min(arr.size * arr / ranks)
-    return p
+    p_value = min(arr.size * arr / ranks)
+    return p_value
 
 
-def global_f_test(x: Union[List, ndarray],
-                  stat: bool = False) -> Tuple[float, float]:
-    '''Fisher's combination test for global null hypothesis. Computes
-    the combined p value using chi-squared distribution and
-    T statistic: -2 * sum(log(x)) [1]_.
+def global_f_test(
+        p_vals: Union[List, ndarray],
+        stat: bool = False) -> Union[float, Tuple[float, float]]:
+    '''Fisher's combination test for global null hypothesis.
+
+    Computes the combined p value using chi-squared distribution and T
+    statistic: -2 * sum(log(x)) [1]_.
 
     Parameters
     ----------
-    x : Union[List, ndarray]
+    p_vals : Union[List, ndarray]
         An array or a list of p values.
     stat : bool
         Defines if statistic should be returned.
 
     Returns
     -------
-    p : float
+    p_value : float
         Global p value.
-    T : float
+    t_stat : float
         Statistic.
 
     References
@@ -66,7 +69,7 @@ def global_f_test(x: Union[List, ndarray],
     >>> sp.global_f_test(x)
     '''
 
-    arr = array(x)
-    T = -2 * sum(log(arr))
-    p = chi2.sf(T, df=2 * len(arr))
-    return p, T
+    arr = array(p_vals)
+    t_stat = -2 * sum(log(arr))
+    p_value = chi2.sf(t_stat, df=2 * len(arr))
+    return p_value, t_stat if stat else p_value
