@@ -176,7 +176,7 @@ def test_osrt(
         data: Union[List, np.ndarray, DataFrame],
         val_col: str = None,
         group_col: str = None,
-        sort: bool = False):
+        sort: bool = False) -> Tuple[float, float, int]:
     '''Hayter's one-sided studentised range test (OSRT)
 
     Tests a hypothesis against an ordered alternative for normal data with
@@ -203,7 +203,7 @@ def test_osrt(
 
     Returns
     -------
-    Tuple[float, float, float]
+    Tuple[float, float, int]
         P value, statistic, and number of degrees of freedom.
 
     Notes
@@ -272,7 +272,7 @@ def test_durbin(
         block_col: Union[str, int] = None,
         group_col: Union[str, int] = None,
         melted: bool = False,
-        sort: bool = True):
+        sort: bool = True) -> Tuple[float, float, int]:
 
     '''Durbin's test whether k groups (or treatments) in a two-way
     balanced incomplete block design (BIBD) have identical effects. See
@@ -316,7 +316,7 @@ def test_durbin(
 
     Returns
     -------
-    Tuple[float, float, float]
+    Tuple[float, float, int]
         P value, statistic, and number of degrees of freedom.
 
     References
