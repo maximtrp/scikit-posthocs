@@ -1,5 +1,5 @@
 import itertools as it
-from typing import Union
+from typing import Tuple, Union
 import numpy as np
 import scipy.stats as ss
 from statsmodels.sandbox.stats.multicomp import multipletests
@@ -835,7 +835,14 @@ def posthoc_npm_test(a, val_col=None, group_col=None, sort=False, p_adjust=None)
     return DataFrame(p_values, index=groups, columns=groups)
 
 
-def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False, p_adjust=None):
+def posthoc_siegel_friedman(
+        a,
+        y_col: str = None,
+        block_col: str = None,
+        group_col: str = None,
+        p_adjust: str = None,
+        melted: bool = False,
+        sort: bool = False) -> DataFrame:
     '''Siegel and Castellan's All-Pairs Comparisons Test for Unreplicated Blocked
     Data. See authors' paper for additional information [1]_.
 
@@ -890,7 +897,7 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
 
     Returns
     -------
-    result : pandas DataFrame
+    result : pandas.DataFrame
         P values.
 
     Notes
@@ -946,7 +953,13 @@ def posthoc_siegel_friedman(a, y_col=None, block_col=None, group_col=None, melte
     return DataFrame(vs, index=groups, columns=groups)
 
 
-def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False):
+def posthoc_miller_friedman(
+        a,
+        y_col: str = None,
+        block_col: str = None,
+        group_col: str = None,
+        melted: bool = False,
+        sort: bool = False) -> DataFrame:
     '''Miller's All-Pairs Comparisons Test for Unreplicated Blocked Data.
     The p-values are computed from the chi-square distribution [1]_, [2]_,
     [3]_.
@@ -1046,7 +1059,14 @@ def posthoc_miller_friedman(a, y_col=None, block_col=None, group_col=None, melte
     return DataFrame(vs, index=groups, columns=groups)
 
 
-def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False, p_adjust=None):
+def posthoc_durbin(
+        a,
+        y_col: str = None,
+        block_col: str = None,
+        group_col: str = None,
+        p_adjust: str = None,
+        melted: bool = False,
+        sort: bool = False) -> DataFrame:
     '''Pairwise post hoc test for multiple comparisons of rank sums according to
     Durbin and Conover for a two-way balanced incomplete block design (BIBD). See
     references for additional information [1]_, [2]_.
@@ -1161,7 +1181,13 @@ def posthoc_durbin(a, y_col=None, block_col=None, group_col=None, melted=False, 
     return DataFrame(vs, index=groups, columns=groups)
 
 
-def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, p_adjust=None):
+def posthoc_anderson(
+        a,
+        val_col: str = None,
+        group_col: str = None,
+        midrank: bool = True,
+        p_adjust: str = None,
+        sort: bool = False) -> DataFrame:
     '''Anderson-Darling Pairwise Test for k-samples. Tests the null hypothesis
     that k-samples are drawn from the same population without having to specify
     the distribution function of that population [1]_.
@@ -1242,7 +1268,15 @@ def posthoc_anderson(a, val_col=None, group_col=None, midrank=True, sort=False, 
     return DataFrame(vs, index=groups, columns=groups)
 
 
-def posthoc_quade(a, y_col=None, block_col=None, group_col=None, dist='t', melted=False, sort=False, p_adjust=None):
+def posthoc_quade(
+        a,
+        y_col: str = None,
+        block_col: str = None,
+        group_col: str = None,
+        dist: str = 't',
+        p_adjust: str = None,
+        melted: bool = False,
+        sort: bool = False) -> DataFrame:
     '''Calculate pairwise comparisons using Quade's post hoc test for
     unreplicated blocked data. This test is usually conducted if significant
     results were obtained by the omnibus test [1]_, [2]_, [3]_.
