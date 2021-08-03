@@ -1,22 +1,25 @@
-# -*- coding: utf-8 -*-
-
+import itertools as it
+from typing import Union
 import numpy as np
 import scipy.stats as ss
-import itertools as it
 from statsmodels.sandbox.stats.multicomp import multipletests
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame
 
 
-def __convert_to_df(a, val_col: str = 'vals', group_col: str = 'groups',
-                    val_id: int = None, group_id: int = None) -> DataFrame:
+def __convert_to_df(
+        a: Union[list, np.ndarray, DataFrame],
+        val_col: str = 'vals',
+        group_col: str = 'groups',
+        val_id: int = None,
+        group_id: int = None) -> Tuple[DataFrame, str, str]:
     '''Hidden helper method to create a DataFrame with input data for further
     processing.
 
     Parameters
     ----------
-    a : array_like or pandas DataFrame object
+    a : Union[list, np.ndarray, DataFrame]
         An array, any object exposing array interface or a pandas DataFrame.
         Array must be two-dimensional. Second dimension may vary, i.e. groups
         may have different lengths.
@@ -43,17 +46,14 @@ def __convert_to_df(a, val_col: str = 'vals', group_col: str = 'groups',
 
     Returns
     -------
-    x : pandas DataFrame
-        DataFrame with input data, `val_col` column contains numerical values and
-        `group_col` column contains categorical values.
-
-    val_col : str
-        Name of a DataFrame column that contains dependent variable values (test
-        or response variable).
-
-    group_col : str
-        Name of a DataFrame column that contains independent variable values
-        (grouping or predictor variable).
+    Tuple[DataFrame, str, str]
+        Returns a tuple of DataFrame and two strings:
+        - DataFrame with input data, `val_col` column contains numerical values and
+          `group_col` column contains categorical values.
+        - Name of a DataFrame column that contains dependent variable values (test
+          or response variable).
+        - Name of a DataFrame column that contains independent variable values
+          (grouping or predictor variable).
 
     Notes
     -----
@@ -147,7 +147,12 @@ def __convert_to_block_df(a, y_col=None, group_col=None, block_col=None, melted=
     return x, y_col, group_col, block_col
 
 
-def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
+def posthoc_conover(
+        a,
+        val_col: str = None,
+        group_col: str = None,
+        p_adjust: str = None,
+        sort: bool = True) -> DataFrame:
     '''Post hoc pairwise test for multiple comparisons of mean rank sums
     (Conover's test). May be used after Kruskal-Wallis one-way analysis of
     variance by ranks to do pairwise comparisons [1]_.
@@ -189,7 +194,7 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
 
     Returns
     -------
-    result : pandas DataFrame
+    result : pandas.DataFrame
         P values.
 
     Notes
@@ -260,7 +265,12 @@ def posthoc_conover(a, val_col=None, group_col=None, p_adjust=None, sort=True):
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
 
 
-def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
+def posthoc_dunn(
+        a,
+        val_col: str = None,
+        group_col: str = None,
+        p_adjust: str = None,
+        sort: bool = True) -> DataFrame:
     '''Post hoc pairwise test for multiple comparisons of mean rank sums
     (Dunn's test). May be used after Kruskal-Wallis one-way analysis of
     variance by ranks to do pairwise comparisons [1]_, [2]_.
@@ -302,7 +312,7 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
 
     Returns
     -------
-    result : pandas DataFrame
+    result : pandas.DataFrame
         P values.
 
     Notes
@@ -364,7 +374,12 @@ def posthoc_dunn(a, val_col=None, group_col=None, p_adjust=None, sort=True):
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
 
 
-def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
+def posthoc_nemenyi(
+        a,
+        val_col: str = None,
+        group_col: str = None,
+        dist: str = 'chi',
+        sort: bool = True):
     '''Post hoc pairwise test for multiple comparisons of mean rank sums
     (Nemenyi's test). May be used after Kruskal-Wallis one-way analysis of
     variance by ranks to do pairwise comparisons [1]_.
@@ -469,7 +484,13 @@ def posthoc_nemenyi(a, val_col=None, group_col=None,  dist='chi', sort=True):
     return DataFrame(vs, index=x_groups_unique, columns=x_groups_unique)
 
 
-def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melted=False, sort=False):
+def posthoc_nemenyi_friedman(
+        a,
+        y_col: str = None,
+        block_col: str = None,
+        group_col: str = None,
+        melted: bool = False,
+        sort: bool = False) -> DataFrame:
     '''Calculate pairwise comparisons using Nemenyi post hoc test for
     unreplicated blocked data. This test is usually conducted post hoc if
     significant results of the Friedman's test are obtained. The statistics
@@ -514,7 +535,7 @@ def posthoc_nemenyi_friedman(a, y_col=None, block_col=None, group_col=None, melt
 
     Returns
     -------
-    result : pandas DataFrame
+    result : pandas.DataFrame
         P values.
 
     Notes
