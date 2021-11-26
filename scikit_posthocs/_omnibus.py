@@ -367,3 +367,4 @@ def test_durbin(
     pval = ss.chi2.sf(stat, df)
 
     return pval, stat, df
+

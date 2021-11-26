@@ -48,10 +48,10 @@ def __convert_to_df(
     -------
     Tuple[DataFrame, str, str]
         Returns a tuple of DataFrame and two strings:
-        - DataFrame with input data, `val_col` column contains numerical values and
-          `group_col` column contains categorical values.
-        - Name of a DataFrame column that contains dependent variable values (test
-          or response variable).
+        - DataFrame with input data, `val_col` column contains numerical values
+          and `group_col` column contains categorical values.
+        - Name of a DataFrame column that contains dependent variable values
+          (test or response variable).
         - Name of a DataFrame column that contains independent variable values
           (grouping or predictor variable).
 
@@ -60,7 +60,6 @@ def __convert_to_df(
     Inferrence algorithm for determining `val_id` and `group_id` args is rather
     simple, so it is better to specify them explicitly to prevent errors.
     '''
-
     if not group_col:
         group_col = 'groups'
     if not val_col:
@@ -83,7 +82,7 @@ def __convert_to_df(
 
         # cols ids not defined
         # trying to infer
-        if not(all([val_id, group_id])):
+        if not all([val_id, group_id]):
 
             if np.argmax(a.shape):
                 a = a.T
@@ -106,7 +105,12 @@ def __convert_to_df(
         return DataFrame(a, columns=cols_vals), val_col, group_col
 
 
-def __convert_to_block_df(a, y_col=None, group_col=None, block_col=None, melted=False):
+def __convert_to_block_df(
+        a,
+        y_col: str = None,
+        group_col: str = None,
+        block_col: str = None,
+        melted: bool = False) -> DataFrame:
     # TODO: refactor conversion of block data to DataFrame
     if melted and not all([i is not None for i in [block_col, group_col, y_col]]):
         raise ValueError('`block_col`, `group_col`, `y_col` should be explicitly specified if using melted data')
@@ -203,16 +207,14 @@ def posthoc_conover(
 
     References
     ----------
-    .. [1] W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
-        Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
+    .. [1] W. J. Conover and R. L. Iman (1979), On multiple-comparisons
+        procedures, Tech. Rep. LA-7677-MS, Los Alamos Scientific Laboratory.
 
     Examples
     --------
-
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_conover(x, p_adjust = 'holm')
     '''
-
     def compare_conover(i, j):
         diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
         B = (1. / x_lens.loc[i] + 1. / x_lens.loc[j])
@@ -688,7 +690,6 @@ def posthoc_conover_friedman(
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_conover_friedman(x)
     '''
-
     def compare_stats(i, j):
         dif = np.abs(R.loc[groups[i]] - R.loc[groups[j]])
         tval = dif / np.sqrt(A) / np.sqrt(B)
@@ -744,8 +745,7 @@ def posthoc_npm_test(
         a: Union[list, np.ndarray, DataFrame],
         val_col: str = None,
         group_col: str = None,
-        sort: bool = False,
-        p_adjust: str = None) -> DataFrame:
+        sort: bool = False) -> DataFrame:
     '''Calculate pairwise comparisons using Nashimoto and Wright´s all-pairs
     comparison procedure (NPM test) for simply ordered mean ranksums.
 
@@ -925,7 +925,6 @@ def posthoc_siegel_friedman(
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_siegel_friedman(x)
     '''
-
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
         zval = dif / np.sqrt(k * (k + 1.) / (6. * n))
@@ -1695,7 +1694,7 @@ def posthoc_tukey_hsd(
     >>> g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
     >>> sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
     '''
-    result = pairwise_tukeyhsd(x, g, alpha=0.05)
+    result = pairwise_tukeyhsd(x, g, alpha=alpha)
     groups = np.array(result.groupsunique, dtype=str)
     groups_len = len(groups)
 
@@ -1819,8 +1818,10 @@ def posthoc_wilcoxon(
         correction: bool = False,
         p_adjust: str = None, 
         sort: bool = False) -> DataFrame:
-    '''Pairwise comparisons with Wilcoxon signed-rank test. It is a non-parametric
-    version of the paired T-test for use with non-parametric ANOVA.
+    '''Pairwise comparisons with Wilcoxon signed-rank test.
+
+    It is a non-parametric version of the paired T-test for use with
+    non-parametric ANOVA.
 
     Parameters
     ----------
@@ -1858,9 +1859,9 @@ def posthoc_wilcoxon(
         'sidak' : one-step correction
         'holm-sidak' : step-down method using Sidak adjustments
         'holm' : step-down method using Bonferroni adjustments
-        'simes-hochberg' : step-up method  (independent)
+        'simes-hochberg' : step-up method (independent)
         'hommel' : closed method based on Simes tests (non-negative)
-        'fdr_bh' : Benjamini/Hochberg  (non-negative)
+        'fdr_bh' : Benjamini/Hochberg (non-negative)
         'fdr_by' : Benjamini/Yekutieli (negative)
         'fdr_tsbh' : two stage fdr correction (non-negative)
         'fdr_tsbky' : two stage fdr correction (non-negative)
@@ -1914,8 +1915,7 @@ def posthoc_scheffe(
         a: Union[list, np.ndarray, DataFrame],
         val_col: str = None,
         group_col: str = None,
-        sort: bool = False,
-        p_adjust: str = None) -> DataFrame:
+        sort: bool = False) -> DataFrame:
     '''Scheffe's all-pairs comparisons test for normally distributed data with equal
     group variances. For all-pairs comparisons in an one-factorial layout with
     normally distributed residuals and equal variances Scheffe's test can be
@@ -2062,7 +2062,6 @@ def posthoc_tamhane(
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_tamhane(x, val_col='values', group_col='groups')
     '''
-
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
@@ -2168,7 +2167,6 @@ def posthoc_tukey(
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_tukey(x, val_col='values', group_col='groups')
     '''
-
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     groups = x[_group_col].unique()
@@ -2207,7 +2205,7 @@ def posthoc_dscf(
         a: Union[list, np.ndarray, DataFrame],
         val_col: str = None,
         group_col: str = None,
-        sort: bool = False):
+        sort: bool = False) -> DataFrame:
     '''Dwass, Steel, Critchlow and Fligner all-pairs comparison test for a
     one-factorial layout with non-normally distributed residuals. As opposed to
     the all-pairs comparison procedures that depend on Kruskal ranks, the DSCF
@@ -2263,7 +2261,6 @@ def posthoc_dscf(
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_dscf(x, val_col='values', group_col='groups')
     '''
-
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     groups = x[_group_col].unique()

@@ -29,7 +29,6 @@ def global_simes_test(p_vals: Union[List, ndarray]) -> float:
     >>> arr = [0.04, 0.03, 0.98, 0.01, 0.43, 0.99, 1.0, 0.002]
     >>> sp.global_simes_test(arr)
     '''
-
     arr = array(p_vals)
     ranks = rankdata(arr)
     p_value = min(arr.size * arr / ranks)
@@ -68,8 +67,8 @@ def global_f_test(
     >>> x = [0.04, 0.03, 0.98, 0.01, 0.43, 0.99, 1.0, 0.002]
     >>> sp.global_f_test(x)
     '''
-
     arr = array(p_vals)
     t_stat = -2 * sum(log(arr))
     p_value = chi2.sf(t_stat, df=2 * len(arr))
     return p_value, t_stat if stat else p_value
+

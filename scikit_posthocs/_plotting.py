@@ -1,17 +1,16 @@
+from typing import Union, List, Tuple
 import numpy as np
 from matplotlib.colors import ListedColormap
 from matplotlib.colorbar import ColorbarBase, Colorbar
 from matplotlib.axes import SubplotBase
 from seaborn import heatmap
 from pandas import DataFrame
-from typing import Union, List, Tuple
 
 
 def sign_array(
         p_values: Union[List, np.ndarray],
         alpha: float = 0.05) -> np.ndarray:
-    """
-    Significance array
+    """Significance array.
 
     Converts an array with p values to a significance array where
     0 is False (not significant), 1 is True (significant),
@@ -34,7 +33,6 @@ def sign_array(
 
     Examples
     --------
-
     >>> p_values = np.array([[ 1.        ,  0.00119517,  0.00278329],
                              [ 0.00119517,  1.        ,  0.18672227],
                              [ 0.00278329,  0.18672227,  1.        ]])
@@ -43,11 +41,11 @@ def sign_array(
            [1, 1, 0],
            [1, 0, 1]])
     """
-
     p_values = np.array(p_values)
     p_values[p_values > alpha] = 0
     p_values[(p_values < alpha) & (p_values > 0)] = 1
     np.fill_diagonal(p_values, 1)
+
     return p_values
 
 
@@ -79,7 +77,6 @@ def sign_table(
 
     Examples
     --------
-
     >>> p_values = np.array([[-1.        ,  0.00119517,  0.00278329],
                       [ 0.00119517, -1.        ,  0.18672227],
                       [ 0.00278329,  0.18672227, -1.        ]])
@@ -87,7 +84,6 @@ def sign_table(
     array([['-', '**', '**'],
            ['**', '-', 'NS'],
            ['**', 'NS', '-']], dtype=object)
-
     """
     if not any([lower, upper]):
         raise ValueError("Either lower or upper triangle must be returned")
@@ -132,7 +128,8 @@ def sign_plot(
     x : Union[List, np.ndarray, DataFrame]
         If flat is False (default), x must be an array, any object exposing
         the array interface, containing p values. If flat is True, x must be
-        a sign_array (returned by `scikit_posthocs.sign_array` function)
+        a sign_array (returned by :py:meth:`scikit_posthocs.sign_array`
+        function).
 
     g : Union[List, np.ndarray]
         An array, any object exposing the array interface, containing
@@ -190,7 +187,6 @@ def sign_plot(
                       [ 1, 0, 1]])
     >>> ph.sign_plot(x, flat = True)
     """
-
     for key in ['cbar', 'vmin', 'vmax', 'center']:
         if key in kwargs:
             del kwargs[key]
@@ -254,3 +250,4 @@ def sign_plot(
         cbar.ax.tick_params(size=0)
 
         return hax, cbar
+
