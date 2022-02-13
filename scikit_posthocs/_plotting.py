@@ -244,8 +244,7 @@ def sign_plot(
         cbar_ax = hax.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
         cbar = ColorbarBase(cbar_ax, cmap=(ListedColormap(cmap[2:] + [cmap[1]])), norm=colors.NoNorm(),
                             boundaries=[0, 1, 2, 3, 4])
-        cbar.set_ticks(list(np.linspace(0.5, 3.5, 4)))
-        cbar.set_ticklabels(['p < 0.001', 'p < 0.01', 'p < 0.05', 'NS'])
+        cbar.set_ticks(list(np.linspace(0, 3, 4)), labels=['p < 0.001', 'p < 0.01', 'p < 0.05', 'NS'])
 
         cbar.outline.set_linewidth(1)
         cbar.outline.set_edgecolor('0.5')
