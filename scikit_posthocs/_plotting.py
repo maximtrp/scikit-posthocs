@@ -1,10 +1,12 @@
 from typing import Union, List, Tuple
+
 import numpy as np
-from matplotlib.colors import ListedColormap
-from matplotlib.colorbar import ColorbarBase, Colorbar
+from matplotlib import colors
 from matplotlib.axes import SubplotBase
-from seaborn import heatmap
+from matplotlib.colorbar import ColorbarBase, Colorbar
+from matplotlib.colors import ListedColormap
 from pandas import DataFrame
+from seaborn import heatmap
 
 
 def sign_array(
@@ -88,8 +90,8 @@ def sign_table(
     if not any([lower, upper]):
         raise ValueError("Either lower or upper triangle must be returned")
 
-    pv = DataFrame(p_values, copy=True)\
-        if not isinstance(p_values, DataFrame)\
+    pv = DataFrame(p_values, copy=True) \
+        if not isinstance(p_values, DataFrame) \
         else p_values.copy()
 
     ns = pv > 0.05
@@ -240,9 +242,9 @@ def sign_plot(
             hax.set_ylabel('')
 
         cbar_ax = hax.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
-        cbar = ColorbarBase(cbar_ax, cmap=ListedColormap(cmap[2:] + [cmap[1]]),
+        cbar = ColorbarBase(cbar_ax, cmap=(ListedColormap(cmap[2:] + [cmap[1]])), norm=colors.NoNorm(),
                             boundaries=[0, 1, 2, 3, 4])
-        cbar.set_ticks(np.linspace(0.5, 3.5, 4))
+        cbar.set_ticks(list(np.linspace(0.5, 3.5, 4)))
         cbar.set_ticklabels(['p < 0.001', 'p < 0.01', 'p < 0.05', 'NS'])
 
         cbar.outline.set_linewidth(1)
@@ -250,4 +252,3 @@ def sign_plot(
         cbar.ax.tick_params(size=0)
 
         return hax, cbar
-
