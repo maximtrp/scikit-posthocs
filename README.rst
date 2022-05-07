@@ -132,7 +132,7 @@ Dependencies
 Compatibility
 -------------
 
-Package is compatible with only Python 3.
+Package is only compatible with Python 3.
 
 Install
 -------
@@ -148,6 +148,12 @@ Or using ``conda`` (from conda-forge repo):
 .. code:: bash
 
   conda install -c conda-forge scikit-posthocs
+
+The latest version from GitHub can be installed using:
+
+.. code:: bash
+
+  pip install git+https://github.com/maximtrp/scikit-posthocs.git
 
 Examples
 --------
