@@ -1,2 +1,3 @@
 include LICENSE
 include DESCRIPTION.rst
+recursive-exclude tests *
