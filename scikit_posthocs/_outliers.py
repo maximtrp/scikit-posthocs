@@ -332,7 +332,7 @@ def outliers_gesd(
                   "---------------------------------------",
                   "      Exact           Test     Critical",
                   "  Number of      Statistic    Value, λi",
-                  "Outliers, i      Value, Ri          5 %",
+                  "Outliers, i      Value, Ri      {:5.3g} %".format(100*alpha),
                   "---------------------------------------"]
 
         for i, (r, l) in enumerate(zip(rs, ls)):
