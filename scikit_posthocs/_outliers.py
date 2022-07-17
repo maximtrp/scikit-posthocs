@@ -300,6 +300,12 @@ def outliers_gesd(
     data = data_proc[argsort_index]
     n = data_proc.size
 
+    # Lambda values (critical values): do not depend on the outliers.
+    nol = np.arange(outliers)  # the number of outliers
+    df = n - nol - 2  # degrees of freedom
+    t_ppr = t.ppf(1 - alpha / (2 * (n - nol)), df)
+    ls = ((n - nol - 1) * t_ppr) / np.sqrt((df + t_ppr**2) * (n - nol))
+
     for i in np.arange(outliers):
 
         abs_d = np.abs(data_proc - np.mean(data_proc))
@@ -312,14 +318,6 @@ def outliers_gesd(
         lms = ms[-1] if len(ms) > 0 else []
         ms.append(
             lms + np.where(data == data_proc[np.argmax(abs_d)])[0].tolist())
-
-        # Lambdas calculation
-        p = 1 - alpha / (2 * (n - i))
-        df = n - i - 2
-        t_ppr = t.ppf(p, df)
-        lambd = ((n - i - 1) * t_ppr) /\
-            np.sqrt((n - i - 2 + t_ppr**2) * (n - i))
-        ls[i] = lambd
 
         # Remove the observation that maximizes |xi − xmean|
         data_proc = np.delete(data_proc, np.argmax(abs_d))
