@@ -217,7 +217,7 @@ def outliers_gesd(
         outliers: int = 5,
         hypo: bool = False,
         report: bool = False,
-        alpha: float = 0.05) -> Union[np.ndarray, str]:
+        alpha: float = 0.05) -> np.ndarray:
     """The generalized (Extreme Studentized Deviate) ESD test is used
     to detect one or more outliers in a univariate data set that follows
     an approximately normal distribution [1]_.
@@ -240,20 +240,16 @@ def outliers_gesd(
         2) False - return a filtered array without an outlier (default).
 
     report : bool = False
-        Specifies whether to return a summary table of the test.
-        Available options are:
-        1) True - return a summary table.
-        2) False - return the array with outliers removed (default).
+        Specifies whether to print a summary table of the test.
 
     alpha : float = 0.05
         Significance level for a hypothesis test.
 
     Returns
     -------
-    Union[np.ndarray, str]
+    np.ndarray
         Returns the filtered array if alternative hypo is True, otherwise an
-        unfiltered (input) array. If ``report`` argument is True,
-        test report is returned instead of the result.
+        unfiltered (input) array.
 
     Notes
     -----
@@ -343,22 +339,21 @@ def outliers_gesd(
                           '{: >13s}'.format(str(np.round(l, 3))) +
                           (" *" if r > l else ""))
 
-        return "\n".join(report)
+        print("\n".join(report))
 
-    else:
-        # Remove masked values
-        # for which the test statistic is greater
-        # than the critical value and return the result
+    # Remove masked values
+    # for which the test statistic is greater
+    # than the critical value and return the result
 
-        if any(rs > ls):
-            if hypo:
-                data[:] = False
-                data[ms[np.max(np.where(rs > ls))]] = True
-                # rearrange data so mask is in same order as incoming data
-                data = np.vstack((data, np.arange(0, data.shape[0])[argsort_index]))
-                data = data[0, data.argsort()[1, ]]
-                data = data.astype('bool')
-            else:
-                data = np.delete(data, ms[np.max(np.where(rs > ls))])
+    if any(rs > ls):
+        if hypo:
+            data[:] = False
+            data[ms[np.max(np.where(rs > ls))]] = True
+            # rearrange data so mask is in same order as incoming data
+            data = np.vstack((data, np.arange(0, data.shape[0])[argsort_index]))
+            data = data[0, data.argsort()[1, ]]
+            data = data.astype('bool')
+        else:
+            data = np.delete(data, ms[np.max(np.where(rs > ls))])
 
-        return data
+    return data

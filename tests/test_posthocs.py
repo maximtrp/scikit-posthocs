@@ -145,7 +145,7 @@ class TestPosthocs(unittest.TestCase):
             1.99,  2.06,  2.09,  2.1 ,  2.14,  2.15,  2.23,  2.24,  2.26,
             2.35,  2.37,  2.4 ,  2.47,  2.54,  2.62,  2.64,  2.9 ,  2.92,
             2.92,  2.93,  3.21,  3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
-        self.assertTrue(isinstance(so.outliers_gesd(x, 5, report=True), str))
+        self.assertTrue(isinstance(so.outliers_gesd(x, 5, report=True), np.ndarray))
         self.assertTrue(np.all(test_results == correct_results))
         self.assertTrue(np.all(test_mask_results == correct_mask))
 
