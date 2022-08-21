@@ -2,14 +2,12 @@
 
 ===============
 
-.. image:: https://img.shields.io/badge/PayPal-donate-blue?logo=paypal
-    :target: https://www.paypal.me/mterpilowski
-.. image:: https://img.shields.io/circleci/build/github/maximtrp/scikit-posthocs
-    :target: https://app.circleci.com/pipelines/github/maximtrp/scikit-posthocs
-.. image:: https://img.shields.io/readthedocs/scikit-posthocs.svg
-    :target: https://scikit-posthocs.readthedocs.io
 .. image:: http://joss.theoj.org/papers/10.21105/joss.01169/status.svg
     :target: https://doi.org/10.21105/joss.01169
+.. image:: https://img.shields.io/github/workflow/status/maximtrp/scikit-posthocs/Test?label=tests
+   :target: https://github.com/maximtrp/scikit-posthocs/actions/workflows/test.yml
+.. image:: https://img.shields.io/readthedocs/scikit-posthocs.svg
+    :target: https://scikit-posthocs.readthedocs.io
 .. image:: https://codecov.io/gh/maximtrp/scikit-posthocs/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/maximtrp/scikit-posthocs
 .. image:: https://app.codacy.com/project/badge/Grade/50d2a82a6dd84b51b515cebf931067d7
