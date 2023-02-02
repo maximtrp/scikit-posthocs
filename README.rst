@@ -4,7 +4,7 @@
 
 .. image:: http://joss.theoj.org/papers/10.21105/joss.01169/status.svg
     :target: https://doi.org/10.21105/joss.01169
-.. image:: https://img.shields.io/github/workflow/status/maximtrp/scikit-posthocs/Test?label=tests
+.. image:: https://img.shields.io/github/actions/workflow/status/maximtrp/scikit-posthocs/test.yml?label=build
    :target: https://github.com/maximtrp/scikit-posthocs/actions/workflows/test.yml
 .. image:: https://img.shields.io/readthedocs/scikit-posthocs.svg
     :target: https://scikit-posthocs.readthedocs.io
