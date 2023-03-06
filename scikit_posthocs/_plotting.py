@@ -291,7 +291,7 @@ def _bron_kerbosch(R, P, X, adj_matrix):
     return res
 
 
-def plot_critical_difference_diagram(
+def critical_difference_diagram(
 		ranks: dict | Series,
 		sig_matrix: DataFrame,
 		*,

@@ -13,5 +13,5 @@ import posthoc_anderson, posthoc_conover, posthoc_conover_friedman,\
     posthoc_vanwaerden, posthoc_wilcoxon, __convert_to_df,\
     __convert_to_block_df  # noqa
 
-from scikit_posthocs._plotting import sign_array, sign_plot, sign_table  # noqa
+from scikit_posthocs._plotting import sign_array, sign_plot, sign_table, critical_difference_diagram  # noqa
 from scikit_posthocs._outliers import outliers_gesd, outliers_grubbs, outliers_iqr, outliers_tietjen  # noqa
