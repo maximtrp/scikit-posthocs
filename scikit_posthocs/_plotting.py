@@ -1,10 +1,11 @@
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Dict
 
 import numpy as np
 from matplotlib import colors
 from matplotlib.axes import SubplotBase
 from matplotlib.colorbar import ColorbarBase, Colorbar
 from matplotlib.colors import ListedColormap
+from matplotlib import pyplot
 from pandas import DataFrame, Series
 from seaborn import heatmap
 
@@ -302,7 +303,7 @@ def critical_difference_diagram(
 		marker_props: dict = None,
 		elbow_props: dict = None,
 		crossbar_props: dict = None,
-		text_h_margin: float = 0.01) -> dict[str, list]:
+		text_h_margin: float = 0.01) -> Dict[str, list]:
     """Plot a Critical Difference diagram from ranks and post-hoc results.
 
     The diagram arranges the average ranks of multiple groups on the x axis
@@ -376,7 +377,7 @@ def critical_difference_diagram(
     label_props = dict(va='center') | (label_props or {})
     crossbar_props = dict(color='k', zorder=3, linewidth=2) | (crossbar_props or {})
 
-    ax = ax or plt.gca()
+    ax = ax or pyplot.gca()
     ax.yaxis.set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
@@ -415,7 +416,7 @@ def critical_difference_diagram(
             ypos = -len(crossbar_levels) - 1
             crossbar_levels.append([bar])
 
-        crossbars.append(plt.plot(
+        crossbars.append(ax.plot(
             [min(ranks[i] for i in bar), max(ranks[i] for i in bar)],
             [ypos]*2,
             **crossbar_props,
