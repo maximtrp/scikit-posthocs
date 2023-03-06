@@ -292,7 +292,7 @@ def _bron_kerbosch(R, P, X, adj_matrix):
 
 
 def critical_difference_diagram(
-		ranks: dict | Series,
+		ranks: Union[dict, Series],
 		sig_matrix: DataFrame,
 		*,
 		ax: SubplotBase = None,
