@@ -417,8 +417,10 @@ def critical_difference_diagram(
             crossbar_levels.append([bar])
 
         crossbars.append(ax.plot(
-            [min(ranks[i] for i in bar), max(ranks[i] for i in bar)],
-            [ypos]*2,
+            # Adding a separate line between each pair enables showing a 
+            # marker over each elbow with crossbar_props={'marker': 'o'}.
+            [ranks[i] for i in bar],
+            [ypos] * len(bar),
             **crossbar_props,
         ))
 
