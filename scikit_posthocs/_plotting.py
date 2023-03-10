@@ -313,8 +313,8 @@ def critical_difference_diagram(
 
                        rank markers
          X axis ---------O----O-------------------O-O------------O---------
-                         |----|                   | |            |   
-                         |    |                   |---crossbar---|   
+                         |----|                   | |            |
+                         |    |                   |---crossbar---|
                 clf1 ----|    |                   | |            |---- clf3
                 clf2 ---------|                   | |----------------- clf4
                                                   |------------------- clf5
@@ -417,7 +417,7 @@ def critical_difference_diagram(
             crossbar_levels.append([bar])
 
         crossbars.append(ax.plot(
-            # Adding a separate line between each pair enables showing a 
+            # Adding a separate line between each pair enables showing a
             # marker over each elbow with crossbar_props={'marker': 'o'}.
             [ranks[i] for i in bar],
             [ypos] * len(bar),
