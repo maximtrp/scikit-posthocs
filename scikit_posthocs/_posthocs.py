@@ -68,7 +68,8 @@ def __convert_to_df(
     if isinstance(a, DataFrame):
         x = a.copy()
         if not {group_col, val_col}.issubset(a.columns):
-            raise ValueError('Specify correct column names using `group_col` and `val_col` args')
+            raise ValueError(
+                'Specify correct column names using `group_col` and `val_col` args')
         return x, val_col, group_col
 
     elif isinstance(a, list) or (isinstance(a, np.ndarray) and not a.shape.count(2)):
@@ -93,7 +94,8 @@ def __convert_to_df(
                 __val_col = np.argmax(ax)
                 __group_col = np.argmin(ax)
             else:
-                raise ValueError('Cannot infer input format.\nPlease specify `val_id` and `group_id` args')
+                raise ValueError(
+                    'Cannot infer input format.\nPlease specify `val_id` and `group_id` args')
 
             cols = {__val_col: val_col,
                     __group_col: group_col}
@@ -113,7 +115,8 @@ def __convert_to_block_df(
         melted: bool = False) -> DataFrame:
     # TODO: refactor conversion of block data to DataFrame
     if melted and not all([i is not None for i in [block_col, group_col, y_col]]):
-        raise ValueError('`block_col`, `group_col`, `y_col` should be explicitly specified if using melted data')
+        raise ValueError(
+            '`block_col`, `group_col`, `y_col` should be explicitly specified if using melted data')
 
     if isinstance(a, DataFrame) and not melted:
         x = a.copy(deep=True)
@@ -131,7 +134,8 @@ def __convert_to_block_df(
 
     elif not isinstance(a, DataFrame):
         x = np.array(a)
-        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
+        x = DataFrame(x, index=np.arange(
+            x.shape[0]), columns=np.arange(x.shape[1]))
 
         if not melted:
             group_col = 'groups'
@@ -142,7 +146,8 @@ def __convert_to_block_df(
             x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
 
         else:
-            x.rename(columns={group_col: 'groups', block_col: 'blocks', y_col: 'y'}, inplace=True)
+            x.rename(columns={group_col: 'groups',
+                     block_col: 'blocks', y_col: 'y'}, inplace=True)
 
     group_col = 'groups'
     block_col = 'blocks'
@@ -217,7 +222,7 @@ def posthoc_conover(
     '''
     def compare_conover(i, j):
         diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
-        B = (1. / x_lens.loc[i] + 1. / x_lens.loc[j])
+        B = 1. / x_lens.loc[i] + 1. / x_lens.loc[j]
         D = (n - 1. - h_cor) / (n - x_len)
         t_value = diff / np.sqrt(S2 * B * D)
         p_value = 2. * ss.t.sf(np.abs(t_value), df=n-x_len)
@@ -241,13 +246,15 @@ def posthoc_conover(
     tie_sum = 0 if not tie_sum else tie_sum
     x_ties = np.min([1., 1. - tie_sum / (n ** 3. - n)])
 
-    h = (12. / (n * (n + 1.))) * np.sum(x_ranks_sum**2 / x_lens) - 3. * (n + 1.)
+    h = (12. / (n * (n + 1.))) * \
+        np.sum(x_ranks_sum**2 / x_lens) - 3. * (n + 1.)
     h_cor = h / x_ties
 
     if x_ties == 1:
         S2 = n * (n + 1.) / 12.
     else:
-        S2 = (1. / (n - 1.)) * (np.sum(x['ranks'] ** 2.) - (n * (((n + 1.)**2.) / 4.)))
+        S2 = (1. / (n - 1.)) * \
+            (np.sum(x['ranks'] ** 2.) - (n * (((n + 1.)**2.) / 4.)))
 
     vs = np.zeros((x_len, x_len))
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -433,7 +440,7 @@ def posthoc_nemenyi(
     def compare_stats_chi(i, j):
         diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
         A = n * (n + 1.) / 12.
-        B = (1. / x_lens.loc[i] + 1. / x_lens.loc[j])
+        B = 1. / x_lens.loc[i] + 1. / x_lens.loc[j]
         chi = diff ** 2. / (A * B)
         return chi
 
@@ -469,13 +476,15 @@ def posthoc_nemenyi(
 
     if dist == 'chi':
         for i, j in combs:
-            vs[i, j] = compare_stats_chi(x_groups_unique[i], x_groups_unique[j]) / x_ties
+            vs[i, j] = compare_stats_chi(
+                x_groups_unique[i], x_groups_unique[j]) / x_ties
 
         vs[tri_upper] = ss.chi2.sf(vs[tri_upper], x_len - 1)
 
     elif dist == 'tukey':
         for i, j in combs:
-            vs[i, j] = compare_stats_tukey(x_groups_unique[i], x_groups_unique[j]) * np.sqrt(2.)
+            vs[i, j] = compare_stats_tukey(
+                x_groups_unique[i], x_groups_unique[j]) * np.sqrt(2.)
 
         vs[tri_upper] = psturng(vs[tri_upper], x_len, np.inf)
 
@@ -571,8 +580,10 @@ def posthoc_nemenyi_friedman(
         qval = dif / np.sqrt(k * (k + 1.) / (6. * n))
         return qval
 
-    x, _y_col, _group_col, _block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
-    x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
+    x, _y_col, _group_col, _block_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, melted)
+    x = x.sort_values(by=[_group_col, _block_col],
+                      ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[_group_col].unique()
@@ -702,8 +713,10 @@ def posthoc_conover_friedman(
         pval = psturng(qval, k, np.inf)
         return pval
 
-    x, _y_col, _group_col, _block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
-    x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
+    x, _y_col, _group_col, _block_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, melted)
+    x = x.sort_values(by=[_group_col, _block_col],
+                      ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[_group_col].unique()
@@ -822,7 +835,8 @@ def posthoc_npm_test(
     df = np.inf
 
     def compare(m, u):
-        a = [(ri.loc[groups[u]]-ri.loc[groups[_mi]])/(sigma/np.sqrt(2)*np.sqrt(1./ni.loc[groups[_mi]] + 1./ni.loc[groups[u]])) for _mi in m]
+        a = [(ri.loc[groups[u]]-ri.loc[groups[_mi]])/(sigma/np.sqrt(2) *
+                                                      np.sqrt(1./ni.loc[groups[_mi]] + 1./ni.loc[groups[u]])) for _mi in m]
         return np.array(a)
 
     stat = np.zeros((k, k))
@@ -930,7 +944,8 @@ def posthoc_siegel_friedman(
         zval = dif / np.sqrt(k * (k + 1.) / (6. * n))
         return zval
 
-    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
+    x, y_col, group_col, block_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, melted)
     x = x.sort_values(by=[group_col, block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
@@ -1040,7 +1055,8 @@ def posthoc_miller_friedman(
         qval = dif / np.sqrt(k * (k + 1.) / (6. * n))
         return qval
 
-    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
+    x, y_col, group_col, block_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, melted)
     x = x.sort_values(by=[group_col, block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
@@ -1146,7 +1162,8 @@ def posthoc_durbin(
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_durbin(x)
     '''
-    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
+    x, y_col, group_col, block_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, melted)
 
     def compare_stats(i, j):
         dif = np.abs(rj[groups[i]] - rj[groups[j]])
@@ -1168,7 +1185,8 @@ def posthoc_durbin(
     C = (b * k * (k + 1) ** 2) / 4.
     D = (rj ** 2).sum() - r * C
     T1 = (t - 1) / (A - C) * D
-    denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1) * (1 - T1 / (b * (k - 1))))
+    denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1)
+                    * (1 - T1 / (b * (k - 1))))
     df = b * k - b - t + 1
 
     vs = np.zeros((t, t), dtype=float)
@@ -1265,7 +1283,8 @@ def posthoc_anderson(
     vs[:, :] = 0
 
     for i, j in combs:
-        vs[i, j] = ss.anderson_ksamp([x.loc[x[_group_col] == groups[i], _val_col], x.loc[x[_group_col] == groups[j], _val_col]], midrank=midrank)[2]
+        vs[i, j] = ss.anderson_ksamp([x.loc[x[_group_col] == groups[i], _val_col],
+                                     x.loc[x[_group_col] == groups[j], _val_col]], midrank=midrank)[2]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
@@ -1378,7 +1397,8 @@ def posthoc_quade(
         pval = 2. * ss.norm.sf(np.abs(zval))
         return pval
 
-    x, y_col, group_col, block_col = __convert_to_block_df(a, y_col, group_col, block_col, melted)
+    x, y_col, group_col, block_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, melted)
 
     x = x.sort_values(by=[block_col, group_col], ascending=True) if sort else x
     x.dropna(inplace=True)
@@ -1388,7 +1408,8 @@ def posthoc_quade(
     b = x[block_col].unique().size
 
     x['r'] = x.groupby(block_col)[y_col].rank()
-    q = (x.groupby(block_col)[y_col].max() - x.groupby(block_col)[y_col].min()).rank()
+    q = (x.groupby(block_col)[y_col].max() -
+         x.groupby(block_col)[y_col].min()).rank()
     x['rr'] = x['r'] - (k + 1)/2
     x['s'] = x.apply(lambda row: row['rr'] * q[row[block_col]], axis=1)
     x['w'] = x.apply(lambda row: row['r'] * q[row[block_col]], axis=1)
@@ -1413,7 +1434,8 @@ def posthoc_quade(
 
     else:
         n = b * k
-        denom = np.sqrt((k * (k + 1.) * (2. * n + 1.) * (k-1.)) / (18. * n * (n + 1.)))
+        denom = np.sqrt((k * (k + 1.) * (2. * n + 1.) *
+                        (k-1.)) / (18. * n * (n + 1.)))
         ff = 1. / (b * (b + 1.)/2.)
 
         for i, j in combs:
@@ -1648,7 +1670,8 @@ def posthoc_ttest(
             vs[i, j] = compare_pooled(i, j)
     else:
         for i, j in combs:
-            vs[i, j] = ss.ttest_ind(xg.get_group(groups[i]), xg.get_group(groups[j]), equal_var=equal_var)[1]
+            vs[i, j] = ss.ttest_ind(xg.get_group(groups[i]), xg.get_group(
+                groups[j]), equal_var=equal_var)[1]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
@@ -1816,7 +1839,7 @@ def posthoc_wilcoxon(
         group_col: str = None,
         zero_method: str = 'wilcox',
         correction: bool = False,
-        p_adjust: str = None, 
+        p_adjust: str = None,
         sort: bool = False) -> DataFrame:
     '''Pairwise comparisons with Wilcoxon signed-rank test.
 
@@ -2076,7 +2099,8 @@ def posthoc_tamhane(
         A = si[i] / ni[i] + si[j] / ni[j]
         t_val = dif / np.sqrt(A)
         if welch:
-            df = A ** 2. / (si[i] ** 2. / (ni[i] ** 2. * (ni[i] - 1.)) + si[j] ** 2. / (ni[j] ** 2. * (ni[j] - 1.)))
+            df = A ** 2. / (si[i] ** 2. / (ni[i] ** 2. * (ni[i] - 1.)) +
+                            si[j] ** 2. / (ni[j] ** 2. * (ni[j] - 1.)))
         else:
             # checks according to Tamhane (1979, p. 474)
             ok1 = (9./10. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 10./9.)
@@ -2090,7 +2114,8 @@ def posthoc_tamhane(
                 and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 4./3.)
             OK = any([ok1, ok2, ok3, ok4])
             if not OK:
-                print("Sample sizes or standard errors are not balanced. T2 test is recommended.")
+                print(
+                    "Sample sizes or standard errors are not balanced. T2 test is recommended.")
             df = ni[i] + ni[j] - 2.
         p_val = 2. * ss.t.sf(np.abs(t_val), df=df)
         return p_val
@@ -2194,7 +2219,8 @@ def posthoc_tukey(
     for i, j in combs:
         vs[i, j] = compare(groups[i], groups[j])
 
-    vs[tri_upper] = psturng(np.abs(vs[tri_upper]), groups.size, n - groups.size)
+    vs[tri_upper] = psturng(np.abs(vs[tri_upper]),
+                            groups.size, n - groups.size)
     vs[tri_lower] = np.transpose(vs)[tri_lower]
 
     np.fill_diagonal(vs, 1)
@@ -2283,14 +2309,15 @@ def posthoc_dscf(
                       nj * ni + (ni * (ni + 1) / 2)]) - r
         u_min = np.min(u)
         s = ni + nj
-        var = (nj*ni/(s*(s - 1.))) * ((s**3 - s)/12. - get_ties(x_raw['ranks']))
+        var = (nj*ni/(s*(s - 1.))) * \
+            ((s**3 - s)/12. - get_ties(x_raw['ranks']))
         p = np.sqrt(2.) * (u_min - nj * ni / 2.) / np.sqrt(var)
         return p
 
     vs = np.zeros((k, k))
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
-    vs[:,:] = 0
+    vs[:, :] = 0
 
     combs = it.combinations(range(k), 2)
 

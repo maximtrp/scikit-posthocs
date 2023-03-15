@@ -245,7 +245,8 @@ def sign_plot(
         cbar_ax = hax.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
         cbar = ColorbarBase(cbar_ax, cmap=(ListedColormap(cmap[2:] + [cmap[1]])), norm=colors.NoNorm(),
                             boundaries=[0, 1, 2, 3, 4])
-        cbar.set_ticks(list(np.linspace(0, 3, 4)), labels=['p < 0.001', 'p < 0.01', 'p < 0.05', 'NS'])
+        cbar.set_ticks(list(np.linspace(0, 3, 4)), labels=[
+                       'p < 0.001', 'p < 0.01', 'p < 0.05', 'NS'])
 
         cbar.outline.set_linewidth(1)
         cbar.outline.set_edgecolor('0.5')
@@ -257,59 +258,68 @@ def sign_plot(
 def _find_maximal_cliques(adj_matrix):
     """Wrapper function over the recursive Bron-Kerbosch algorithm.
     Will be used to find points that are under the same crossbar.
+
     Parameters
     ----------
     adj_matrix : DataFrame
         Matrix containing 1 if row item and column item do NOT significantly
         differ. Diagonal must be zeroed.
+
     Returns
     -------
     list[set]
-        Largest fully conected subgraphs.
+        Largest fully connected subgraphs.
     """
     return _bron_kerbosch(set(), set(adj_matrix.index), set(), adj_matrix)
 
 
 def _bron_kerbosch(R, P, X, adj_matrix):
-    """Recursive algrithm to find the maximal fully connected subgraphs.
-    See https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
+    """Recursive algrithm to find the maximal fully connected subgraphs [1]_.
+
+    Parameters
+    ----------
     adj_matrix : DataFrame
         Matrix containing 1 if row item and column item do NOT significantly
         differ. Diagonal must be zeroed.
+
     Returns
     -------
     list[set]
-        Largest fully conected subgraphs.
+        Largest fully connected subgraphs.
+
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
     """
     if len(P) == 0 and len(X) == 0:
         return [R]
     res = []
     for v in P.copy():
         N = {n for n in adj_matrix.index if adj_matrix.loc[v, n]}
-        res += _bron_kerbosch(R|{v}, P&N, X&N, adj_matrix)
+        res += _bron_kerbosch(R | {v}, P & N, X & N, adj_matrix)
         P.remove(v)
         X.add(v)
     return res
 
 
 def critical_difference_diagram(
-		ranks: Union[dict, Series],
-		sig_matrix: DataFrame,
-		*,
-		ax: SubplotBase = None,
-		label_fmt_left: str = '{label} ({rank:.2g})',
-		label_fmt_right: str = '({rank:.2g}) {label}',
-		label_props: dict = None,
-		marker_props: dict = None,
-		elbow_props: dict = None,
-		crossbar_props: dict = None,
-		text_h_margin: float = 0.01) -> Dict[str, list]:
+        ranks: Union[dict, Series],
+        sig_matrix: DataFrame,
+        *,
+        ax: SubplotBase = None,
+        label_fmt_left: str = '{label} ({rank:.2g})',
+        label_fmt_right: str = '({rank:.2g}) {label}',
+        label_props: dict = None,
+        marker_props: dict = None,
+        elbow_props: dict = None,
+        crossbar_props: dict = None,
+        text_h_margin: float = 0.01) -> Dict[str, list]:
     """Plot a Critical Difference diagram from ranks and post-hoc results.
 
     The diagram arranges the average ranks of multiple groups on the x axis
     in order to facilitate performance comparisons between them. The groups
     that could not be statistically deemed as different are linked by a
-    horizontal crossbar.
+    horizontal crossbar [1]_, [2]_.
 
                        rank markers
          X axis ---------O----O-------------------O-O------------O---------
@@ -328,34 +338,43 @@ def critical_difference_diagram(
 
     Parameters
     ----------
-    ranks : dict or series
+    ranks : dict or Series
         Indicates the rank value for each sample or estimator (as keys or index).
+
     sig_matrix : DataFrame
         The corresponding p-value matrix outputted by post-hoc tests, with
         indices matching the labels in the ranks argument.
+
     ax : matplotlib.SubplotBase, optional
         The object in which the plot will be built. Gets the current Axes
         by default (if None is passed).
+
     label_fmt_left : str, optional
         The format string to apply to the labels on the left side. The keywords
         label and rank can be used to specify the sample/estimator name and
         rank value, respectively, by default '{label} ({rank:.2g})'.
+
     label_fmt_right : str, optional
         The same, but for the labels on the right side of the plot.
         By default '({rank:.2g}) {label}'.
+
     label_props : dict, optional
         Parameters to be passed to pyplot.annotate() when creating the labels,
         by default None.
+
     marker_props : dict, optional
         Parameters to be passed to pyplot.scatter() when plotting the rank
         markers on the axis, by default None.
+
     elbow_props : dict, optional
         Parameters to be passed to pyplot.plot() when creating the elbow lines,
         by default None.
+
     crossbar_props : dict, optional
         Parameters to be passed to pyplot.plot() when creating the crossbars
         that indicate lack of statistically significant difference. By default
         None.
+
     text_h_margin : float, optional
         Space between the text labels and the nearest vertical line of an
         elbow, by default 0.01.
@@ -367,15 +386,16 @@ def critical_difference_diagram(
 
     References
     ----------
-    [1] Demšar, J. (2006). Statistical comparisons of classifiers over multiple
-    data sets. The Journal of Machine learning research, 7, 1-30.
+    .. [1] Demšar, J. (2006). Statistical comparisons of classifiers over multiple
+            data sets. The Journal of Machine learning research, 7, 1-30.
 
-    [2] https://mirkobunse.github.io/CriticalDifferenceDiagrams.jl/stable/
+    .. [2] https://mirkobunse.github.io/CriticalDifferenceDiagrams.jl/stable/
     """
     elbow_props = elbow_props or {}
     marker_props = dict(zorder=3) | (marker_props or {})
     label_props = dict(va='center') | (label_props or {})
-    crossbar_props = dict(color='k', zorder=3, linewidth=2) | (crossbar_props or {})
+    crossbar_props = dict(color='k', zorder=3, linewidth=2) | (
+        crossbar_props or {})
 
     ax = ax or pyplot.gca()
     ax.yaxis.set_visible(False)
@@ -462,9 +482,9 @@ def critical_difference_diagram(
         label_props=dict(ha='left') | label_props,
     )
 
-    return dict(
-        markers=markers,
-        elbows=elbows,
-        labels=labels,
-        crossbars=crossbars,
-    )
+    return {
+        "markers": markers,
+        "elbows": elbows,
+        "labels": labels,
+        "crossbars": crossbars,
+    }
