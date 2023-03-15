@@ -71,7 +71,7 @@ class TestPosthocs(unittest.TestCase):
         a = splt.sign_plot(x, flat=True, labels=False)
         with self.assertRaises(ValueError):
             splt.sign_plot(x.astype(float), flat=True, labels=False)
-        self.assertTrue(isinstance(a, ma._subplots.Axes))
+        self.assertTrue(isinstance(a, ma._axes.Axes))
 
     def test_sign_plot_nonflat(self):
 
@@ -85,7 +85,7 @@ class TestPosthocs(unittest.TestCase):
         with self.assertRaises(ValueError):
             splt.sign_plot(x.astype(np.int64), labels=False)
 
-        self.assertTrue(isinstance(a, ma._subplots.Axes) and isinstance(cbar, mpl.colorbar.ColorbarBase))
+        self.assertTrue(isinstance(a, ma._axes.Axes) and isinstance(cbar, mpl.colorbar.ColorbarBase))
 
     # Outliers tests
     def test_outliers_iqr(self):
