@@ -278,11 +278,11 @@ Critical Difference diagrams
 .. image:: _static/cd_diagram0.png
 
 Critical difference diagrams are another interesting way of visualizing post
-hoc test statistics.
-In a block design scenario, the values within each block are ranked,
-and the average rank across all blocks for each treatment is plotted along the
-x axis. Crossbars are then drawn to indicate which treatments do not present
-a statistically significant difference.
+hoc test statistics. Firstly, in a block design scenario, the values within
+each block are ranked, and the average rank across all blocks for each
+treatment is plotted along the x axis. A crossbar is then drawn over each
+group of treatments that do not show a statistically significant difference
+among themselves.
 
 As an example, suppose we have a set of 8 treatments with 30 measurements
 (blocks) each, as simulated below. It could, for instance, represent scores for
