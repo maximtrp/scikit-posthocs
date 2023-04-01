@@ -321,7 +321,7 @@ def critical_difference_diagram(
     that could not be statistically deemed as different are linked by a
     horizontal crossbar [1]_, [2]_.
 
-                       rank markers
+                      rank markers
          X axis ---------O----O-------------------O-O------------O---------
                          |----|                   | |            |
                          |    |                   |---crossbar---|
@@ -331,7 +331,7 @@ def critical_difference_diagram(
                     |____|
                 text_h_margin
 
-    In the drawing above, the two crossbar indicates that clf1 and clf2 cannot
+    In the drawing above, the two crossbars indicate that clf1 and clf2 cannot
     be statistically differentiated, the same occurring between clf3, clf4 and
     clf5. However, clf1 and clf2 are each significantly lower ranked than clf3,
     clf4 and clf5.
@@ -359,7 +359,7 @@ def critical_difference_diagram(
         By default '({rank:.2g}) {label}'.
 
     label_props : dict, optional
-        Parameters to be passed to pyplot.annotate() when creating the labels,
+        Parameters to be passed to pyplot.text() when creating the labels,
         by default None.
 
     marker_props : dict, optional
@@ -461,9 +461,10 @@ def critical_difference_diagram(
                 ax.scatter(rank, 0, **dict(color=curr_color) | marker_props)
             )
             labels.append(
-                ax.annotate(
+                ax.text(
+                    xpos,
+                    ypos,
                     label_fmt.format(label=label, rank=rank),
-                    (xpos, ypos),
                     **dict(color=curr_color) | label_props,
                 )
             )
