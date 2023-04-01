@@ -321,6 +321,8 @@ def critical_difference_diagram(
     that could not be statistically deemed as different are linked by a
     horizontal crossbar [1]_, [2]_.
 
+    ::
+
                       rank markers
          X axis ---------O----O-------------------O-O------------O---------
                          |----|                   | |            |
@@ -383,6 +385,10 @@ def critical_difference_diagram(
     -------
     dict[str, list[matplotlib.Artist]]
         Lists of Artists created.
+    
+    Examples
+    --------
+    See the :doc:`/tutorial`.
 
     References
     ----------
