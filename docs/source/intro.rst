@@ -72,7 +72,10 @@ Features
   - Tietjen-Moore test.
   - Generalized Extreme Studentized Deviate test (ESD test).
 
-- Plotting functionality (e.g. significance plots).
+- Plotting functionality:
+
+  - Significance plots.
+  - Critical difference diagrams.
 
 All post hoc tests are capable of p value adjustments for multiple pairwise
 comparisons.

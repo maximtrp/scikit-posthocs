@@ -270,3 +270,138 @@ Custom colormap applied to a plot:
   sp.sign_plot(pc, **heatmap_args)
 
 .. image:: _static/plot-conover-custom-cmap.png
+
+
+Critical Difference diagrams
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: _static/cd_diagram0.png
+
+Critical difference diagrams are another interesting way of visualizing post
+hoc test statistics.
+In a block design scenario, the values within each block are ranked,
+and the average rank across all blocks for each treatment is plotted along the
+x axis. Crossbars are then drawn to indicate which treatments do not present
+a statistically significant difference.
+
+As an example, suppose we have a set of 8 treatments with 30 measurements
+(blocks) each, as simulated below. It could, for instance, represent scores for
+eight machine learning models in a 30-fold cross-validation setting.
+
+.. code:: python
+
+  >>> rng = np.random.default_rng(1)
+  >>> dict_data = {
+      'model1': rng.normal(loc=0.2, scale=0.1, size=30),
+      'model2': rng.normal(loc=0.2, scale=0.1, size=30),
+      'model3': rng.normal(loc=0.4, scale=0.1, size=30),
+      'model4': rng.normal(loc=0.5, scale=0.1, size=30),
+      'model5': rng.normal(loc=0.7, scale=0.1, size=30),
+      'model6': rng.normal(loc=0.7, scale=0.1, size=30),
+      'model7': rng.normal(loc=0.8, scale=0.1, size=30),
+      'model8': rng.normal(loc=0.9, scale=0.1, size=30),
+  }
+  >>> data = (
+    pd.DataFrame(dict_data)
+    .rename_axis('cv_fold')
+    .melt(
+        var_name='estimator',
+        value_name='score',
+        ignore_index=False,
+    )
+    .reset_index()
+  )
+  >>> data
+        cv_fold  estimator     score
+  0          0      model1  0.234558
+  1          1      model1  0.282162
+  2          2      model1  0.233044
+  3          3      model1  0.069684
+  4          4      model1  0.290536
+  ..       ...       ...       ...
+  235       25      model8  0.925956
+  236       26      model8  0.758762
+  237       27      model8  0.977032
+  238       28      model8  0.829890
+  239       29      model8  0.787381
+
+  [240 rows x 3 columns]
+
+The average (percentile) ranks could be calculated as follows:
+
+.. code:: python
+
+  >>> avg_rank = data.groupby('cv_fold').score.rank(pct=True).groupby(data.estimator).mean()
+  >>> avg_rank
+
+  estimator
+  model1    0.208333
+  model2    0.191667
+  model3    0.366667
+  model4    0.495833
+  model5    0.708333
+  model6    0.737500
+  model7    0.850000
+  model8    0.941667
+  Name: score, dtype: float64
+
+Again, the omnibus test result shows we can confidently reject the null
+hypothesis that all models come from the same distribution and proceed to the
+post hoc analysis.
+
+.. code:: python
+
+  >>> import scipy.stats as ss
+  >>> ss.friedmanchisquare(*dict_data.values())
+  FriedmanchisquareResult(statistic=186.9000000000001, pvalue=6.787361102785178e-37)
+
+The results of a post hoc Conover test are collected:
+
+.. code:: python
+
+  >>> test_results = sp.posthoc_conover_friedman(
+      data,
+      melted=True,
+      block_col='cv_fold',
+      group_col='estimator',
+      y_col='score',
+  )
+  >>> sp.sign_plot(test_results)
+
+.. image:: _static/cd_diagram_example_sig_plot.png
+
+Finally, the average ranks and post hoc significance results can be passed to
+the ``critical_difference_diagram()`` function to plot the diagram:
+
+.. code:: python
+
+  >>> plt.figure(figsize=(10, 2), dpi=100)
+  >>> plt.title('Critical difference diagram of average score ranks')
+  >>> sp.critical_difference_diagram(avg_rank, test_results)
+
+.. image:: _static/cd_diagram1.png
+
+The diagram shows that model 8 is significantly better ranked than all models
+but model 7, that models 1 and 2 are worse than the others, and that 3 and 4
+are also worse ranked than models 5, 6 and 7. Other comparisons, however, do
+not have sufficient statistical evidence to support them.
+
+Several style customization options are available:
+
+.. code:: python
+
+  >>> plt.figure(figsize=(10, 2), dpi=100)
+  >>> plt.title('Critical difference diagram of average score ranks')
+  >>> sp.critical_difference_diagram(
+  >>>     ranks=avg_rank,
+  >>>     sig_matrix=test_results,
+  >>>     label_fmt_left='{label} [{rank:.3f}]  ',
+  >>>     label_fmt_right='  [{rank:.3f}] {label}',
+  >>>     text_h_margin=0.3,
+  >>>     label_props={'color': 'black', 'fontweight': 'bold'},
+  >>>     crossbar_props={'color': None, 'marker': 'o'},
+  >>>     marker_props={'marker': '*', 's': 150, 'color': 'y', 'edgecolor': 'k'},
+  >>>     elbow_props={'color': 'gray'},
+  >>> )
+
+.. image:: _static/cd_diagram2.png
