@@ -1,4 +1,4 @@
-from typing import Union, List, Tuple, Dict
+from typing import Union, List, Tuple, Dict, Set
 
 import numpy as np
 from matplotlib import colors
@@ -255,7 +255,7 @@ def sign_plot(
         return hax, cbar
 
 
-def _find_maximal_cliques(adj_matrix):
+def _find_maximal_cliques(adj_matrix: DataFrame) -> List[Set]:
     """Wrapper function over the recursive Bron-Kerbosch algorithm.
 
     Will be used to find points that are under the same crossbar in critical
@@ -298,7 +298,12 @@ def _find_maximal_cliques(adj_matrix):
     return result
 
 
-def _bron_kerbosch(current_clique, candidates, visited, adj_matrix, result):
+def _bron_kerbosch(
+        current_clique: Set,
+        candidates: Set,
+        visited: Set,
+        adj_matrix: DataFrame,
+        result: List[Set]) -> None:
     """Recursive algorithm to find the maximal fully connected subgraphs.
 
     See [1]_ for more information.
@@ -315,14 +320,14 @@ def _bron_kerbosch(current_clique, candidates, visited, adj_matrix, result):
     adj_matrix : pandas.DataFrame
         Binary matrix with 1 if row item and column item do NOT significantly
         differ. Diagonal must be zeroed.
-    result : list
+    result : list[set]
         List where to append the maximal cliques.
 
     Returns
     -------
     None
 
-     References
+    References
     ----------
     .. [1] https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
     """
@@ -428,7 +433,7 @@ def critical_difference_diagram(
     -------
     dict[str, list[matplotlib.Artist]]
         Lists of Artists created.
-    
+
     Examples
     --------
     See the :doc:`/tutorial`.

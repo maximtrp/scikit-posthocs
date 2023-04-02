@@ -360,12 +360,12 @@ The results of a post hoc Conover test are collected:
 .. code:: python
 
   >>> test_results = sp.posthoc_conover_friedman(
-      data,
-      melted=True,
-      block_col='cv_fold',
-      group_col='estimator',
-      y_col='score',
-  )
+  >>>     data,
+  >>>     melted=True,
+  >>>     block_col='cv_fold',
+  >>>     group_col='estimator',
+  >>>     y_col='score',
+  >>> )
   >>> sp.sign_plot(test_results)
 
 .. image:: _static/cd_diagram_example_sig_plot.png
