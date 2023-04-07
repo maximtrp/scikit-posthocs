@@ -10,7 +10,7 @@ import scikit_posthocs._global as spg
 import seaborn as sb
 import numpy as np
 import matplotlib.axes as ma
-from pandas import DataFrame
+from pandas import DataFrame, Series
 if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend')
     mpl.use('Agg')
@@ -86,6 +86,85 @@ class TestPosthocs(unittest.TestCase):
             splt.sign_plot(x.astype(np.int64), labels=False)
 
         self.assertTrue(isinstance(a, ma._axes.Axes) and isinstance(cbar, mpl.colorbar.ColorbarBase))
+
+    def test_find_maximal_cliques_input_validation(self):
+        with self.assertRaisesRegex(ValueError, ".*indices do not match"):
+            splt._find_maximal_cliques(
+                DataFrame(
+                    [[0, 1], [1, 0]],
+                    index=['a', 'b'],
+                    columns=['b', 'a'],
+                )
+            )
+        with self.assertRaises(ValueError, msg="Input matrix must be binary"):
+            splt._find_maximal_cliques(DataFrame([[0, 3], [3, 0]]))
+        with self.assertRaisesRegex(ValueError, '.*empty and symmetric'):
+            splt._find_maximal_cliques(DataFrame())
+        with self.assertRaisesRegex(ValueError, '.*empty and symmetric'):
+            splt._find_maximal_cliques(DataFrame([[1, 0], [1, 0]]))
+
+    def test_find_maximal_cliques_1x1(self):
+        adj_matrix = DataFrame([[0]], columns=['a'], index=['a'])
+        expected = [{'a'}]
+        self.assertEqual(splt._find_maximal_cliques(adj_matrix), expected)
+
+    def test_find_maximal_cliques_2x2(self):
+        adj_matrix = DataFrame(
+            [[0, 1], [1, 0]],
+            columns=['a', 'b'],
+            index=['a', 'b'],
+        )
+        expected = [{'a', 'b'}]
+        self.assertEqual(splt._find_maximal_cliques(adj_matrix), expected)
+
+    def test_find_maximal_cliques_3x3(self):
+        adj_matrix = DataFrame(
+            [[0, 0, 1],
+             [0, 0, 0],
+             [1, 0, 0]],
+            columns=['a', 'b', 'c'],
+            index=['a', 'b', 'c'],
+        )
+        expected = [{'a', 'c'}, {'b'}]
+        self.assertEqual(
+            set(map(frozenset, splt._find_maximal_cliques(adj_matrix))),
+            set(map(frozenset, expected)),
+        )
+
+    def test_find_maximal_cliques_6x6(self):
+        adj_matrix = DataFrame([
+            [0, 1, 0, 0, 0, 0],
+            [1, 0, 1, 1, 1, 0],
+            [0, 1, 0, 1, 1, 0],
+            [0, 1, 1, 0, 1, 0],
+            [0, 1, 1, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+        ])
+        expected = [{0, 1}, {1, 2, 3, 4}, {5}]
+        self.assertEqual(
+            set(map(frozenset, splt._find_maximal_cliques(adj_matrix))),
+            set(map(frozenset, expected)),
+        )
+
+    def test_cd_diagram_number_of_artists(self):
+        index = list('abcdef')
+        ranks = Series([2.1, 1.2, 4.5, 3.2, 5.7, 6.5], index=index)
+        sig_matrix = DataFrame(
+            [[0.08, 0.08, 0.01, 0.01, 0.01, 0.01],
+             [0.08, 0.08, 0.08, 0.08, 0.08, 0.01],
+             [0.01, 0.08, 0.08, 0.08, 0.08, 0.01],
+             [0.01, 0.08, 0.08, 0.08, 0.08, 0.01],
+             [0.01, 0.08, 0.08, 0.08, 0.08, 0.01],
+             [0.01, 0.01, 0.01, 0.01, 0.01, 0.08]],
+            index=index,
+            columns=index,
+        )
+
+        output = splt.critical_difference_diagram(ranks, sig_matrix)
+        self.assertEqual(len(output['markers']), len(ranks))
+        self.assertEqual(len(output['elbows']), len(ranks))
+        self.assertEqual(len(output['labels']), len(ranks))
+        self.assertEqual(len(output['crossbars']), 2)
 
     # Outliers tests
     def test_outliers_iqr(self):

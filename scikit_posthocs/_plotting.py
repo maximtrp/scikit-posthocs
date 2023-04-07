@@ -1,4 +1,4 @@
-from typing import Union, List, Tuple, Dict
+from typing import Union, List, Tuple, Dict, Set
 
 import numpy as np
 from matplotlib import colors
@@ -255,51 +255,99 @@ def sign_plot(
         return hax, cbar
 
 
-def _find_maximal_cliques(adj_matrix):
+def _find_maximal_cliques(adj_matrix: DataFrame) -> List[Set]:
     """Wrapper function over the recursive Bron-Kerbosch algorithm.
-    Will be used to find points that are under the same crossbar.
+
+    Will be used to find points that are under the same crossbar in critical
+    difference diagrams.
 
     Parameters
     ----------
-    adj_matrix : DataFrame
-        Matrix containing 1 if row item and column item do NOT significantly
-        differ. Diagonal must be zeroed.
+    adj_matrix : pandas.DataFrame
+        Binary matrix with 1 if row item and column item do NOT significantly
+        differ. Values in the main diagonal are not considered.
 
     Returns
     -------
     list[set]
-        Largest fully connected subgraphs.
+        Largest fully connected subgraphs, represented as sets of indices of
+        adj_matrix.
+
+    Raises
+    ------
+    ValueError
+        If the input matrix is empty or not symmetric.
+        If the input matrix is not binary.
+
     """
-    return _bron_kerbosch(set(), set(adj_matrix.index), set(), adj_matrix)
+    if (adj_matrix.index != adj_matrix.columns).any():
+        raise ValueError("adj_matrix must be symmetric, indices do not match")
+    if not adj_matrix.isin((0, 1)).values.all():
+        raise ValueError("Input matrix must be binary")
+    if adj_matrix.empty or not (adj_matrix.T == adj_matrix).values.all():
+        raise ValueError("Input matrix must be non-empty and symmetric")
+
+    result = []
+    _bron_kerbosch(
+        current_clique=set(),
+        candidates=set(adj_matrix.index),
+        visited=set(),
+        adj_matrix=adj_matrix,
+        result=result,
+    )
+    return result
 
 
-def _bron_kerbosch(R, P, X, adj_matrix):
-    """Recursive algrithm to find the maximal fully connected subgraphs [1]_.
+def _bron_kerbosch(
+        current_clique: Set,
+        candidates: Set,
+        visited: Set,
+        adj_matrix: DataFrame,
+        result: List[Set]) -> None:
+    """Recursive algorithm to find the maximal fully connected subgraphs.
+
+    See [1]_ for more information.
 
     Parameters
     ----------
-    adj_matrix : DataFrame
-        Matrix containing 1 if row item and column item do NOT significantly
+    current_clique : set
+        A set of vertices known to be fully connected.
+    candidates : set
+        Set of vertices that could potentially be added to the clique.
+    visited : set
+        Set of vertices already known to be part of another previously explored
+        clique, that is not current_clique.
+    adj_matrix : pandas.DataFrame
+        Binary matrix with 1 if row item and column item do NOT significantly
         differ. Diagonal must be zeroed.
+    result : list[set]
+        List where to append the maximal cliques.
 
     Returns
     -------
-    list[set]
-        Largest fully connected subgraphs.
+    None
 
     References
     ----------
     .. [1] https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
     """
-    if len(P) == 0 and len(X) == 0:
-        return [R]
-    res = []
-    for v in P.copy():
-        N = {n for n in adj_matrix.index if adj_matrix.loc[v, n]}
-        res += _bron_kerbosch(R | {v}, P & N, X & N, adj_matrix)
-        P.remove(v)
-        X.add(v)
-    return res
+    while candidates:
+        v = candidates.pop()
+        _bron_kerbosch(
+            current_clique | {v},
+            # Restrict candidate vertices to the neighbors of v
+            {n for n in candidates if adj_matrix.loc[v, n]},
+            # Restrict visited vertices to the neighbors of v
+            {n for n in visited if adj_matrix.loc[v, n]},
+            adj_matrix,
+            result,
+        )
+        visited.add(v)
+
+    # We do not need to report a clique if a children call aready did it.
+    if not visited:
+        # If this is not a terminal call, i.e. if any clique was reported.
+        result.append(current_clique)
 
 
 def critical_difference_diagram(
@@ -321,7 +369,9 @@ def critical_difference_diagram(
     that could not be statistically deemed as different are linked by a
     horizontal crossbar [1]_, [2]_.
 
-                       rank markers
+    ::
+
+                      rank markers
          X axis ---------O----O-------------------O-O------------O---------
                          |----|                   | |            |
                          |    |                   |---crossbar---|
@@ -331,7 +381,7 @@ def critical_difference_diagram(
                     |____|
                 text_h_margin
 
-    In the drawing above, the two crossbar indicates that clf1 and clf2 cannot
+    In the drawing above, the two crossbars indicate that clf1 and clf2 cannot
     be statistically differentiated, the same occurring between clf3, clf4 and
     clf5. However, clf1 and clf2 are each significantly lower ranked than clf3,
     clf4 and clf5.
@@ -359,7 +409,7 @@ def critical_difference_diagram(
         By default '({rank:.2g}) {label}'.
 
     label_props : dict, optional
-        Parameters to be passed to pyplot.annotate() when creating the labels,
+        Parameters to be passed to pyplot.text() when creating the labels,
         by default None.
 
     marker_props : dict, optional
@@ -383,6 +433,10 @@ def critical_difference_diagram(
     -------
     dict[str, list[matplotlib.Artist]]
         Lists of Artists created.
+
+    Examples
+    --------
+    See the :doc:`/tutorial`.
 
     References
     ----------
@@ -422,11 +476,20 @@ def critical_difference_diagram(
     ranks = Series(ranks)  # Standardize if ranks is dict
     points_left, points_right = np.array_split(ranks.sort_values(), 2)
 
+    # Sets of points under the same crossbar
+    crossbar_sets = _find_maximal_cliques(adj_matrix)
+
+    # Sort by lowest rank and filter single-valued sets
+    crossbar_sets = sorted(
+        (x for x in crossbar_sets if len(x) > 1),
+        key=lambda x: ranks[list(x)].min()
+    )
+
     # Create stacking of crossbars: for each level, try to fit the crossbar,
     # so that it does not intersect with any other in the level. If it does not
     # fit in any level, create a new level for it.
     crossbar_levels: list[list[set]] = []
-    for bar in _find_maximal_cliques(adj_matrix):
+    for bar in crossbar_sets:
         for level, bars_in_level in enumerate(crossbar_levels):
             if not any(bool(bar & bar_in_lvl) for bar_in_lvl in bars_in_level):
                 ypos = -level-1
@@ -461,9 +524,10 @@ def critical_difference_diagram(
                 ax.scatter(rank, 0, **dict(color=curr_color) | marker_props)
             )
             labels.append(
-                ax.annotate(
+                ax.text(
+                    xpos,
+                    ypos,
                     label_fmt.format(label=label, rank=rank),
-                    (xpos, ypos),
                     **dict(color=curr_color) | label_props,
                 )
             )
