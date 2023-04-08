@@ -448,7 +448,8 @@ def critical_difference_diagram(
     elbow_props = elbow_props or {}
     marker_props = {"zorder": 3, **(marker_props or {})}
     label_props = {"va": "center", **(label_props or {})}
-    crossbar_props = {"color": "k", "zorder": 3, "linewidth": 2, **(crossbar_props or {})}
+    crossbar_props = {"color": "k", "zorder": 3,
+                      "linewidth": 2, **(crossbar_props or {})}
 
     ax = ax or pyplot.gca()
     ax.yaxis.set_visible(False)
@@ -520,7 +521,7 @@ def critical_difference_diagram(
             elbows.append(elbow)
             curr_color = elbow.get_color()
             markers.append(
-                ax.scatter(rank, 0, **{"color": curr_color, **marker_props}
+                ax.scatter(rank, 0, **{"color": curr_color, **marker_props})
             )
             labels.append(
                 ax.text(
