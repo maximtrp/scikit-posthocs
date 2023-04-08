@@ -446,10 +446,9 @@ def critical_difference_diagram(
     .. [2] https://mirkobunse.github.io/CriticalDifferenceDiagrams.jl/stable/
     """
     elbow_props = elbow_props or {}
-    marker_props = dict(zorder=3) | (marker_props or {})
-    label_props = dict(va='center') | (label_props or {})
-    crossbar_props = dict(color='k', zorder=3, linewidth=2) | (
-        crossbar_props or {})
+    marker_props = {"zorder": 3, **(marker_props or {})}
+    label_props = {"va": "center", **(label_props or {})}
+    crossbar_props = {"color": "k", "zorder": 3, "linewidth": 2, **(crossbar_props or {})}
 
     ax = ax or pyplot.gca()
     ax.yaxis.set_visible(False)
@@ -521,14 +520,14 @@ def critical_difference_diagram(
             elbows.append(elbow)
             curr_color = elbow.get_color()
             markers.append(
-                ax.scatter(rank, 0, **dict(color=curr_color) | marker_props)
+                ax.scatter(rank, 0, **{"color": curr_color, **marker_props}
             )
             labels.append(
                 ax.text(
                     xpos,
                     ypos,
                     label_fmt.format(label=label, rank=rank),
-                    **dict(color=curr_color) | label_props,
+                    **{"color": curr_color, **label_props},
                 )
             )
             ypos -= 1
@@ -537,13 +536,13 @@ def critical_difference_diagram(
         points_left,
         xpos=points_left.iloc[0] - text_h_margin,
         label_fmt=label_fmt_left,
-        label_props=dict(ha='right') | label_props,
+        label_props={"ha": "right", **label_props},
     )
     plot_items(
         points_right[::-1],
         xpos=points_right.iloc[-1] + text_h_margin,
         label_fmt=label_fmt_right,
-        label_props=dict(ha='left') | label_props,
+        label_props={"ha": "left", **label_props},
     )
 
     return {
