@@ -12,7 +12,7 @@
     :target: https://codecov.io/gh/maximtrp/scikit-posthocs
 .. image:: https://app.codacy.com/project/badge/Grade/50d2a82a6dd84b51b515cebf931067d7
     :target: https://www.codacy.com/gh/maximtrp/scikit-posthocs/dashboard
-.. image:: https://pepy.tech/badge/scikit-posthocs
+.. image:: https://static.pepy.tech/badge/scikit-posthocs
     :target: https://pepy.tech/project/scikit-posthocs
 .. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg
     :target: https://github.com/maximtrp/scikit-posthocs/issues
