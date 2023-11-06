@@ -9,7 +9,7 @@ description = "Statistical post-hoc analysis and outlier detection algorithms"
 readme = "DESCRIPTION.rst"
 requires-python = ">=3.6"
 keywords = ["statistics", "stats", "posthoc", "anova", "data science"]
-license = MIT
+license.file = "LICENSE"
 authors = [
     { name = "Maksim Terpilovskii", email = "maximtrp@gmail.com" },
 ]
