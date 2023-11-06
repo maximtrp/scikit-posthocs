@@ -27,7 +27,7 @@ jobs:
         python -m pip install .[test]
     - name: Testing with pytest and measuring coverage
       run: |
-        coverage run --source src -m pytest .
+        coverage run --source scikit_posthocs -m pytest .
         coverage xml
     - name: Reporting coverage to Codacy
       uses: codacy/codacy-coverage-reporter-action@0.2.0
