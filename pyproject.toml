@@ -41,11 +41,15 @@ dependencies = [
     "matplotlib",
 ]
 
-[project.optional-dependencies]
-test = ["pytest", "coverage"]
+[tool.setuptools]
+packages = ["scikit_posthocs"]
 
 [tool.setuptools.dynamic]
 version = {attr = "scikit_posthocs.__version__"}
+
+[project.optional-dependencies]
+test = ["pytest", "coverage"]
+
 
 [tool.pytest.ini_options]
 log_cli = true
