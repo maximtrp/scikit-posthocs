@@ -3,23 +3,23 @@
 ===============
 
 .. image:: http://joss.theoj.org/papers/10.21105/joss.01169/status.svg
-    :target: https://doi.org/10.21105/joss.01169
+   :target: https://doi.org/10.21105/joss.01169
 .. image:: https://img.shields.io/github/actions/workflow/status/maximtrp/scikit-posthocs/package-test.yml?label=build
    :target: https://github.com/maximtrp/scikit-posthocs/actions/workflows/package-test.yml
 .. image:: https://img.shields.io/readthedocs/scikit-posthocs.svg
-    :target: https://scikit-posthocs.readthedocs.io
-.. image:: https://codecov.io/gh/maximtrp/scikit-posthocs/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/maximtrp/scikit-posthocs
-.. image:: https://app.codacy.com/project/badge/Grade/50d2a82a6dd84b51b515cebf931067d7
-    :target: https://www.codacy.com/gh/maximtrp/scikit-posthocs/dashboard
+   :target: https://scikit-posthocs.readthedocs.io
+.. image:: https://img.shields.io/codacy/coverage/50d2a82a6dd84b51b515cebf931067d7/master
+   :target: https://app.codacy.com/gh/maximtrp/scikit-posthocs/dashboard
+.. image:: https://img.shields.io/codacy/grade/50d2a82a6dd84b51b515cebf931067d7
+   :target: https://www.codacy.com/gh/maximtrp/scikit-posthocs/dashboard
 .. image:: https://static.pepy.tech/badge/scikit-posthocs
-    :target: https://pepy.tech/project/scikit-posthocs
+   :target: https://pepy.tech/project/scikit-posthocs
 .. image:: https://img.shields.io/github/issues/maximtrp/scikit-posthocs.svg
-    :target: https://github.com/maximtrp/scikit-posthocs/issues
+   :target: https://github.com/maximtrp/scikit-posthocs/issues
 .. image:: https://img.shields.io/pypi/v/scikit-posthocs.svg
-    :target: https://pypi.python.org/pypi/scikit-posthocs/
+   :target: https://pypi.python.org/pypi/scikit-posthocs/
 .. image:: https://img.shields.io/conda/vn/conda-forge/scikit-posthocs.svg
-    :target: https://anaconda.org/conda-forge/scikit-posthocs
+   :target: https://anaconda.org/conda-forge/scikit-posthocs
 
 **scikit-posthocs** is a Python package that provides post hoc tests for
 pairwise multiple comparisons that are usually performed in statistical
