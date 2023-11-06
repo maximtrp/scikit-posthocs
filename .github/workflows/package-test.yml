@@ -1,13 +1,17 @@
 name: Test
 
-on: [push]
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -17,10 +21,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest codecov coverage
-        pip install .
-    - name: Testing package with pytest
+        python -m pip install .
+        python -m pip install .[test]
+    - name: Testing with pytest and measuring coverage
       run: |
-        pytest .
-        coverage run --source scikit_posthocs setup.py test
-        codecov
+        coverage run --source src -m pytest .
+        coverage xml
+    - name: Reporting coverage to Codacy
+      uses: codacy/codacy-coverage-reporter-action@0.2.0
+      with:
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        coverage-reports: coverage.xml

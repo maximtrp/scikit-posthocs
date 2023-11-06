@@ -1,6 +1,54 @@
 [build-system]
-requires = [
-    "setuptools",
-    "wheel"
-]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "scikit-posthocs"
+dynamic = ["version"]
+description = "Statistical post-hoc analysis and outlier detection algorithms"
+readme = "DESCRIPTION.rst"
+requires-python = ">=3.6"
+keywords = ["statistics", "stats", "posthoc", "anova", "data science"]
+license = MIT
+authors = [
+    { name = "Maksim Terpilovskii", email = "maximtrp@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Education",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+urls.homepage = "https://github.com/maximtrp/scikit-posthocs"
+urls.documentation = "https://scikit-posthocs.rtfd.io"
+dependencies = [
+    "numpy",
+    "scipy",
+    "statsmodels",
+    "pandas>=0.20.0",
+    "seaborn",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+test = ["pytest", "coverage"]
+
+[tool.setuptools.dynamic]
+version = {attr = "scikit_posthocs.__version__"}
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
