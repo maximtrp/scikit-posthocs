@@ -357,25 +357,28 @@ class TestPosthocs(unittest.TestCase):
     def test_posthoc_conover_friedman(self):
 
         results = sp.posthoc_conover_friedman(self.df_bn)
-        p_results = np.array([[1.000000, 0.9325836, 0.2497915, 0.3203414, 0.3203414, 0.0517417, 0.6136576],
-                              [0.9325836, 1.000000, 0.28339156, 0.36072942, 0.36072942, 0.06033626, 0.67344846],
-                              [0.2497915, 0.28339156, 1.000000, 0.8657092, 0.8657092, 0.3607294, 0.5026565],
-                              [0.3203414, 0.36072942, 0.8657092, 1.000000, 1.000000, 0.2833916, 0.6136576],
-                              [0.3203414, 0.36072942, 0.8657092, 1.000000, 1.000000, 0.2833916, 0.6136576],
-                              [0.0517417, 0.06033626, 0.3607294, 0.2833916, 0.2833916, 1.000000, 0.1266542],
-                              [0.6136576, 0.67344846, 0.5026565, 0.6136576, 0.6136576, 0.1266542, 1.000000]])
+        p_results = np.array([[1.0000000,     np.nan,    np.nan,   np.nan,    np.nan,      np.nan,   np.nan],
+                              [0.9147508, 1.00000000,    np.nan,   np.nan,    np.nan,      np.nan,   np.nan],
+                              [0.1518030, 0.18071036, 1.0000000,   np.nan,    np.nan,      np.nan,   np.nan],
+                              [0.2140927, 0.25232845, 0.8305955, 1.000000,    np.nan,      np.nan,   np.nan],
+                              [0.2140927, 0.25232845, 0.8305955, 1.000000,  1.000000,      np.nan,   np.nan],
+                              [0.0181602, 0.02222747, 0.2523284, 0.1807104, 0.1807104, 1.00009000,   np.nan],
+                              [0.5242303, 0.59465124, 0.3989535, 0.5242303, 0.5242303, 0.05991984, 1.000000]])
+        tri_upper = np.triu_indices(p_results.shape[0], 1)
+        p_results[tri_upper] = np.transpose(p_results)[tri_upper]
+        np.fill_diagonal(p_results, 1)
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_conover_friedman_tukey(self):
 
         results = sp.posthoc_conover_friedman(self.df_bn, p_adjust='single-step')
-        p_results = np.array([[1.0000000,    np.nan,    np.nan,    np.nan,    np.nan,     np.nan,   np.nan],
-                              [1.0000000,  1.000000,    np.nan,    np.nan,    np.nan,     np.nan,   np.nan],
-                              [0.8908193, 0.9212619,  1.000000,    np.nan,    np.nan,     np.nan,   np.nan],
-                              [0.9455949, 0.9642182, 0.9999978,  1.000000,    np.nan,     np.nan,   np.nan],
-                              [0.9455949, 0.9642182, 0.9999978, 1.0000000,  1.000000,     np.nan,   np.nan],
-                              [0.3177477, 0.3686514, 0.9642182, 0.9212619, 0.9212619,   1.000000,   np.nan],
-                              [0.9986057, 0.9995081, 0.9931275, 0.9986057, 0.9986057,  0.6553018, 1.000000]])
+        p_results = np.array([[1.00000000,    np.nan,    np.nan,    np.nan,    np.nan,    np.nan,   np.nan],
+                              [0.99999986, 1.0000000,    np.nan,    np.nan,    np.nan,    np.nan,   np.nan],
+                              [0.72638075, 0.7905289, 1.0000000,    np.nan,    np.nan,    np.nan,   np.nan],
+                              [0.84667448, 0.8934524, 0.9999910, 1.0000000,    np.nan,    np.nan,   np.nan],
+                              [0.84667448, 0.8934524, 0.9999910, 1.0000000, 1.0000000,    np.nan,   np.nan],
+                              [0.09013677, 0.1187580, 0.8934524, 0.7905289, 0.7905289, 1.0000000,   np.nan],
+                              [0.99482447, 0.9981178, 0.9763466, 0.9948245, 0.9948245, 0.3662675, 1.000000]])
         p_results[p_results > 0.9] = 0.9
         tri_upper = np.triu_indices(p_results.shape[0], 1)
         p_results[tri_upper] = np.transpose(p_results)[tri_upper]
@@ -386,13 +389,16 @@ class TestPosthocs(unittest.TestCase):
 
         df = DataFrame(self.df_bn)
         results = sp.posthoc_conover_friedman(df, melted=False)
-        p_results = np.array([[1.000000, 0.9325836, 0.2497915, 0.3203414, 0.3203414, 0.0517417, 0.6136576],
-                              [0.9325836, 1.000000, 0.28339156, 0.36072942, 0.36072942, 0.06033626, 0.67344846],
-                              [0.2497915, 0.28339156, 1.000000, 0.8657092, 0.8657092, 0.3607294, 0.5026565],
-                              [0.3203414, 0.36072942, 0.8657092, 1.000000, 1.000000, 0.2833916, 0.6136576],
-                              [0.3203414, 0.36072942, 0.8657092, 1.000000, 1.000000, 0.2833916, 0.6136576],
-                              [0.0517417, 0.06033626, 0.3607294, 0.2833916, 0.2833916, 1.000000, 0.1266542],
-                              [0.6136576, 0.67344846, 0.5026565, 0.6136576, 0.6136576, 0.1266542, 1.000000]])
+        p_results = np.array([[1.0000000,     np.nan,    np.nan,   np.nan,    np.nan,      np.nan,   np.nan],
+                              [0.9147508, 1.00000000,    np.nan,   np.nan,    np.nan,      np.nan,   np.nan],
+                              [0.1518030, 0.18071036, 1.0000000,   np.nan,    np.nan,      np.nan,   np.nan],
+                              [0.2140927, 0.25232845, 0.8305955, 1.000000,    np.nan,      np.nan,   np.nan],
+                              [0.2140927, 0.25232845, 0.8305955, 1.000000,  1.000000,      np.nan,   np.nan],
+                              [0.0181602, 0.02222747, 0.2523284, 0.1807104, 0.1807104, 1.00009000,   np.nan],
+                              [0.5242303, 0.59465124, 0.3989535, 0.5242303, 0.5242303, 0.05991984, 1.000000]])
+        tri_upper = np.triu_indices(p_results.shape[0], 1)
+        p_results[tri_upper] = np.transpose(p_results)[tri_upper]
+        np.fill_diagonal(p_results, 1)
         self.assertTrue(np.allclose(results, p_results))
 
 

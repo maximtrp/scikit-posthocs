@@ -728,7 +728,7 @@ def posthoc_conover_friedman(
     A1 = (x['mat'] ** 2).sum()
     m = 1
     S2 = m/(m*k - 1.) * (A1 - m*k*n*(m*k + 1.)**2./4.)
-    T2 = 1. / S2 * (np.sum(R) - n * m * ((m * k + 1.) / 2.)**2.)
+    T2 = 1. / S2 * np.sum((R - n * m * ((m * k + 1.) / 2.))**2.)
     A = S2 * (2. * n * (m * k - 1.)) / (m * n * k - k - n + 1.)
     B = 1. - T2 / (n * (m * k - 1.))
 
