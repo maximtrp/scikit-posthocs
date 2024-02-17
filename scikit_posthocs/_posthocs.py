@@ -1,12 +1,11 @@
 import itertools as it
 from typing import Tuple, Union
 import numpy as np
-import pandas as pd
 import scipy.stats as ss
 from statsmodels.sandbox.stats.multicomp import multipletests
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
-from pandas import DataFrame
+from pandas import DataFrame, Series, MultiIndex
 
 
 def __convert_to_df(
@@ -1567,7 +1566,7 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
                     group_col: str = None,
                     control: str = None,
                     sort: bool = False,
-                    to_matrix: bool = True) -> pd.Series | DataFrame:
+                    to_matrix: bool = True) -> Series | DataFrame:
     """
     Dunnett's test [1, 2, 3] for multiple comparisons against a control group, used after parametric
     ANOVA. The control group is specified by the `control` parameter.
@@ -1621,15 +1620,15 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
 
     pvals = ss.dunnett(*treatment_data, control=control_data).pvalue
 
-    multi_index = pd.MultiIndex.from_product([[control], treatment_data.index.tolist()])
-    dunnett_sr = pd.Series(pvals, index=multi_index)
+    multi_index = MultiIndex.from_product([[control], treatment_data.index.tolist()])
+    dunnett_sr = Series(pvals, index=multi_index)
 
     if not to_matrix:
         return dunnett_sr
 
     else:
         levels = x.index.unique().tolist()
-        result_df = pd.DataFrame(index=levels, columns=levels)
+        result_df = DataFrame(index=levels, columns=levels)
 
         for pair in dunnett_sr.index:
             a, b = pair
