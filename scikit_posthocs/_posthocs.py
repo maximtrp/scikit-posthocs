@@ -1634,6 +1634,7 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
             a, b = pair
             result_df.loc[a, b] = dunnett_sr[pair]
             result_df.loc[b, a] = dunnett_sr[pair]
+        result_df.loc[control, control] = 1.0
         return result_df
 
 
