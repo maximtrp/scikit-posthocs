@@ -2405,10 +2405,3 @@ def posthoc_dscf(
 
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
-
-
-if __name__ == "__main__":
-    import pingouin
-    data = pingouin.read_dataset("anova2")
-    dunnett_df = posthoc_dunnett(data, "Yield", "Crop", "Soy", to_matrix=False)
-    display(dunnett_df)
