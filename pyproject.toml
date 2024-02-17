@@ -7,7 +7,7 @@ name = "scikit-posthocs"
 dynamic = ["version"]
 description = "Statistical post-hoc analysis and outlier detection algorithms"
 readme = "DESCRIPTION.rst"
-requires-python = ">=3.6"
+requires-python = ">=3.9"
 keywords = ["statistics", "stats", "posthoc", "anova", "data science"]
 license.file = "LICENSE"
 authors = [
@@ -22,9 +22,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -34,7 +31,7 @@ urls.homepage = "https://github.com/maximtrp/scikit-posthocs"
 urls.documentation = "https://scikit-posthocs.rtfd.io"
 dependencies = [
     "numpy",
-    "scipy",
+    "scipy>=1.9.0",
     "statsmodels",
     "pandas>=0.20.0",
     "seaborn",

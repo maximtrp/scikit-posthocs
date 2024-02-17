@@ -1,4 +1,4 @@
-__version__ = '0.8.2'
+__version__ = '0.9.0'
 
 from scikit_posthocs._global import global_simes_test, global_f_test
 from scikit_posthocs._omnibus import test_osrt, test_durbin, test_mackwolfe

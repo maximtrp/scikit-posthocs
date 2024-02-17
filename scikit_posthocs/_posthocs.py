@@ -1566,7 +1566,7 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
                     group_col: str = None,
                     control: str = None,
                     sort: bool = False,
-                    to_matrix: bool = True) -> Series | DataFrame:
+                    to_matrix: bool = True) -> Union[Series, DataFrame]:
     """
     Dunnett's test [1, 2, 3] for multiple comparisons against a control group, used after parametric
     ANOVA. The control group is specified by the `control` parameter.
@@ -1590,6 +1590,7 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
     control : str, optional
         Name of the control group within the `group_col` column. Values should
         have a nominal scale (categorical). Must be specified if `a` is a pandas
+        DataFrame.
 
     sort : bool, optional
         Specifies whether to sort DataFrame by group_col or not. Recommended
@@ -1914,6 +1915,7 @@ def posthoc_wilcoxon(
         a: Union[list, np.ndarray, DataFrame],
         val_col: str = None,
         group_col: str = None,
+        method: str = 'auto',
         zero_method: str = 'wilcox',
         correction: bool = False,
         p_adjust: str = None,
@@ -1939,7 +1941,10 @@ def posthoc_wilcoxon(
         (grouping or predictor variable). Values should have a nominal scale
         (categorical). Must be specified if `a` is a pandas DataFrame object.
 
-    zero_method : string, {"pratt", "wilcox", "zsplit"}, optional
+    method : {"auto", "exact", "approx"}, optional
+        Method to calculate the p-value. Default is "auto".
+
+    zero_method : {"pratt", "wilcox", "zsplit"}, optional
         "pratt": Pratt treatment, includes zero-differences in the ranking
         process (more conservative)
         "wilcox": Wilcox treatment, discards all zero-differences
@@ -1977,7 +1982,11 @@ def posthoc_wilcoxon(
 
     Notes
     -----
-    Refer to `scipy.stats.wilcoxon` reference page for further details.
+    Refer to `scipy.stats.wilcoxon` reference page for further details [1]_.
+
+    References
+    ----------
+    .. [1] https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html
 
     Examples
     --------
@@ -2002,6 +2011,7 @@ def posthoc_wilcoxon(
             xg.get_group(groups[i]),
             xg.get_group(groups[j]),
             zero_method=zero_method,
+            method=method,
             correction=correction)[1]
 
     if p_adjust:
