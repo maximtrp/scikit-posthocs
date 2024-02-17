@@ -1,4 +1,4 @@
-__version__ = '0.8.1'
+__version__ = '0.8.2'
 
 from scikit_posthocs._global import global_simes_test, global_f_test
 from scikit_posthocs._omnibus import test_osrt, test_durbin, test_mackwolfe
@@ -10,8 +10,8 @@ from scikit_posthocs._posthocs import (
     posthoc_nemenyi_friedman, posthoc_npm_test, posthoc_quade,
     posthoc_scheffe, posthoc_siegel_friedman, posthoc_tamhane,
     posthoc_ttest, posthoc_tukey, posthoc_tukey_hsd,
-    posthoc_vanwaerden, posthoc_wilcoxon, __convert_to_df,
-    __convert_to_block_df,
+    posthoc_vanwaerden, posthoc_wilcoxon, posthoc_dunnett,
+    __convert_to_df, __convert_to_block_df,
 )
 
 from scikit_posthocs._plotting import (

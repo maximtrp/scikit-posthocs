@@ -1,6 +1,7 @@
 import itertools as it
 from typing import Tuple, Union
 import numpy as np
+import pandas as pd
 import scipy.stats as ss
 from statsmodels.sandbox.stats.multicomp import multipletests
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
@@ -1561,6 +1562,82 @@ def posthoc_vanwaerden(
     return DataFrame(vs, index=groups, columns=groups)
 
 
+def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
+                    val_col: str = None,
+                    group_col: str = None,
+                    control: str = None,
+                    sort: bool = False,
+                    to_matrix: bool = True) -> pd.Series | DataFrame:
+    """
+    Dunnett's test [1, 2, 3] for multiple comparisons against a control group, used after parametric
+    ANOVA. The control group is specified by the `control` parameter.
+
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame. Array must be two-dimensional.
+
+    val_col : str, optional
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
+
+    group_col : str, optional
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
+
+    control : str, optional
+        Name of the control group within the `group_col` column. Values should
+        have a nominal scale (categorical). Must be specified if `a` is a pandas
+
+    sort : bool, optional
+        Specifies whether to sort DataFrame by group_col or not. Recommended
+        unless you sort your data manually.
+
+    to_matrix: bool, optional
+        Specifies whether to return a DataFrame or a Series. If True, a DataFrame
+        is returned with some NaN values since it's not pairwise comparison.
+        Default is True.
+
+    Returns
+    -------
+    result : pandas.Series or pandas.DataFrame
+        P values.
+
+    References
+    ----------
+    .. [1] Charles W. Dunnett (1955). “A Multiple Comparison Procedure for Comparing Several Treatments with a Control.”
+    .. [2] https://en.wikipedia.org/wiki/Dunnett%27s_test
+    .. [3] https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.dunnett.html#id1
+    """
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+    x = x.set_index(_group_col)[_val_col]
+    x_embedded = x.groupby(_group_col).agg(lambda y: y.dropna().tolist())
+    control_data = x_embedded.loc[control]
+    treatment_data = x_embedded.drop(control)
+
+    pvals = ss.dunnett(*treatment_data, control=control_data).pvalue
+
+    multi_index = pd.MultiIndex.from_product([[control], treatment_data.index.tolist()])
+    dunnett_sr = pd.Series(pvals, index=multi_index)
+
+    if not to_matrix:
+        return dunnett_sr
+
+    else:
+        levels = x.index.unique().tolist()
+        result_df = pd.DataFrame(index=levels, columns=levels)
+
+        for pair in dunnett_sr.index:
+            a, b = pair
+            result_df.loc[a, b] = dunnett_sr[pair]
+            result_df.loc[b, a] = dunnett_sr[pair]
+        return result_df
+
+
 def posthoc_ttest(
         a: Union[list, np.ndarray, DataFrame],
         val_col: str = None,
@@ -2329,3 +2406,10 @@ def posthoc_dscf(
 
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
+
+
+if __name__ == "__main__":
+    import pingouin
+    data = pingouin.read_dataset("anova2")
+    dunnett_df = posthoc_dunnett(data, "Yield", "Crop", "Soy", to_matrix=False)
+    display(dunnett_df)
