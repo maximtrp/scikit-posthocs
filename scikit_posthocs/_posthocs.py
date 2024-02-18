@@ -1,5 +1,5 @@
 import itertools as it
-from typing import Tuple, Union
+from typing import Tuple, Union, Literal
 import numpy as np
 import scipy.stats as ss
 from statsmodels.sandbox.stats.multicomp import multipletests
@@ -1565,6 +1565,7 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
                     val_col: str = None,
                     group_col: str = None,
                     control: str = None,
+                    alternative: Literal['two-sided', 'less', 'greater'] = 'two-sided',
                     sort: bool = False,
                     to_matrix: bool = True) -> Union[Series, DataFrame]:
     """
@@ -1591,6 +1592,11 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
         Name of the control group within the `group_col` column. Values should
         have a nominal scale (categorical). Must be specified if `a` is a pandas
         DataFrame.
+
+    alternative : ['two-sided', 'less', or 'greater'], optional
+        Whether to get the p-value for the one-sided hypothesis
+        ('less' or 'greater') or for the two-sided hypothesis ('two-sided').
+        Defaults to 'two-sided'.
 
     sort : bool, optional
         Specifies whether to sort DataFrame by group_col or not. Recommended
@@ -1619,7 +1625,7 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
     control_data = x_embedded.loc[control]
     treatment_data = x_embedded.drop(control)
 
-    pvals = ss.dunnett(*treatment_data, control=control_data).pvalue
+    pvals = ss.dunnett(*treatment_data, control=control_data, alternative=alternative).pvalue
 
     multi_index = MultiIndex.from_product([[control], treatment_data.index.tolist()])
     dunnett_sr = Series(pvals, index=multi_index)
