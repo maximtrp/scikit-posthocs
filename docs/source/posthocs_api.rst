@@ -25,3 +25,4 @@ Post-hocs API reference
     posthoc_tamhane
     posthoc_tukey
     posthoc_dscf
+    posthoc_dunnett
