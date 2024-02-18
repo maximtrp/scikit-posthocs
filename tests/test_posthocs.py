@@ -597,6 +597,21 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, r_results, atol=1.e-3))
 
 
+    def test_posthoc_dunnett(self):
+        r_results = [8.125844e-11, 2.427434e-01]
+        results = sp.posthoc_dunnett(self.df.sort_index(), val_col='pulse', group_col='kind',
+                                     control='rest', to_matrix=False)
+
+        # scipy use randomized Quasi-Monte Carlo integration of the multivariate-t distribution
+        # to compute the p-values. The result may vary slightly from run to run.
+        # we run the test 1000 times (maximum absolute tolerance = 1.e-4 for example data)
+        is_close = []
+        for i in range(1000):
+            is_close.append(np.allclose(results, r_results, atol=1.e-4))
+        is_close = all(is_close)
+        self.assertTrue(is_close)
+
 
 if __name__ == '__main__':
     unittest.main()
+
