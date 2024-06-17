@@ -362,7 +362,8 @@ def critical_difference_diagram(
         elbow_props: dict = None,
         crossbar_props: dict = None,
         color_palette:Union[Dict[str, str], List] = {},
-        text_h_margin: float = 0.01) -> Dict[str, list]:
+        text_h_margin: float = 0.01,
+        left_only: bool = False) -> Dict[str, list]:
     """Plot a Critical Difference diagram from ranks and post-hoc results.
 
     The diagram arranges the average ranks of multiple groups on the x axis
@@ -426,11 +427,17 @@ def critical_difference_diagram(
         that indicate lack of statistically significant difference. By default
         None.
 
+    color_palette: dict, optional
+        Parameters to be passed when you need specific colors for each category
+
     text_h_margin : float, optional
         Space between the text labels and the nearest vertical line of an
         elbow, by default 0.01.
-    color_palette: dict, optional
-        Parameters to be passed when you need specific colors for each category
+
+    left_only: boolean, optional
+        Set all labels in a single left-aligned block instead of splitting them
+        into two block, one for the left and one for the right.
+
 
     Returns
     -------
@@ -487,7 +494,11 @@ def critical_difference_diagram(
     )
 
     ranks = Series(ranks)  # Standardize if ranks is dict
-    points_left, points_right = np.array_split(ranks.sort_values(), 2)
+    if left_only:
+        points_left = ranks.sort_values()
+    else:
+        points_left, points_right = np.array_split(ranks.sort_values(), 2)
+    #points_left, points_right = np.array_split(ranks.sort_values(), 2)
 
     # Sets of points under the same crossbar
     crossbar_sets = _find_maximal_cliques(adj_matrix)
@@ -563,13 +574,15 @@ def critical_difference_diagram(
         label_props={"ha": "right", **label_props,
         },
     )
-    plot_items(
-        points_right[::-1],
-        xpos=points_right.iloc[-1] + text_h_margin,
-        label_fmt=label_fmt_right,
-        color_palette = color_palette,
-        label_props={"ha": "left", **label_props},
-    )
+
+    if not left_only:
+        plot_items(
+            points_right[::-1],
+            xpos=points_right.iloc[-1] + text_h_margin,
+            label_fmt=label_fmt_right,
+            color_palette = color_palette,
+            label_props={"ha": "left", **label_props},
+        )
 
     return {
         "markers": markers,
