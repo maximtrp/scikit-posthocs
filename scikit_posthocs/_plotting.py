@@ -435,7 +435,7 @@ def critical_difference_diagram(
         elbow, by default 0.01.
 
     left_only: boolean, optional
-        Set all labels in a single left-aligned block instead of splitting them
+        Set all labels in a single left-sided block instead of splitting them
         into two block, one for the left and one for the right.
 
 
