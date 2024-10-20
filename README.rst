@@ -21,6 +21,8 @@
 .. image:: https://img.shields.io/conda/vn/conda-forge/scikit-posthocs.svg
    :target: https://anaconda.org/conda-forge/scikit-posthocs
 
+===============
+
 **scikit-posthocs** is a Python package that provides post hoc tests for
 pairwise multiple comparisons that are usually performed in statistical
 data analysis to assess the differences between group levels if a statistically

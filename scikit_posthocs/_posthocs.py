@@ -1,20 +1,20 @@
 import itertools as it
-from typing import Tuple, Union, Literal
+from typing import Optional, Tuple, Union, Literal
 import numpy as np
 import scipy.stats as ss
 from statsmodels.sandbox.stats.multicomp import multipletests
-from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame, Series, MultiIndex
 
 
 def __convert_to_df(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = 'vals',
-        group_col: str = 'groups',
-        val_id: int = None,
-        group_id: int = None) -> Tuple[DataFrame, str, str]:
-    '''Hidden helper method to create a DataFrame with input data for further
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = "vals",
+    group_col: Optional[str] = "groups",
+    val_id: Optional[int] = None,
+    group_id: Optional[int] = None,
+) -> Tuple[DataFrame, str, str]:
+    """Hidden helper method to create a DataFrame with input data for further
     processing.
 
     Parameters
@@ -59,32 +59,33 @@ def __convert_to_df(
     -----
     Inferrence algorithm for determining `val_id` and `group_id` args is rather
     simple, so it is better to specify them explicitly to prevent errors.
-    '''
+    """
     if not group_col:
-        group_col = 'groups'
+        group_col = "groups"
     if not val_col:
-        val_col = 'vals'
+        val_col = "vals"
 
     if isinstance(a, DataFrame):
         x = a.copy()
         if not {group_col, val_col}.issubset(a.columns):
             raise ValueError(
-                'Specify correct column names using `group_col` and `val_col` args')
+                "Specify correct column names using `group_col` and `val_col` args"
+            )
         return x, val_col, group_col
 
     elif isinstance(a, list) or (isinstance(a, np.ndarray) and not a.shape.count(2)):
         grps_len = map(len, a)
-        grps = list(it.chain(*[[i+1] * l for i, l in enumerate(grps_len)]))
+        grps = list(
+            it.chain(*[[i + 1] * grp_len for i, grp_len in enumerate(grps_len)])
+        )
         vals = list(it.chain(*a))
 
         return DataFrame({val_col: vals, group_col: grps}), val_col, group_col
 
     elif isinstance(a, np.ndarray):
-
         # cols ids not defined
         # trying to infer
         if not all([val_id, group_id]):
-
             if np.argmax(a.shape):
                 a = a.T
 
@@ -95,74 +96,81 @@ def __convert_to_df(
                 __group_col = np.argmin(ax)
             else:
                 raise ValueError(
-                    'Cannot infer input format.\nPlease specify `val_id` and `group_id` args')
+                    "Cannot infer input format.\nPlease specify `val_id` and `group_id` args"
+                )
 
-            cols = {__val_col: val_col,
-                    __group_col: group_col}
+            cols = {__val_col: val_col, __group_col: group_col}
         else:
-            cols = {val_id: val_col,
-                    group_id: group_col}
+            cols = {val_id: val_col, group_id: group_col}
 
-        cols_vals = dict(sorted(cols.items())).values()
-        return DataFrame(a, columns=cols_vals), val_col, group_col
+        cols_vals = np.array(dict(sorted(cols.items())).values())
+        return DataFrame(a, columns=cols_vals).dropna(), val_col, group_col
 
 
 def __convert_to_block_df(
-        a,
-        y_col: str = None,
-        group_col: str = None,
-        block_col: str = None,
-        melted: bool = False) -> DataFrame:
+    a,
+    y_col: Optional[Union[str, int]] = None,
+    group_col: Optional[Union[str, int]] = None,
+    block_col: Optional[Union[str, int]] = None,
+    melted: bool = False,
+) -> Tuple[DataFrame, str, str, str]:
     # TODO: refactor conversion of block data to DataFrame
     if melted and not all([i is not None for i in [block_col, group_col, y_col]]):
         raise ValueError(
-            '`block_col`, `group_col`, `y_col` should be explicitly specified if using melted data')
+            "`block_col`, `group_col`, `y_col` should be explicitly specified if using melted data"
+        )
 
     if isinstance(a, DataFrame) and not melted:
         x = a.copy(deep=True)
-        group_col = 'groups'
-        block_col = 'blocks'
-        y_col = 'y'
+        group_col = "groups"
+        block_col = "blocks"
+        y_col = "y"
         x.columns.name = group_col
         x.index.name = block_col
-        x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+        x = x.reset_index().melt(
+            id_vars=block_col, var_name=group_col, value_name=y_col
+        )
 
     elif isinstance(a, DataFrame) and melted:
-        x = DataFrame.from_dict({'groups': a[group_col],
-                                 'blocks': a[block_col],
-                                 'y': a[y_col]})
+        x = DataFrame.from_dict(
+            {"groups": a[group_col], "blocks": a[block_col], "y": a[y_col]}
+        )
 
     elif not isinstance(a, DataFrame):
         x = np.array(a)
-        x = DataFrame(x, index=np.arange(
-            x.shape[0]), columns=np.arange(x.shape[1]))
+        x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
 
         if not melted:
-            group_col = 'groups'
-            block_col = 'blocks'
-            y_col = 'y'
+            group_col = "groups"
+            block_col = "blocks"
+            y_col = "y"
             x.columns.name = group_col
             x.index.name = block_col
-            x = x.reset_index().melt(id_vars=block_col, var_name=group_col, value_name=y_col)
+            x = x.reset_index().melt(
+                id_vars=block_col, var_name=group_col, value_name=y_col
+            )
 
         else:
-            x.rename(columns={group_col: 'groups',
-                     block_col: 'blocks', y_col: 'y'}, inplace=True)
+            x.rename(
+                columns={group_col: "groups", block_col: "blocks", y_col: "y"},
+                inplace=True,
+            )
 
-    group_col = 'groups'
-    block_col = 'blocks'
-    y_col = 'y'
+    group_col = "groups"
+    block_col = "blocks"
+    y_col = "y"
 
     return x, y_col, group_col, block_col
 
 
 def posthoc_conover(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        p_adjust: str = None,
-        sort: bool = True) -> DataFrame:
-    '''Post hoc pairwise test for multiple comparisons of mean rank sums
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    p_adjust: Optional[str] = None,
+    sort: bool = True,
+) -> DataFrame:
+    """Post hoc pairwise test for multiple comparisons of mean rank sums
     (Conover´s test). May be used after Kruskal-Wallis one-way analysis of
     variance by ranks to do pairwise comparisons [1]_.
 
@@ -219,13 +227,14 @@ def posthoc_conover(
     --------
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_conover(x, p_adjust = 'holm')
-    '''
+    """
+
     def compare_conover(i, j):
         diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
-        B = 1. / x_lens.loc[i] + 1. / x_lens.loc[j]
-        D = (n - 1. - h_cor) / (n - x_len)
+        B = 1.0 / x_lens.loc[i] + 1.0 / x_lens.loc[j]
+        D = (n - 1.0 - h_cor) / (n - x_len)
         t_value = diff / np.sqrt(S2 * B * D)
-        p_value = 2. * ss.t.sf(np.abs(t_value), df=n-x_len)
+        p_value = 2.0 * ss.t.sf(np.abs(t_value), df=n - x_len)
         return p_value
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -236,25 +245,25 @@ def posthoc_conover(
     x_len = x_groups_unique.size
     x_lens = x.groupby(_group_col)[_val_col].count()
 
-    x['ranks'] = x[_val_col].rank()
-    x_ranks_avg = x.groupby(_group_col)['ranks'].mean()
-    x_ranks_sum = x.groupby(_group_col)['ranks'].sum()
+    x["ranks"] = x[_val_col].rank()
+    x_ranks_avg = x.groupby(_group_col)["ranks"].mean()
+    x_ranks_sum = x.groupby(_group_col)["ranks"].sum().to_numpy()
 
     # ties
-    vals = x.groupby('ranks').count()[_val_col].values
+    vals = x.groupby("ranks").count()[_val_col].to_numpy()
     tie_sum = np.sum(vals[vals != 1] ** 3 - vals[vals != 1])
     tie_sum = 0 if not tie_sum else tie_sum
-    x_ties = np.min([1., 1. - tie_sum / (n ** 3. - n)])
+    x_ties = np.min([1.0, 1.0 - tie_sum / (n**3.0 - n)])
 
-    h = (12. / (n * (n + 1.))) * \
-        np.sum(x_ranks_sum**2 / x_lens) - 3. * (n + 1.)
+    h = (12.0 / (n * (n + 1.0))) * np.sum(x_ranks_sum**2 / x_lens) - 3.0 * (n + 1.0)
     h_cor = h / x_ties
 
     if x_ties == 1:
-        S2 = n * (n + 1.) / 12.
+        S2 = n * (n + 1.0) / 12.0
     else:
-        S2 = (1. / (n - 1.)) * \
-            (np.sum(x['ranks'] ** 2.) - (n * (((n + 1.)**2.) / 4.)))
+        S2 = (1.0 / (n - 1.0)) * (
+            np.sum(x["ranks"] ** 2.0) - (n * (((n + 1.0) ** 2.0) / 4.0))
+        )
 
     vs = np.zeros((x_len, x_len))
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -275,12 +284,13 @@ def posthoc_conover(
 
 
 def posthoc_dunn(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        p_adjust: str = None,
-        sort: bool = True) -> DataFrame:
-    '''Post hoc pairwise test for multiple comparisons of mean rank sums
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    p_adjust: Optional[str] = None,
+    sort: bool = True,
+) -> DataFrame:
+    """Post hoc pairwise test for multiple comparisons of mean rank sums
     (Dunn's test). May be used after Kruskal-Wallis one-way analysis of
     variance by ranks to do pairwise comparisons [1]_, [2]_.
 
@@ -339,13 +349,14 @@ def posthoc_dunn(
 
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_dunn(x, p_adjust = 'holm')
-    '''
+    """
+
     def compare_dunn(i, j):
         diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
-        A = n * (n + 1.) / 12.
-        B = (1. / x_lens.loc[i] + 1. / x_lens.loc[j])
+        A = n * (n + 1.0) / 12.0
+        B = 1.0 / x_lens.loc[i] + 1.0 / x_lens.loc[j]
         z_value = diff / np.sqrt((A - x_ties) * B)
-        p_value = 2. * ss.norm.sf(np.abs(z_value))
+        p_value = 2.0 * ss.norm.sf(np.abs(z_value))
         return p_value
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -356,14 +367,14 @@ def posthoc_dunn(
     x_len = x_groups_unique.size
     x_lens = x.groupby(_group_col)[_val_col].count()
 
-    x['ranks'] = x[_val_col].rank()
-    x_ranks_avg = x.groupby(_group_col)['ranks'].mean()
+    x["ranks"] = x[_val_col].rank()
+    x_ranks_avg = x.groupby(_group_col)["ranks"].mean()
 
     # ties
-    vals = x.groupby('ranks').count()[_val_col].values
+    vals = x.groupby("ranks").count()[_val_col].to_numpy()
     tie_sum = np.sum(vals[vals != 1] ** 3 - vals[vals != 1])
     tie_sum = 0 if not tie_sum else tie_sum
-    x_ties = tie_sum / (12. * (n - 1))
+    x_ties = tie_sum / (12.0 * (n - 1))
 
     vs = np.zeros((x_len, x_len))
     combs = it.combinations(range(x_len), 2)
@@ -384,12 +395,13 @@ def posthoc_dunn(
 
 
 def posthoc_nemenyi(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        dist: str = 'chi',
-        sort: bool = True) -> DataFrame:
-    '''Post hoc pairwise test for multiple comparisons of mean rank sums
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    dist: str = "chi",
+    sort: bool = True,
+) -> DataFrame:
+    """Post hoc pairwise test for multiple comparisons of mean rank sums
     (Nemenyi's test). May be used after Kruskal-Wallis one-way analysis of
     variance by ranks to do pairwise comparisons [1]_.
 
@@ -436,18 +448,19 @@ def posthoc_nemenyi(
     --------
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_nemenyi(x)
-    '''
+    """
+
     def compare_stats_chi(i, j):
         diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
-        A = n * (n + 1.) / 12.
-        B = 1. / x_lens.loc[i] + 1. / x_lens.loc[j]
-        chi = diff ** 2. / (A * B)
+        A = n * (n + 1.0) / 12.0
+        B = 1.0 / x_lens.loc[i] + 1.0 / x_lens.loc[j]
+        chi = diff**2.0 / (A * B)
         return chi
 
     def compare_stats_tukey(i, j):
         diff = np.abs(x_ranks_avg.loc[i] - x_ranks_avg.loc[j])
-        B = (1. / x_lens.loc[i] + 1. / x_lens.loc[j])
-        q = diff / np.sqrt((n * (n + 1.) / 12.) * B)
+        B = 1.0 / x_lens.loc[i] + 1.0 / x_lens.loc[j]
+        q = diff / np.sqrt((n * (n + 1.0) / 12.0) * B)
         return q
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -458,14 +471,14 @@ def posthoc_nemenyi(
     x_len = x_groups_unique.size
     x_lens = x.groupby(_group_col)[_val_col].count()
 
-    x['ranks'] = x[_val_col].rank()
-    x_ranks_avg = x.groupby(_group_col)['ranks'].mean()
+    x["ranks"] = x[_val_col].rank()
+    x_ranks_avg = x.groupby(_group_col)["ranks"].mean()
 
     # ties
-    vals = x.groupby('ranks').count()[_val_col].values
+    vals = x.groupby("ranks").count()[_val_col].to_numpy()
     tie_sum = np.sum(vals[vals != 1] ** 3 - vals[vals != 1])
     tie_sum = 0 if not tie_sum else tie_sum
-    x_ties = np.min([1., 1. - tie_sum / (n ** 3. - n)])
+    x_ties = np.min([1.0, 1.0 - tie_sum / (n**3.0 - n)])
 
     vs = np.zeros((x_len, x_len))
     combs = it.combinations(range(x_len), 2)
@@ -474,19 +487,21 @@ def posthoc_nemenyi(
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
 
-    if dist == 'chi':
+    if dist == "chi":
         for i, j in combs:
-            vs[i, j] = compare_stats_chi(
-                x_groups_unique[i], x_groups_unique[j]) / x_ties
+            vs[i, j] = (
+                compare_stats_chi(x_groups_unique[i], x_groups_unique[j]) / x_ties
+            )
 
         vs[tri_upper] = ss.chi2.sf(vs[tri_upper], x_len - 1)
 
-    elif dist == 'tukey':
+    elif dist == "tukey":
         for i, j in combs:
             vs[i, j] = compare_stats_tukey(
-                x_groups_unique[i], x_groups_unique[j]) * np.sqrt(2.)
+                x_groups_unique[i], x_groups_unique[j]
+            ) * np.sqrt(2.0)
 
-        vs[tri_upper] = psturng(vs[tri_upper], x_len, np.inf)
+        vs[tri_upper] = ss.studentized_range.sf(vs[tri_upper], x_len, np.inf)
 
     vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
@@ -495,13 +510,14 @@ def posthoc_nemenyi(
 
 
 def posthoc_nemenyi_friedman(
-        a: Union[list, np.ndarray, DataFrame],
-        y_col: str = None,
-        block_col: str = None,
-        group_col: str = None,
-        melted: bool = False,
-        sort: bool = False) -> DataFrame:
-    '''Calculate pairwise comparisons using Nemenyi post hoc test for
+    a: Union[list, np.ndarray, DataFrame],
+    y_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    melted: bool = False,
+    sort: bool = False,
+) -> DataFrame:
+    """Calculate pairwise comparisons using Nemenyi post hoc test for
     unreplicated blocked data. This test is usually conducted post hoc if
     significant results of the Friedman's test are obtained. The statistics
     refer to upper quantiles of the studentized range distribution (Tukey) [1]_,
@@ -574,24 +590,25 @@ def posthoc_nemenyi_friedman(
     >>> # and columns are groups.
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_nemenyi_friedman(x)
-    '''
+    """
+
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
-        qval = dif / np.sqrt(k * (k + 1.) / (6. * n))
+        qval = dif / np.sqrt(k * (k + 1.0) / (6.0 * n))
         return qval
 
     x, _y_col, _group_col, _block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted)
-    x = x.sort_values(by=[_group_col, _block_col],
-                      ascending=True) if sort else x
+        a, y_col, group_col, block_col, melted
+    )
+    x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[_group_col].unique()
     k = groups.size
     n = x[_block_col].unique().size
 
-    x['mat'] = x.groupby(_block_col)[_y_col].rank()
-    R = x.groupby(_group_col)['mat'].mean()
+    x["mat"] = x.groupby(_block_col)[_y_col].rank()
+    R = x.groupby(_group_col)["mat"].mean()
     vs = np.zeros((k, k))
     combs = it.combinations(range(k), 2)
 
@@ -602,22 +619,23 @@ def posthoc_nemenyi_friedman(
     for i, j in combs:
         vs[i, j] = compare_stats(i, j)
 
-    vs *= np.sqrt(2.)
-    vs[tri_upper] = psturng(vs[tri_upper], k, np.inf)
+    vs *= np.sqrt(2.0)
+    vs[tri_upper] = ss.studentized_range.sf(vs[tri_upper], k, np.inf)
     vs[tri_lower] = np.transpose(vs)[tri_lower]
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
 
 
 def posthoc_conover_friedman(
-        a: Union[list, np.ndarray, DataFrame],
-        y_col: str = None,
-        block_col: str = None,
-        group_col: str = None,
-        melted: bool = False,
-        sort: bool = False,
-        p_adjust: str = None) -> DataFrame:
-    '''Calculate pairwise comparisons using Conover post hoc test for unreplicated
+    a: Union[list, np.ndarray, DataFrame],
+    y_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    melted: bool = False,
+    sort: bool = False,
+    p_adjust: Optional[str] = None,
+) -> DataFrame:
+    """Calculate pairwise comparisons using Conover post hoc test for unreplicated
     blocked data. This test is usually conducted post hoc after
     significant results of the Friedman test. The statistics refer to
     the Student t distribution [1]_, [2]_.
@@ -700,37 +718,38 @@ def posthoc_conover_friedman(
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_conover_friedman(x)
-    '''
+    """
+
     def compare_stats(i, j):
         dif = np.abs(R.loc[groups[i]] - R.loc[groups[j]])
         tval = dif / np.sqrt(A) / np.sqrt(B)
-        pval = 2. * ss.t.sf(np.abs(tval), df=(m*n*k - k - n + 1))
+        pval = 2.0 * ss.t.sf(np.abs(tval), df=(m * n * k - k - n + 1))
         return pval
 
     def compare_tukey(i, j):
         dif = np.abs(R.loc[groups[i]] - R.loc[groups[j]])
-        qval = np.sqrt(2.) * dif / (np.sqrt(A) * np.sqrt(B))
+        qval = np.sqrt(2.0) * dif / (np.sqrt(A) * np.sqrt(B))
         pval = psturng(qval, k, np.inf)
         return pval
 
     x, _y_col, _group_col, _block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted)
-    x = x.sort_values(by=[_group_col, _block_col],
-                      ascending=True) if sort else x
+        a, y_col, group_col, block_col, melted
+    )
+    x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[_group_col].unique()
     k = groups.size
     n = x[_block_col].unique().size
 
-    x['mat'] = x.groupby(_block_col)[_y_col].rank()
-    R = x.groupby(_group_col)['mat'].sum()
-    A1 = (x['mat'] ** 2).sum()
+    x["mat"] = x.groupby(_block_col)[_y_col].rank()
+    R = x.groupby(_group_col)["mat"].sum()
+    A1 = (x["mat"] ** 2).sum()
     m = 1
-    S2 = m/(m*k - 1.) * (A1 - m*k*n*(m*k + 1.)**2./4.)
-    T2 = 1. / S2 * np.sum((R - n * m * ((m * k + 1.) / 2.))**2.)
-    A = S2 * (2. * n * (m * k - 1.)) / (m * n * k - k - n + 1.)
-    B = 1. - T2 / (n * (m * k - 1.))
+    S2 = m / (m * k - 1.0) * (A1 - m * k * n * (m * k + 1.0) ** 2.0 / 4.0)
+    T2 = 1.0 / S2 * np.sum((R.to_numpy() - n * m * ((m * k + 1.0) / 2.0)) ** 2.0)
+    A = S2 * (2.0 * n * (m * k - 1.0)) / (m * n * k - k - n + 1.0)
+    B = 1.0 - T2 / (n * (m * k - 1.0))
 
     vs = np.zeros((k, k))
     combs = it.combinations(range(k), 2)
@@ -739,7 +758,7 @@ def posthoc_conover_friedman(
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
 
-    if p_adjust == 'single-step':
+    if p_adjust == "single-step":
         for i, j in combs:
             vs[i, j] = compare_tukey(i, j)
     else:
@@ -755,11 +774,14 @@ def posthoc_conover_friedman(
 
 
 def posthoc_npm_test(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        sort: bool = False) -> DataFrame:
-    '''Calculate pairwise comparisons using Nashimoto and Wright´s all-pairs
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    alternative: Literal["greater", "less"] = "greater",
+    nperm: int = 1000,
+    sort: bool = False,
+) -> DataFrame:
+    """Calculate pairwise comparisons using Nashimoto and Wright´s all-pairs
     comparison procedure (NPM test) for simply ordered mean ranksums.
 
     NPM test is basically an extension of Nemenyi´s procedure for testing
@@ -772,9 +794,9 @@ def posthoc_npm_test(
         DataFrame.
 
     val_col : str, optional
-        Name of a DataFrame column that contains dependent variable values (test
-        or response variable). Values should have a non-nominal scale. Must be
-        specified if `a` is a pandas DataFrame object.
+        Name of a DataFrame column that contains dependent variable values
+        (test or response variable). Values should have a non-nominal scale.
+        Must be specified if `a` is a pandas DataFrame object.
 
     group_col : str, optional
         Name of a DataFrame column that contains independent variable values
@@ -784,19 +806,12 @@ def posthoc_npm_test(
     sort : bool, optional
         If True, sort data by block and group columns.
 
-    p_adjust : str, optional
-        Method for adjusting p values. See `statsmodels.sandbox.stats.multicomp`
-        for details. Available methods are:
-        'bonferroni' : one-step correction
-        'sidak' : one-step correction
-        'holm-sidak' : step-down method using Sidak adjustments
-        'holm' : step-down method using Bonferroni adjustments
-        'simes-hochberg' : step-up method  (independent)
-        'hommel' : closed method based on Simes tests (non-negative)
-        'fdr_bh' : Benjamini/Hochberg  (non-negative)
-        'fdr_by' : Benjamini/Yekutieli (negative)
-        'fdr_tsbh' : two stage fdr correction (non-negative)
-        'fdr_tsbky' : two stage fdr correction (non-negative)
+    alternative : str, optional
+        Alternative hypothesis being tested.
+        Can be either "greater" (by default) or "less".
+
+    nperm : int, optional
+        Number of permutations to perform for calculating p values.
 
     Returns
     -------
@@ -805,9 +820,7 @@ def posthoc_npm_test(
 
     Notes
     -----
-    The p values are estimated from the studentized range distribution. If
-    the medians are already increasingly ordered, than the NPM-test
-    simplifies to the ordinary Nemenyi test
+    An asymetric permutation test is conducted for calculating p values.
 
     References
     ----------
@@ -821,52 +834,74 @@ def posthoc_npm_test(
                       [110,112,123,130,145],
                       [132,141,156,160,172]])
     >>> sp.posthoc_npm_test(x)
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+    if alternative == "less":
+        x[_val_col] *= -1
 
     groups = x[_group_col].unique()
-    x['ranks'] = x[_val_col].rank()
-    ri = x.groupby(_group_col)['ranks'].mean()
-    ni = x.groupby(_group_col)[_val_col].count()
     k = groups.size
     n = x.shape[0]
-    sigma = np.sqrt(n * (n + 1) / 12.)
-    df = np.inf
+    sigma = np.sqrt(n * (n + 1) / 12.0)
 
-    def compare(m, u):
-        a = [(ri.loc[groups[u]]-ri.loc[groups[_mi]])/(sigma/np.sqrt(2) *
-                                                      np.sqrt(1./ni.loc[groups[_mi]] + 1./ni.loc[groups[u]])) for _mi in m]
-        return np.array(a)
+    def compare(x, ix):
+        x0 = x.copy()
+        x0.loc[:, _val_col] = x0.loc[ix, _val_col].values
+        x0["ranks"] = x0[_val_col].rank()
+        ri = x0.groupby(_group_col)["ranks"].mean()
+        ni = x0.groupby(_group_col)[_val_col].count()
+        is_balanced = all(ni == n)
+        stat = np.ones((k, k))
 
-    stat = np.zeros((k, k))
+        for i in range(k - 1):
+            for j in range(i + 1, k):
+                m = np.arange(i, j)
+                if is_balanced:
+                    tmp = [
+                        (ri.loc[groups[j]] - ri.loc[groups[_mi]]) / (sigma / np.sqrt(n))
+                        for _mi in m
+                    ]
+                else:
+                    tmp = [
+                        (ri.loc[groups[j]] - ri.loc[groups[_mi]])
+                        / (
+                            sigma
+                            * np.sqrt(
+                                1.0 / ni.loc[groups[_mi]] + 1.0 / ni.loc[groups[j]]
+                            )
+                        )
+                        for _mi in m
+                    ]
+                stat[j, i] = np.max(tmp)
+        return stat
 
-    for i in range(k-1):
-        for j in range(i+1, k):
-            u = j
-            m = np.arange(i, u)
-            tmp = compare(m, u)
-            stat[j, i] = np.max(tmp)
+    stat = compare(x, x.index)
 
-    stat[stat < 0] = 0
+    mt = np.zeros((nperm, k, k))
+    for i in range(nperm):
+        ix = np.random.permutation(x.index)
+        mt[i] = compare(x, ix)
 
-    p_values = psturng(stat, k, df)
-    tri_lower = np.tril_indices(p_values.shape[0], -1)
-    p_values[tri_lower] = p_values.T[tri_lower]
+    p_values = (mt >= stat).sum(axis=0) / nperm
 
+    tri_upper = np.triu_indices(p_values.shape[0], 1)
+    p_values[tri_upper] = np.transpose(p_values)[tri_upper]
     np.fill_diagonal(p_values, 1)
+
     return DataFrame(p_values, index=groups, columns=groups)
 
 
 def posthoc_siegel_friedman(
-        a: Union[list, np.ndarray, DataFrame],
-        y_col: str = None,
-        block_col: str = None,
-        group_col: str = None,
-        p_adjust: str = None,
-        melted: bool = False,
-        sort: bool = False) -> DataFrame:
-    '''Siegel and Castellan´s All-Pairs Comparisons Test for Unreplicated Blocked
+    a: Union[list, np.ndarray, DataFrame],
+    y_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    p_adjust: Optional[str] = None,
+    melted: bool = False,
+    sort: bool = False,
+) -> DataFrame:
+    """Siegel and Castellan´s All-Pairs Comparisons Test for Unreplicated Blocked
     Data. See authors' paper for additional information [1]_.
 
     Parameters
@@ -938,14 +973,16 @@ def posthoc_siegel_friedman(
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_siegel_friedman(x)
-    '''
+    """
+
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
-        zval = dif / np.sqrt(k * (k + 1.) / (6. * n))
+        zval = dif / np.sqrt(k * (k + 1.0) / (6.0 * n))
         return zval
 
     x, y_col, group_col, block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted)
+        a, y_col, group_col, block_col, melted
+    )
     x = x.sort_values(by=[group_col, block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
@@ -953,8 +990,8 @@ def posthoc_siegel_friedman(
     k = groups.size
     n = x[block_col].unique().size
 
-    x['mat'] = x.groupby(block_col)[y_col].rank()
-    R = x.groupby(group_col)['mat'].mean()
+    x["mat"] = x.groupby(block_col)[y_col].rank()
+    R = x.groupby(group_col)["mat"].mean()
 
     vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
@@ -965,8 +1002,8 @@ def posthoc_siegel_friedman(
 
     for i, j in combs:
         vs[i, j] = compare_stats(i, j)
-    vs = 2. * ss.norm.sf(np.abs(vs))
-    vs[vs > 1] = 1.
+    vs = 2.0 * ss.norm.sf(np.abs(vs))
+    vs[vs > 1] = 1.0
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
@@ -977,13 +1014,14 @@ def posthoc_siegel_friedman(
 
 
 def posthoc_miller_friedman(
-        a: Union[list, np.ndarray, DataFrame],
-        y_col: str = None,
-        block_col: str = None,
-        group_col: str = None,
-        melted: bool = False,
-        sort: bool = False) -> DataFrame:
-    '''Miller´s All-Pairs Comparisons Test for Unreplicated Blocked Data.
+    a: Union[list, np.ndarray, DataFrame],
+    y_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    melted: bool = False,
+    sort: bool = False,
+) -> DataFrame:
+    """Miller´s All-Pairs Comparisons Test for Unreplicated Blocked Data.
     The p-values are computed from the chi-square distribution [1]_, [2]_,
     [3]_.
 
@@ -1049,14 +1087,16 @@ def posthoc_miller_friedman(
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_miller_friedman(x)
-    '''
+    """
+
     def compare_stats(i, j):
         dif = np.abs(R[groups[i]] - R[groups[j]])
-        qval = dif / np.sqrt(k * (k + 1.) / (6. * n))
+        qval = dif / np.sqrt(k * (k + 1.0) / (6.0 * n))
         return qval
 
     x, y_col, group_col, block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted)
+        a, y_col, group_col, block_col, melted
+    )
     x = x.sort_values(by=[group_col, block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
@@ -1064,8 +1104,8 @@ def posthoc_miller_friedman(
     k = groups.size
     n = x[block_col].unique().size
 
-    x['mat'] = x.groupby(block_col)[y_col].rank()
-    R = x.groupby(group_col)['mat'].mean()
+    x["mat"] = x.groupby(block_col)[y_col].rank()
+    R = x.groupby(group_col)["mat"].mean()
 
     vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
@@ -1075,7 +1115,7 @@ def posthoc_miller_friedman(
 
     for i, j in combs:
         vs[i, j] = compare_stats(i, j)
-    vs = vs ** 2
+    vs = vs**2
     vs = ss.chi2.sf(vs, k - 1)
 
     vs[tri_lower] = np.transpose(vs)[tri_lower]
@@ -1084,14 +1124,15 @@ def posthoc_miller_friedman(
 
 
 def posthoc_durbin(
-        a: Union[list, np.ndarray, DataFrame],
-        y_col: str = None,
-        block_col: str = None,
-        group_col: str = None,
-        p_adjust: str = None,
-        melted: bool = False,
-        sort: bool = False) -> DataFrame:
-    '''Pairwise post hoc test for multiple comparisons of rank sums according to
+    a: Union[list, np.ndarray, DataFrame],
+    y_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    p_adjust: Optional[str] = None,
+    melted: bool = False,
+    sort: bool = False,
+) -> DataFrame:
+    """Pairwise post hoc test for multiple comparisons of rank sums according to
     Durbin and Conover for a two-way balanced incomplete block design (BIBD). See
     references for additional information [1]_, [2]_.
 
@@ -1161,14 +1202,15 @@ def posthoc_durbin(
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_durbin(x)
-    '''
+    """
     x, y_col, group_col, block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted)
+        a, y_col, group_col, block_col, melted
+    )
 
     def compare_stats(i, j):
         dif = np.abs(rj[groups[i]] - rj[groups[j]])
         tval = dif / denom
-        pval = 2. * ss.t.sf(np.abs(tval), df=df)
+        pval = 2.0 * ss.t.sf(np.abs(tval), df=df)
         return pval
 
     x = x.sort_values(by=[block_col, group_col], ascending=True) if sort else x
@@ -1179,14 +1221,13 @@ def posthoc_durbin(
     b = x[block_col].unique().size
     r = b
     k = t
-    x['y_ranked'] = x.groupby(block_col)[y_col].rank()
-    rj = x.groupby(group_col)['y_ranked'].sum()
-    A = (x['y_ranked'] ** 2).sum()
-    C = (b * k * (k + 1) ** 2) / 4.
-    D = (rj ** 2).sum() - r * C
+    x["y_ranked"] = x.groupby(block_col)[y_col].rank()
+    rj = x.groupby(group_col)["y_ranked"].sum()
+    A = (x["y_ranked"] ** 2).sum()
+    C = (b * k * (k + 1) ** 2) / 4.0
+    D = (rj.to_numpy() ** 2).sum() - r * C
     T1 = (t - 1) / (A - C) * D
-    denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1)
-                    * (1 - T1 / (b * (k - 1))))
+    denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1) * (1 - T1 / (b * (k - 1))))
     df = b * k - b - t + 1
 
     vs = np.zeros((t, t), dtype=float)
@@ -1208,13 +1249,14 @@ def posthoc_durbin(
 
 
 def posthoc_anderson(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        midrank: bool = True,
-        p_adjust: str = None,
-        sort: bool = False) -> DataFrame:
-    '''Anderson-Darling Pairwise Test for k-samples. Tests the null hypothesis
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    midrank: bool = True,
+    p_adjust: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Anderson-Darling Pairwise Test for k-samples. Tests the null hypothesis
     that k-samples are drawn from the same population without having to specify
     the distribution function of that population [1]_.
 
@@ -1269,7 +1311,7 @@ def posthoc_anderson(
     --------
     >>> x = np.array([[2.9, 3.0, 2.5, 2.6, 3.2], [3.8, 2.7, 4.0, 2.4], [2.8, 3.4, 3.7, 2.2, 2.0]])
     >>> sp.posthoc_anderson(x)
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
@@ -1283,8 +1325,13 @@ def posthoc_anderson(
     vs[:, :] = 0
 
     for i, j in combs:
-        vs[i, j] = ss.anderson_ksamp([x.loc[x[_group_col] == groups[i], _val_col],
-                                     x.loc[x[_group_col] == groups[j], _val_col]], midrank=midrank)[2]
+        vs[i, j] = ss.anderson_ksamp(
+            [
+                x.loc[x[_group_col] == groups[i], _val_col],
+                x.loc[x[_group_col] == groups[j], _val_col],
+            ],
+            midrank=midrank,
+        )[2]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
@@ -1295,15 +1342,16 @@ def posthoc_anderson(
 
 
 def posthoc_quade(
-        a: Union[list, np.ndarray, DataFrame],
-        y_col: str = None,
-        block_col: str = None,
-        group_col: str = None,
-        dist: str = 't',
-        p_adjust: str = None,
-        melted: bool = False,
-        sort: bool = False) -> DataFrame:
-    '''Calculate pairwise comparisons using Quade's post hoc test for
+    a: Union[list, np.ndarray, DataFrame],
+    y_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    dist: str = "t",
+    p_adjust: Optional[str] = None,
+    melted: bool = False,
+    sort: bool = False,
+) -> DataFrame:
+    """Calculate pairwise comparisons using Quade's post hoc test for
     unreplicated blocked data. This test is usually conducted if significant
     results were obtained by the omnibus test [1]_, [2]_, [3]_.
 
@@ -1384,21 +1432,23 @@ def posthoc_quade(
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_quade(x)
-    '''
+    """
+
     def compare_stats_t(i, j):
         dif = np.abs(S[groups[i]] - S[groups[j]])
         tval = dif / denom
-        pval = 2. * ss.t.sf(np.abs(tval), df=(b - 1) * (k - 1))
+        pval = 2.0 * ss.t.sf(np.abs(tval), df=(b - 1) * (k - 1))
         return pval
 
     def compare_stats_norm(i, j):
         dif = np.abs(W[groups[i]] * ff - W[groups[j]] * ff)
         zval = dif / denom
-        pval = 2. * ss.norm.sf(np.abs(zval))
+        pval = 2.0 * ss.norm.sf(np.abs(zval))
         return pval
 
     x, y_col, group_col, block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted)
+        a, y_col, group_col, block_col, melted
+    )
 
     x = x.sort_values(by=[block_col, group_col], ascending=True) if sort else x
     x.dropna(inplace=True)
@@ -1407,17 +1457,18 @@ def posthoc_quade(
     k = len(groups)
     b = x[block_col].unique().size
 
-    x['r'] = x.groupby(block_col)[y_col].rank()
-    q = (x.groupby(block_col)[y_col].max() -
-         x.groupby(block_col)[y_col].min()).rank()
-    x['rr'] = x['r'] - (k + 1)/2
-    x['s'] = x.apply(lambda row: row['rr'] * q[row[block_col]], axis=1)
-    x['w'] = x.apply(lambda row: row['r'] * q[row[block_col]], axis=1)
+    x["r"] = x.groupby(block_col)[y_col].rank()
+    q = Series(
+        x.groupby(block_col)[y_col].max() - x.groupby(block_col)[y_col].min().to_numpy()
+    ).rank()
+    x["rr"] = x["r"] - (k + 1) / 2
+    x["s"] = x.apply(lambda row: row["rr"] * q[row[block_col]], axis=1)
+    x["w"] = x.apply(lambda row: row["r"] * q[row[block_col]], axis=1)
 
-    A = (x['s'] ** 2).sum()
-    S = x.groupby(group_col)['s'].sum()
-    B = np.sum(S ** 2) / b
-    W = x.groupby(group_col)['w'].sum()
+    A = (x["s"] ** 2).sum()
+    S = x.groupby(group_col)["s"].sum()
+    B = np.sum(S.to_numpy() ** 2) / b
+    W = x.groupby(group_col)["w"].sum()
 
     vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
@@ -1426,7 +1477,7 @@ def posthoc_quade(
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
 
-    if dist == 't':
+    if dist == "t":
         denom = np.sqrt((2 * b * (A - B)) / ((b - 1) * (k - 1)))
 
         for i, j in combs:
@@ -1434,9 +1485,10 @@ def posthoc_quade(
 
     else:
         n = b * k
-        denom = np.sqrt((k * (k + 1.) * (2. * n + 1.) *
-                        (k-1.)) / (18. * n * (n + 1.)))
-        ff = 1. / (b * (b + 1.)/2.)
+        denom = np.sqrt(
+            (k * (k + 1.0) * (2.0 * n + 1.0) * (k - 1.0)) / (18.0 * n * (n + 1.0))
+        )
+        ff = 1.0 / (b * (b + 1.0) / 2.0)
 
         for i, j in combs:
             vs[i, j] = compare_stats_norm(i, j)
@@ -1450,12 +1502,13 @@ def posthoc_quade(
 
 
 def posthoc_vanwaerden(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        sort: bool = False,
-        p_adjust: str = None) -> DataFrame:
-    '''Van der Waerden's test for pairwise multiple comparisons between group
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    sort: bool = False,
+    p_adjust: Optional[str] = None,
+) -> DataFrame:
+    """Van der Waerden's test for pairwise multiple comparisons between group
     levels. See references for additional information [1]_, [2]_.
 
     Parameters
@@ -1520,7 +1573,7 @@ def posthoc_vanwaerden(
     --------
     >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
     >>> sp.posthoc_vanwaerden(x, val_col = 0, group_col = 1)
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
@@ -1528,12 +1581,12 @@ def posthoc_vanwaerden(
     n = x[_val_col].size
     k = groups.size
     r = ss.rankdata(x[_val_col])
-    x['z_scores'] = ss.norm.ppf(r / (n + 1))
+    x["z_scores"] = ss.norm.ppf(r / (n + 1))
 
-    aj = x.groupby(_group_col)['z_scores'].sum()
-    nj = x.groupby(_group_col)['z_scores'].count()
-    s2 = (1. / (n - 1.)) * (x['z_scores'] ** 2.).sum()
-    sts = (1. / s2) * np.sum(aj ** 2. / nj)
+    aj = x.groupby(_group_col)["z_scores"].sum().to_numpy()
+    nj = x.groupby(_group_col)["z_scores"].count()
+    s2 = (1.0 / (n - 1.0)) * (x["z_scores"] ** 2.0).sum()
+    sts = (1.0 / s2) * np.sum(aj**2.0 / nj)
     A = aj / nj
 
     vs = np.zeros((k, k), dtype=float)
@@ -1545,9 +1598,9 @@ def posthoc_vanwaerden(
 
     def compare_stats(i, j):
         dif = np.abs(A[groups[i]] - A[groups[j]])
-        B = 1. / nj[groups[i]] + 1. / nj[groups[j]]
-        tval = dif / np.sqrt(s2 * (n - 1. - sts)/(n - k) * B)
-        pval = 2. * ss.t.sf(np.abs(tval), df=n - k)
+        B = 1.0 / nj[groups[i]] + 1.0 / nj[groups[j]]
+        tval = dif / np.sqrt(s2 * (n - 1.0 - sts) / (n - k) * B)
+        pval = 2.0 * ss.t.sf(np.abs(tval), df=n - k)
         return pval
 
     for i, j in combs:
@@ -1561,13 +1614,15 @@ def posthoc_vanwaerden(
     return DataFrame(vs, index=groups, columns=groups)
 
 
-def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
-                    val_col: str = None,
-                    group_col: str = None,
-                    control: str = None,
-                    alternative: Literal['two-sided', 'less', 'greater'] = 'two-sided',
-                    sort: bool = False,
-                    to_matrix: bool = True) -> Union[Series, DataFrame]:
+def posthoc_dunnett(
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    control: Optional[str] = None,
+    alternative: Literal["two-sided", "less", "greater"] = "two-sided",
+    sort: bool = False,
+    to_matrix: bool = True,
+) -> Union[Series, DataFrame]:
     """
     Dunnett's test [1, 2, 3] for multiple comparisons against a control group, used after parametric
     ANOVA. The control group is specified by the `control` parameter.
@@ -1625,7 +1680,9 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
     control_data = x_embedded.loc[control]
     treatment_data = x_embedded.drop(control)
 
-    pvals = ss.dunnett(*treatment_data, control=control_data, alternative=alternative).pvalue
+    pvals = ss.dunnett(
+        *treatment_data, control=control_data, alternative=alternative
+    ).pvalue
 
     multi_index = MultiIndex.from_product([[control], treatment_data.index.tolist()])
     dunnett_sr = Series(pvals, index=multi_index)
@@ -1634,7 +1691,7 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
         return dunnett_sr
 
     else:
-        levels = x.index.unique().tolist()
+        levels = x.index.unique().to_numpy()
         result_df = DataFrame(index=levels, columns=levels)
 
         for pair in dunnett_sr.index:
@@ -1646,14 +1703,15 @@ def posthoc_dunnett(a: Union[list, np.ndarray, DataFrame],
 
 
 def posthoc_ttest(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        pool_sd: bool = False,
-        equal_var: bool = True,
-        p_adjust: str = None,
-        sort: bool = False) -> DataFrame:
-    '''Pairwise T test for multiple comparisons of independent groups. May be
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    pool_sd: bool = False,
+    equal_var: bool = True,
+    p_adjust: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Pairwise T test for multiple comparisons of independent groups. May be
     used after a parametric ANOVA to do pairwise comparisons.
 
     Parameters
@@ -1722,7 +1780,7 @@ def posthoc_ttest(
     array([[-1.        ,  0.04600899,  0.31269089],
            [ 0.04600899, -1.        ,  0.6327077 ],
            [ 0.31269089,  0.6327077 , -1.        ]])
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
@@ -1740,22 +1798,23 @@ def posthoc_ttest(
         ni = xg.count()
         m = xg.mean()
         sd = xg.std(ddof=1)
-        deg_f = ni - 1.
+        deg_f = ni - 1.0
         total_deg_f = np.sum(deg_f)
-        pooled_sd = np.sqrt(np.sum(sd ** 2. * deg_f) / total_deg_f)
+        pooled_sd = np.sqrt(np.sum(sd**2.0 * deg_f) / total_deg_f)
 
         def compare_pooled(i, j):
             diff = m.iloc[i] - m.iloc[j]
-            se_diff = pooled_sd * np.sqrt(1. / ni.iloc[i] + 1. / ni.iloc[j])
+            se_diff = pooled_sd * np.sqrt(1.0 / ni.iloc[i] + 1.0 / ni.iloc[j])
             t_value = diff / se_diff
-            return 2. * ss.t.cdf(-np.abs(t_value), total_deg_f)
+            return 2.0 * ss.t.cdf(-np.abs(t_value), total_deg_f)
 
         for i, j in combs:
             vs[i, j] = compare_pooled(i, j)
     else:
         for i, j in combs:
-            vs[i, j] = ss.ttest_ind(xg.get_group(groups[i]), xg.get_group(
-                groups[j]), equal_var=equal_var)[1]
+            vs[i, j] = ss.ttest_ind(
+                xg.get_group(groups[i]), xg.get_group(groups[j]), equal_var=equal_var
+            )[1]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
@@ -1766,10 +1825,12 @@ def posthoc_ttest(
 
 
 def posthoc_tukey_hsd(
-        x: Union[list, np.ndarray, DataFrame],
-        g: str,
-        alpha: float = 0.05) -> DataFrame:
-    '''Pairwise comparisons with TukeyHSD confidence intervals. This is a
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    sort: bool = True,
+) -> DataFrame:
+    """Pairwise comparisons with TukeyHSD confidence intervals. This is a
     convenience function to make statsmodels `pairwise_tukeyhsd` method more
     applicable for further use.
 
@@ -1800,36 +1861,31 @@ def posthoc_tukey_hsd(
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
     >>> sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
-    '''
-    result = pairwise_tukeyhsd(x, g, alpha=alpha)
-    groups = np.array(result.groupsunique, dtype=str)
-    groups_len = len(groups)
+    """
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
+    groups = x[_group_col].unique()
 
-    vs = np.zeros((groups_len, groups_len), dtype=int)
+    results = ss.tukey_hsd(
+        *[
+            x.loc[idx, _val_col].to_numpy()
+            for idx in x.groupby(_group_col).groups.values()
+        ]
+    )
 
-    for a in result.summary()[1:]:
-        a0 = str(a[0])
-        a1 = str(a[1])
-        a0i = np.where(groups == a0)[0][0]
-        a1i = np.where(groups == a1)[0][0]
-        vs[a0i, a1i] = 1 if str(a[-1]) == 'True' else 0
-
-    vsu = np.triu(vs)
-    np.fill_diagonal(vsu, 1)
-    tri_lower = np.tril_indices(vsu.shape[0], -1)
-    vsu[tri_lower] = np.transpose(vsu)[tri_lower]
-    return DataFrame(vsu, index=groups, columns=groups)
+    return DataFrame(results.pvalue, index=groups, columns=groups)
 
 
 def posthoc_mannwhitney(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        use_continuity: bool = True,
-        alternative: str = 'two-sided',
-        p_adjust: str = None,
-        sort: bool = True) -> DataFrame:
-    '''Pairwise comparisons with Mann-Whitney rank test.
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    use_continuity: bool = True,
+    alternative: str = "two-sided",
+    p_adjust: Optional[str] = None,
+    sort: bool = True,
+) -> DataFrame:
+    """Pairwise comparisons with Mann-Whitney rank test.
 
     Parameters
     ----------
@@ -1888,7 +1944,7 @@ def posthoc_mannwhitney(
     --------
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> sp.posthoc_mannwhitney(x, p_adjust = 'holm')
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
@@ -1907,7 +1963,8 @@ def posthoc_mannwhitney(
             xg.get_group(groups[i]),
             xg.get_group(groups[j]),
             use_continuity=use_continuity,
-            alternative=alternative)[1]
+            alternative=alternative,
+        )[1]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
@@ -1918,15 +1975,16 @@ def posthoc_mannwhitney(
 
 
 def posthoc_wilcoxon(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        method: str = 'auto',
-        zero_method: str = 'wilcox',
-        correction: bool = False,
-        p_adjust: str = None,
-        sort: bool = False) -> DataFrame:
-    '''Pairwise comparisons with Wilcoxon signed-rank test.
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    method: str = "auto",
+    zero_method: str = "wilcox",
+    correction: bool = False,
+    p_adjust: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Pairwise comparisons with Wilcoxon signed-rank test.
 
     It is a non-parametric version of the paired T-test for use with
     non-parametric ANOVA.
@@ -1998,7 +2056,7 @@ def posthoc_wilcoxon(
     --------
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> sp.posthoc_wilcoxon(x)
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
@@ -2018,7 +2076,8 @@ def posthoc_wilcoxon(
             xg.get_group(groups[j]),
             zero_method=zero_method,
             method=method,
-            correction=correction)[1]
+            correction=correction,
+        )[1]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
@@ -2028,11 +2087,12 @@ def posthoc_wilcoxon(
 
 
 def posthoc_scheffe(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        sort: bool = False) -> DataFrame:
-    '''Scheffe's all-pairs comparisons test for normally distributed data with equal
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Scheffe's all-pairs comparisons test for normally distributed data with equal
     group variances. For all-pairs comparisons in an one-factorial layout with
     normally distributed residuals and equal variances Scheffe's test can be
     performed with parametric ANOVA [1]_, [2]_, [3]_.
@@ -2084,7 +2144,7 @@ def posthoc_scheffe(
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_scheffe(x, val_col='values', group_col='groups')
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
@@ -2094,12 +2154,12 @@ def posthoc_scheffe(
     xi = x_grouped.mean()
     si = x_grouped.var()
     n = ni.sum()
-    sin = 1. / (n - groups.size) * np.sum(si * (ni - 1.))
+    sin = 1.0 / (n - groups.size) * np.sum(si * (ni - 1.0))
 
     def compare(i, j):
         dif = xi.loc[i] - xi.loc[j]
-        A = sin * (1. / ni.loc[i] + 1. / ni.loc[j]) * (groups.size - 1.)
-        f_val = dif ** 2. / A
+        A = sin * (1.0 / ni.loc[i] + 1.0 / ni.loc[j]) * (groups.size - 1.0)
+        f_val = dif**2.0 / A
         return f_val
 
     vs = np.zeros((groups.size, groups.size), dtype=float)
@@ -2112,19 +2172,20 @@ def posthoc_scheffe(
         vs[i, j] = compare(groups[i], groups[j])
 
     vs[tri_lower] = np.transpose(vs)[tri_lower]
-    p_values = ss.f.sf(vs, groups.size - 1., n - groups.size)
+    p_values = ss.f.sf(vs, groups.size - 1.0, n - groups.size)
 
     np.fill_diagonal(p_values, 1)
     return DataFrame(p_values, index=groups, columns=groups)
 
 
 def posthoc_tamhane(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        welch: bool = True,
-        sort: bool = False) -> DataFrame:
-    '''Tamhane's T2 all-pairs comparison test for normally distributed data with
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    welch: bool = True,
+    sort: bool = False,
+) -> DataFrame:
+    """Tamhane's T2 all-pairs comparison test for normally distributed data with
     unequal variances. Tamhane's T2 test can be performed for all-pairs
     comparisons in an one-factorial layout with normally distributed residuals
     but unequal groups variances. A total of m = k(k-1)/2 hypotheses can be
@@ -2177,7 +2238,7 @@ def posthoc_tamhane(
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_tamhane(x, val_col='values', group_col='groups')
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
@@ -2192,25 +2253,35 @@ def posthoc_tamhane(
         A = si[i] / ni[i] + si[j] / ni[j]
         t_val = dif / np.sqrt(A)
         if welch:
-            df = A ** 2. / (si[i] ** 2. / (ni[i] ** 2. * (ni[i] - 1.)) +
-                            si[j] ** 2. / (ni[j] ** 2. * (ni[j] - 1.)))
+            df = A**2.0 / (
+                si[i] ** 2.0 / (ni[i] ** 2.0 * (ni[i] - 1.0))
+                + si[j] ** 2.0 / (ni[j] ** 2.0 * (ni[j] - 1.0))
+            )
         else:
             # checks according to Tamhane (1979, p. 474)
-            ok1 = (9./10. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 10./9.)
-            ok2 = (9./10. <= (si[i] / ni[i]) / (si[j] / ni[j])) and\
-                ((si[i] / ni[i]) / (si[j] / ni[j]) <= 10./9.)
-            ok3 = (4./5. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 5./4.) and\
-                (1./2. <= (si[i] / ni[i]) / (si[j] / ni[j])) and\
-                ((si[i] / ni[i]) / (si[j] / ni[j]) <= 2.)
-            ok4 = (2./3. <= ni[i]/ni[j]) and (ni[i]/ni[j] <= 3./2.) and\
-                (3./4. <= (si[i] / ni[i]) / (si[j] / ni[j]))\
-                and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 4./3.)
+            ok1 = (9.0 / 10.0 <= ni[i] / ni[j]) and (ni[i] / ni[j] <= 10.0 / 9.0)
+            ok2 = (9.0 / 10.0 <= (si[i] / ni[i]) / (si[j] / ni[j])) and (
+                (si[i] / ni[i]) / (si[j] / ni[j]) <= 10.0 / 9.0
+            )
+            ok3 = (
+                (4.0 / 5.0 <= ni[i] / ni[j])
+                and (ni[i] / ni[j] <= 5.0 / 4.0)
+                and (1.0 / 2.0 <= (si[i] / ni[i]) / (si[j] / ni[j]))
+                and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 2.0)
+            )
+            ok4 = (
+                (2.0 / 3.0 <= ni[i] / ni[j])
+                and (ni[i] / ni[j] <= 3.0 / 2.0)
+                and (3.0 / 4.0 <= (si[i] / ni[i]) / (si[j] / ni[j]))
+                and ((si[i] / ni[i]) / (si[j] / ni[j]) <= 4.0 / 3.0)
+            )
             OK = any([ok1, ok2, ok3, ok4])
             if not OK:
                 print(
-                    "Sample sizes or standard errors are not balanced. T2 test is recommended.")
-            df = ni[i] + ni[j] - 2.
-        p_val = 2. * ss.t.sf(np.abs(t_val), df=df)
+                    "Sample sizes or standard errors are not balanced. T2 test is recommended."
+                )
+            df = ni[i] + ni[j] - 2.0
+        p_val = 2.0 * ss.t.sf(np.abs(t_val), df=df)
         return p_val
 
     vs = np.zeros((groups.size, groups.size), dtype=float)
@@ -2223,7 +2294,7 @@ def posthoc_tamhane(
     for i, j in combs:
         vs[i, j] = compare(groups[i], groups[j])
 
-    vs[tri_upper] = 1. - (1. - vs[tri_upper]) ** groups.size
+    vs[tri_upper] = 1.0 - (1.0 - vs[tri_upper]) ** groups.size
     vs[tri_lower] = np.transpose(vs)[tri_lower]
     vs[vs > 1] = 1
 
@@ -2232,11 +2303,12 @@ def posthoc_tamhane(
 
 
 def posthoc_tukey(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        sort: bool = False) -> DataFrame:
-    '''Performs Tukey's all-pairs comparisons test for normally distributed data
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Performs Tukey's all-pairs comparisons test for normally distributed data
     with equal group variances. For all-pairs comparisons in an
     one-factorial layout with normally distributed residuals and equal variances
     Tukey's test can be performed. A total of m = k(k-1)/2 hypotheses can be
@@ -2284,7 +2356,7 @@ def posthoc_tukey(
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_tukey(x, val_col='values', group_col='groups')
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     groups = x[_group_col].unique()
@@ -2294,11 +2366,11 @@ def posthoc_tukey(
     n = ni.sum()
     xi = x_grouped.mean()
     si = x_grouped.var()
-    sin = 1. / (n - groups.size) * np.sum(si * (ni - 1))
+    sin = 1.0 / (n - groups.size) * np.sum(si * (ni - 1))
 
     def compare(i, j):
         dif = xi[i] - xi[j]
-        A = sin * 0.5 * (1. / ni.loc[i] + 1. / ni.loc[j])
+        A = sin * 0.5 * (1.0 / ni.loc[i] + 1.0 / ni.loc[j])
         q_val = dif / np.sqrt(A)
         return q_val
 
@@ -2312,8 +2384,7 @@ def posthoc_tukey(
     for i, j in combs:
         vs[i, j] = compare(groups[i], groups[j])
 
-    vs[tri_upper] = psturng(np.abs(vs[tri_upper]),
-                            groups.size, n - groups.size)
+    vs[tri_upper] = psturng(np.abs(vs[tri_upper]), groups.size, n - groups.size)
     vs[tri_lower] = np.transpose(vs)[tri_lower]
 
     np.fill_diagonal(vs, 1)
@@ -2321,11 +2392,12 @@ def posthoc_tukey(
 
 
 def posthoc_dscf(
-        a: Union[list, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        sort: bool = False) -> DataFrame:
-    '''Dwass, Steel, Critchlow and Fligner all-pairs comparison test for a
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Dwass, Steel, Critchlow and Fligner all-pairs comparison test for a
     one-factorial layout with non-normally distributed residuals. As opposed to
     the all-pairs comparison procedures that depend on Kruskal ranks, the DSCF
     test is basically an extension of the U-test as re-ranking is conducted for
@@ -2379,7 +2451,7 @@ def posthoc_dscf(
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.posthoc_dscf(x, val_col='values', group_col='groups')
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     groups = x[_group_col].unique()
@@ -2389,22 +2461,22 @@ def posthoc_dscf(
 
     def get_ties(x):
         t = x.value_counts().values
-        c = np.sum((t ** 3 - t) / 12.)
+        c = np.sum((t**3 - t) / 12.0)
         return c
 
     def compare(i, j):
         ni = n.loc[i]
         nj = n.loc[j]
         x_raw = x.loc[(x[_group_col] == i) | (x[_group_col] == j)].copy()
-        x_raw['ranks'] = x_raw.loc[:, _val_col].rank()
-        r = x_raw.groupby(_group_col)['ranks'].sum().loc[[j, i]]
-        u = np.array([nj * ni + (nj * (nj + 1) / 2),
-                      nj * ni + (ni * (ni + 1) / 2)]) - r
+        x_raw["ranks"] = x_raw.loc[:, _val_col].rank()
+        r = x_raw.groupby(_group_col)["ranks"].sum().loc[[j, i]]
+        u = np.array([nj * ni + (nj * (nj + 1) / 2), nj * ni + (ni * (ni + 1) / 2)]) - r
         u_min = np.min(u)
         s = ni + nj
-        var = (nj*ni/(s*(s - 1.))) * \
-            ((s**3 - s)/12. - get_ties(x_raw['ranks']))
-        p = np.sqrt(2.) * (u_min - nj * ni / 2.) / np.sqrt(var)
+        var = (nj * ni / (s * (s - 1.0))) * (
+            (s**3 - s) / 12.0 - get_ties(x_raw["ranks"])
+        )
+        p = np.sqrt(2.0) * (u_min - nj * ni / 2.0) / np.sqrt(var)
         return p
 
     vs = np.zeros((k, k))

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Union, List, Tuple
+from typing import Optional, Union, List, Tuple, cast
 import itertools as it
 import numpy as np
 import scipy.stats as ss
@@ -10,14 +10,14 @@ from scikit_posthocs._posthocs import __convert_to_df, __convert_to_block_df
 
 
 def test_mackwolfe(
-        data: Union[List, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        p: int = None,
-        n_perm: int = 100,
-        sort: bool = False) -> Tuple[float, float]:
-
-    '''Mack-Wolfe Test for Umbrella Alternatives.
+    data: Union[List, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    p: Optional[int] = None,
+    n_perm: int = 100,
+    sort: bool = False,
+) -> Tuple[float, float]:
+    """Mack-Wolfe Test for Umbrella Alternatives.
 
     In dose-finding studies one may assume an increasing treatment effect with
     increasing dose level. However, the test subject may actually succumb to
@@ -71,25 +71,26 @@ def test_mackwolfe(
     --------
     >>> x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
     >>> sp.posthoc_mackwolfe(x)
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
 
     if not sort:
         x[_group_col] = Categorical(
-            x[_group_col], categories=x[_group_col].unique(), ordered=True)
+            x[_group_col], categories=x[_group_col].unique(), ordered=True
+        )
     x.sort_values(by=[_group_col], ascending=True, inplace=True)
 
     k = x[_group_col].unique().size
 
     if p and p > k:
         print("Selected 'p' > number of groups:", str(p), " > ", str(k))
-        return False
+        return (np.nan, np.nan)
     elif p is not None and p < 1:
         print("Selected 'p' < 1: ", str(p))
-        return False
+        return (np.nan, np.nan)
 
     Rij = x[_val_col].rank()
-    n = x.groupby(_group_col)[_val_col].count()
+    n = cast(Series, x.groupby(_group_col)[_val_col].count())
 
     def _fn(Ri, Rj):
         return np.sum(Ri.apply(lambda x: Rj[Rj > x].size))
@@ -100,44 +101,53 @@ def test_mackwolfe(
 
         for i in range(k):
             for j in range(i):
-                U[i, j] = _fn(Rij[x[_group_col] == levels[i]], Rij[x[_group_col] == levels[j]])
-                U[j, i] = _fn(Rij[x[_group_col] == levels[j]], Rij[x[_group_col] == levels[i]])
+                U[i, j] = _fn(
+                    Rij[x[_group_col] == levels[i]], Rij[x[_group_col] == levels[j]]
+                )
+                U[j, i] = _fn(
+                    Rij[x[_group_col] == levels[j]], Rij[x[_group_col] == levels[i]]
+                )
 
         return U
 
-    def _ap(p, U):
-        tmp1 = 0.
+    def _ap(p, U) -> float:
+        tmp1 = 0.0
         if p > 0:
             for i in range(p):
-                for j in range(i+1, p+1):
+                for j in range(i + 1, p + 1):
                     tmp1 += U[i, j]
-        tmp2 = 0.
+        tmp2 = 0.0
         if p < k:
             for i in range(p, k):
-                for j in range(i+1, k):
+                for j in range(i + 1, k):
                     tmp2 += U[j, i]
 
         return tmp1 + tmp2
 
-    def _n1(p, n):
-        return np.sum(n[:p+1])
+    def _n1(p: int, n: Series) -> float:
+        return np.sum(n[: p + 1])
 
-    def _n2(p, n):
+    def _n2(p: int, n: Series) -> float:
         return np.sum(n[p:k])
 
-    def _mean_at(p, n):
+    def _mean_at(p, n) -> float:
         N1 = _n1(p, n)
         N2 = _n2(p, n)
-        return (N1**2. + N2**2. - np.sum(n**2.) - n.iloc[p]**2.)/4.
+        return (N1**2.0 + N2**2.0 - np.sum(n**2.0) - n.iloc[p] ** 2.0) / 4.0
 
-    def _var_at(p, n):
+    def _var_at(p: int, n: Series) -> float:
         N1 = _n1(p, n)
         N2 = _n2(p, n)
         N = np.sum(n)
 
-        var = (2. * (N1**3 + N2**3) + 3. * (N1**2 + N2**2) -
-               np.sum(n**2 * (2*n + 3.)) - n.iloc[p]**2. * (2. * n.iloc[p] + 3.) +
-               12. * n.iloc[p] * N1 * N2 - 12. * n.iloc[p] ** 2. * N) / 72.
+        var = (
+            2.0 * (N1**3 + N2**3)
+            + 3.0 * (N1**2 + N2**2)
+            - np.sum(n**2 * (2 * n + 3.0))
+            - n.iloc[p] ** 2.0 * (2.0 * n.iloc[p] + 3.0)
+            + 12.0 * n.iloc[p] * N1 * N2
+            - 12.0 * n.iloc[p] ** 2.0 * N
+        ) / 72.0
         return var
 
     if p:
@@ -147,19 +157,18 @@ def test_mackwolfe(
         est = _ap(p, U)
         mean = _mean_at(p, n)
         sd = np.sqrt(_var_at(p, n))
-        stat = (est - mean)/sd
-        p_value = ss.norm.sf(stat)
+        stat = (est - mean) / sd
+        p_value = ss.norm.sf(stat).item()
     else:
         U = _ustat(Rij, x[_group_col], k)
         Ap = np.array([_ap(i, U) for i in range(k)]).ravel()
         mean = np.array([_mean_at(i, n) for i in range(k)]).ravel()
         var = np.array([_var_at(i, n) for i in range(k)]).ravel()
         A = (Ap - mean) / np.sqrt(var)
-        stat = np.max(A)
+        stat = float(np.max(A))
 
         mt = []
         for _ in range(n_perm):
-
             ix = Series(np.random.permutation(Rij))
             uix = _ustat(ix, x[_group_col], k)
             apix = np.array([_ap(i, uix) for i in range(k)])
@@ -167,17 +176,18 @@ def test_mackwolfe(
             mt.append(np.max(astarix))
 
         mt = np.array(mt)
-        p_value = mt[mt > stat] / n_perm
+        p_value = mt[mt > stat].size / n_perm
 
     return p_value, stat
 
 
 def test_osrt(
-        data: Union[List, np.ndarray, DataFrame],
-        val_col: str = None,
-        group_col: str = None,
-        sort: bool = False) -> Tuple[float, float, int]:
-    '''Hayter's one-sided studentised range test (OSRT)
+    data: Union[List, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    sort: bool = False,
+) -> Tuple[float, float, int]:
+    """Hayter's one-sided studentised range test (OSRT)
 
     Tests a hypothesis against an ordered alternative for normal data with
     equal variances [1]_.
@@ -223,11 +233,13 @@ def test_osrt(
     >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
     >>> x = x.melt(var_name='groups', value_name='values')
     >>> sp.test_osrt(x, val_col='values', group_col='groups')
-    '''
+    """
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
 
     if not sort:
-        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
+        x[_group_col] = Categorical(
+            x[_group_col], categories=x[_group_col].unique(), ordered=True
+        )
 
     x.sort_values(by=[_group_col], ascending=True, inplace=True)
     groups = np.unique(x[_group_col])
@@ -245,13 +257,13 @@ def test_osrt(
     for i in range(k):
         for j in range(ni.iloc[i]):
             c += 1
-            sigma2 += (x[_val_col].iat[c] - xi[i])**2. / df
+            sigma2 += (x[_val_col].iat[c] - xi[i]) ** 2.0 / df
 
     sigma = np.sqrt(sigma2)
 
     def compare(i, j):
         dif = xi.loc[groups[j]] - xi.loc[groups[i]]
-        A = sigma / np.sqrt(2.) * np.sqrt(1. / ni[groups[j]] + 1. / ni[groups[i]])
+        A = sigma / np.sqrt(2.0) * np.sqrt(1.0 / ni[groups[j]] + 1.0 / ni[groups[i]])
         qval = np.abs(dif) / A
         return qval
 
@@ -267,14 +279,14 @@ def test_osrt(
 
 
 def test_durbin(
-        data: Union[List, np.ndarray, DataFrame],
-        y_col: Union[str, int] = None,
-        block_col: Union[str, int] = None,
-        group_col: Union[str, int] = None,
-        melted: bool = False,
-        sort: bool = True) -> Tuple[float, float, int]:
-
-    '''Durbin's test whether k groups (or treatments) in a two-way
+    data: Union[List, np.ndarray, DataFrame],
+    y_col: Optional[Union[str, int]] = None,
+    block_col: Optional[Union[str, int]] = None,
+    group_col: Optional[Union[str, int]] = None,
+    melted: bool = False,
+    sort: bool = True,
+) -> Tuple[float, float, int]:
+    """Durbin's test whether k groups (or treatments) in a two-way
     balanced incomplete block design (BIBD) have identical effects. See
     references for additional information [1]_, [2]_.
 
@@ -331,11 +343,15 @@ def test_durbin(
     --------
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.test_durbin(x)
-    '''
+    """
     if melted and not all([block_col, group_col, y_col]):
-        raise ValueError('block_col, group_col, y_col should be explicitly specified if using melted data')
+        raise ValueError(
+            "block_col, group_col, y_col should be explicitly specified if using melted data"
+        )
 
-    x, _y_col, _group_col, _block_col = __convert_to_block_df(data, y_col, group_col, block_col, melted)
+    x, _y_col, _group_col, _block_col = __convert_to_block_df(
+        data, y_col, group_col, block_col, melted
+    )
 
     groups = x[_group_col].unique()
     blocks = x[_block_col].unique()
@@ -350,21 +366,20 @@ def test_durbin(
     r = np.unique(x.groupby(_group_col).count())
     k = np.unique(x.groupby(_block_col).count())
     if r.size > 1 and k.size > 1:
-        raise ValueError('Data appear to be unbalanced. Please correct your input data')
+        raise ValueError("Data appear to be unbalanced. Please correct your input data")
     else:
-        r = r.item()
-        k = k.item()
-    x['y_ranks'] = x.groupby(_block_col)[_y_col].rank()
-    x['y_ranks_sum'] = x.groupby(_group_col)['y_ranks'].sum()
+        r = float(r.item())
+        k = float(k.item())
+    x["y_ranks"] = x.groupby(_block_col)[_y_col].rank()
+    x["y_ranks_sum"] = x.groupby(_group_col)["y_ranks"].sum()
 
-    A = np.sum(x['y_ranks'] ** 2.)
-    C = (b * k * (k + 1)**2.) / 4.
-    D = np.sum(x['y_ranks_sum'] ** 2.) - r * C
-    T1 = (t - 1.) / (A - C) * D
+    A = float(np.sum(x["y_ranks"] ** 2.0))
+    C = float(b * k * (k + 1) ** 2.0) / 4.0
+    D = float(np.sum(x["y_ranks_sum"] ** 2.0)) - r * C
+    T1 = (t - 1.0) / (A - C) * D
 
     stat = T1
     df = t - 1
-    pval = ss.chi2.sf(stat, df)
+    pval = ss.chi2.sf(stat, df).item()
 
     return pval, stat, df
-
