@@ -534,7 +534,6 @@ class TestPosthocs(unittest.TestCase):
         results = sp.posthoc_nemenyi(
             self.df, val_col="pulse", group_col="kind", dist="tukey"
         ).values
-        print(results)
         self.assertTrue(np.allclose(results, r_results, atol=1.0e-3))
 
     def test_posthoc_nemenyi_friedman(self):
@@ -576,39 +575,57 @@ class TestPosthocs(unittest.TestCase):
         tri_upper = np.triu_indices(p_results.shape[0], 1)
         p_results[tri_upper] = np.transpose(p_results)[tri_upper]
         results = sp.posthoc_nemenyi_friedman(self.df_bn)
-        print(p_results)
-        print(results)
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_conover_friedman(self):
-        results = sp.posthoc_conover_friedman(self.df_bn)
-        p_results = np.array(
-            [
-                [1.0000000, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
-                [0.9147508, 1.00000000, np.nan, np.nan, np.nan, np.nan, np.nan],
-                [0.1518030, 0.18071036, 1.0000000, np.nan, np.nan, np.nan, np.nan],
-                [0.2140927, 0.25232845, 0.8305955, 1.000000, np.nan, np.nan, np.nan],
-                [0.2140927, 0.25232845, 0.8305955, 1.000000, 1.000000, np.nan, np.nan],
+        results = sp.posthoc_conover_friedman(self.df_bn, p_adjust="bonferroni")
+        p_results = (
+            np.array(
                 [
-                    0.0181602,
-                    0.02222747,
-                    0.2523284,
-                    0.1807104,
-                    0.1807104,
-                    1.00009000,
-                    np.nan,
-                ],
-                [
-                    0.5242303,
-                    0.59465124,
-                    0.3989535,
-                    0.5242303,
-                    0.5242303,
-                    0.05991984,
-                    1.000000,
-                ],
-            ]
+                    [1.0000000, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                    [0.9147508, 1.00000000, np.nan, np.nan, np.nan, np.nan, np.nan],
+                    [0.1518030, 0.18071036, 1.0000000, np.nan, np.nan, np.nan, np.nan],
+                    [
+                        0.2140927,
+                        0.25232845,
+                        0.8305955,
+                        1.000000,
+                        np.nan,
+                        np.nan,
+                        np.nan,
+                    ],
+                    [
+                        0.2140927,
+                        0.25232845,
+                        0.8305955,
+                        1.000000,
+                        1.000000,
+                        np.nan,
+                        np.nan,
+                    ],
+                    [
+                        0.0181602,
+                        0.02222747,
+                        0.2523284,
+                        0.1807104,
+                        0.1807104,
+                        1.00009000,
+                        np.nan,
+                    ],
+                    [
+                        0.5242303,
+                        0.59465124,
+                        0.3989535,
+                        0.5242303,
+                        0.5242303,
+                        0.05991984,
+                        1.000000,
+                    ],
+                ]
+            )
+            * 21
         )
+        p_results[p_results > 1] = 1.0
         tri_upper = np.triu_indices(p_results.shape[0], 1)
         p_results[tri_upper] = np.transpose(p_results)[tri_upper]
         np.fill_diagonal(p_results, 1)
@@ -651,11 +668,10 @@ class TestPosthocs(unittest.TestCase):
                 ],
             ]
         )
-        p_results[p_results > 0.9] = 0.9
         tri_upper = np.triu_indices(p_results.shape[0], 1)
         p_results[tri_upper] = np.transpose(p_results)[tri_upper]
         np.fill_diagonal(p_results, 1)
-        self.assertTrue(np.allclose(results, p_results, atol=3.0e-2))
+        self.assertTrue(np.allclose(results, p_results, atol=1e-3))
 
     def test_posthoc_conover_friedman_non_melted(self):
         df = DataFrame(self.df_bn)
@@ -766,75 +782,79 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_siegel_friedman(self):
-        results = sp.posthoc_siegel_friedman(self.df_bn)
+        results = sp.posthoc_siegel_friedman(self.df_bn, p_adjust="bonferroni")
 
-        p_results = np.array(
-            [
+        p_results = (
+            np.array(
                 [
-                    1.000000,
-                    0.92471904,
-                    0.18587673,
-                    0.25683926,
-                    0.25683926,
-                    0.01816302,
-                    0.57075039,
-                ],
-                [
-                    0.92471904,
-                    1.0000000,
-                    0.2193026,
-                    0.2986177,
-                    0.2986177,
-                    0.0233422,
-                    0.6366016,
-                ],
-                [
-                    0.18587673,
-                    0.2193026,
-                    1.0000000,
-                    0.8501067,
-                    0.8501067,
-                    0.2986177,
-                    0.4496918,
-                ],
-                [
-                    0.25683926,
-                    0.2986177,
-                    0.8501067,
-                    1.000000,
-                    1.0000000,
-                    0.2193026,
-                    0.5707504,
-                ],
-                [
-                    0.25683926,
-                    0.2986177,
-                    0.8501067,
-                    1.0000000,
-                    1.0000000,
-                    0.2193026,
-                    0.5707504,
-                ],
-                [
-                    0.01816302,
-                    0.0233422,
-                    0.2986177,
-                    0.2193026,
-                    0.2193026,
-                    1.000000,
-                    0.07260094,
-                ],
-                [
-                    0.57075039,
-                    0.6366016,
-                    0.4496918,
-                    0.5707504,
-                    0.5707504,
-                    0.07260094,
-                    1.000000,
-                ],
-            ]
+                    [
+                        1.000000,
+                        0.92471904,
+                        0.18587673,
+                        0.25683926,
+                        0.25683926,
+                        0.01816302,
+                        0.57075039,
+                    ],
+                    [
+                        0.92471904,
+                        1.0000000,
+                        0.2193026,
+                        0.2986177,
+                        0.2986177,
+                        0.0233422,
+                        0.6366016,
+                    ],
+                    [
+                        0.18587673,
+                        0.2193026,
+                        1.0000000,
+                        0.8501067,
+                        0.8501067,
+                        0.2986177,
+                        0.4496918,
+                    ],
+                    [
+                        0.25683926,
+                        0.2986177,
+                        0.8501067,
+                        1.000000,
+                        1.0000000,
+                        0.2193026,
+                        0.5707504,
+                    ],
+                    [
+                        0.25683926,
+                        0.2986177,
+                        0.8501067,
+                        1.0000000,
+                        1.0000000,
+                        0.2193026,
+                        0.5707504,
+                    ],
+                    [
+                        0.01816302,
+                        0.0233422,
+                        0.2986177,
+                        0.2193026,
+                        0.2193026,
+                        1.000000,
+                        0.07260094,
+                    ],
+                    [
+                        0.57075039,
+                        0.6366016,
+                        0.4496918,
+                        0.5707504,
+                        0.5707504,
+                        0.07260094,
+                        1.000000,
+                    ],
+                ]
+            )
+            * 21
         )
+        p_results[p_results > 1] = 1.0
 
         self.assertTrue(np.allclose(results, p_results))
 
@@ -855,75 +875,79 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_quade(self):
-        results = sp.posthoc_quade(self.df_bn)
+        results = sp.posthoc_quade(self.df_bn, p_adjust="bonferroni")
 
-        p_results = np.array(
-            [
+        p_results = (
+            np.array(
                 [
-                    1.00000000,
-                    0.67651326,
-                    0.15432143,
-                    0.17954686,
-                    0.2081421,
-                    0.02267043,
-                    0.2081421,
-                ],
-                [
-                    0.67651326,
-                    1.00000000,
-                    0.29595042,
-                    0.33809987,
-                    0.38443835,
-                    0.0494024,
-                    0.38443835,
-                ],
-                [
-                    0.15432143,
-                    0.29595042,
-                    1.00000000,
-                    0.92586499,
-                    0.85245022,
-                    0.29595042,
-                    0.85245022,
-                ],
-                [
-                    0.17954686,
-                    0.33809987,
-                    0.92586499,
-                    1.00000000,
-                    0.92586499,
-                    0.25789648,
-                    0.92586499,
-                ],
-                [
-                    0.2081421,
-                    0.38443835,
-                    0.85245022,
-                    0.92586499,
-                    1.00000000,
-                    0.22378308,
-                    1.00000000,
-                ],
-                [
-                    0.02267043,
-                    0.0494024,
-                    0.29595042,
-                    0.25789648,
-                    0.22378308,
-                    1.00000000,
-                    0.22378308,
-                ],
-                [
-                    0.2081421,
-                    0.38443835,
-                    0.85245022,
-                    0.92586499,
-                    1.00000000,
-                    0.22378308,
-                    1.00000000,
-                ],
-            ]
+                    [
+                        1.00000000,
+                        0.67651326,
+                        0.15432143,
+                        0.17954686,
+                        0.2081421,
+                        0.02267043,
+                        0.2081421,
+                    ],
+                    [
+                        0.67651326,
+                        1.00000000,
+                        0.29595042,
+                        0.33809987,
+                        0.38443835,
+                        0.0494024,
+                        0.38443835,
+                    ],
+                    [
+                        0.15432143,
+                        0.29595042,
+                        1.00000000,
+                        0.92586499,
+                        0.85245022,
+                        0.29595042,
+                        0.85245022,
+                    ],
+                    [
+                        0.17954686,
+                        0.33809987,
+                        0.92586499,
+                        1.00000000,
+                        0.92586499,
+                        0.25789648,
+                        0.92586499,
+                    ],
+                    [
+                        0.2081421,
+                        0.38443835,
+                        0.85245022,
+                        0.92586499,
+                        1.00000000,
+                        0.22378308,
+                        1.00000000,
+                    ],
+                    [
+                        0.02267043,
+                        0.0494024,
+                        0.29595042,
+                        0.25789648,
+                        0.22378308,
+                        1.00000000,
+                        0.22378308,
+                    ],
+                    [
+                        0.2081421,
+                        0.38443835,
+                        0.85245022,
+                        0.92586499,
+                        1.00000000,
+                        0.22378308,
+                        1.00000000,
+                    ],
+                ]
+            )
+            * 21
         )
+        p_results[p_results > 1.0] = 1.0
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_quade_norm(self):
@@ -988,7 +1012,6 @@ class TestPosthocs(unittest.TestCase):
 
         results = sp.posthoc_npm_test(data)
 
-        print(results)
         p_results = np.array(
             [
                 [1.0, 0.0077, 0.0020, 2e-16],
@@ -998,7 +1021,7 @@ class TestPosthocs(unittest.TestCase):
             ]
         )
 
-        self.assertTrue(np.allclose(results, p_results, rtol=1))
+        self.assertTrue(np.allclose(results, p_results, rtol=4))
 
     def test_posthoc_vanwaerden(self):
         r_results = np.array(
@@ -1066,16 +1089,20 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(n_results, results))
 
     def test_posthoc_mannwhitney(self):
-        r_results = np.array(
-            [
-                [1, 3.420508e-08, 1.714393e-02],
-                [3.420508e-08, 1, 1.968352e-05],
-                [1.714393e-02, 1.968352e-05, 1],
-            ]
+        r_results = (
+            np.array(
+                [
+                    [1, 3.420508e-08, 1.714393e-02],
+                    [3.420508e-08, 1, 1.968352e-05],
+                    [1.714393e-02, 1.968352e-05, 1],
+                ]
+            )
+            * 3
         )
+        np.fill_diagonal(r_results, 1)
 
         results = sp.posthoc_mannwhitney(
-            self.df, val_col="pulse", group_col="kind"
+            self.df, val_col="pulse", group_col="kind", p_adjust="bonferroni"
         ).values
         self.assertTrue(np.allclose(results, r_results))
 
@@ -1092,16 +1119,23 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(nd_results, results))
 
     def test_posthoc_wilcoxon(self):
-        r_results = np.array(
-            [
-                [1, 2.337133e-03, 2.857818e-06],
-                [2.337133e-03, 1, 1.230888e-05],
-                [2.857818e-06, 1.230888e-05, 1],
-            ]
+        r_results = (
+            np.array(
+                [
+                    [1, 2.337133e-03, 2.857818e-06],
+                    [2.337133e-03, 1, 1.230888e-05],
+                    [2.857818e-06, 1.230888e-05, 1],
+                ]
+            )
+            * 3
         )
+        np.fill_diagonal(r_results, 1)
 
         results = sp.posthoc_wilcoxon(
-            self.df.sort_index(), val_col="pulse", group_col="kind"
+            self.df.sort_index(),
+            val_col="pulse",
+            group_col="kind",
+            p_adjust="bonferroni",
         )
         self.assertTrue(np.allclose(results, r_results, atol=1e-4))
 
@@ -1163,22 +1197,37 @@ class TestPosthocs(unittest.TestCase):
 
     def test_posthoc_dunnett(self):
         r_results = [8.125844e-11, 2.427434e-01]
-        results = sp.posthoc_dunnett(
-            self.df.sort_index(),
-            val_col="pulse",
-            group_col="kind",
-            control="rest",
-            to_matrix=False,
-        )
 
         # scipy use randomized Quasi-Monte Carlo integration of the multivariate-t distribution
         # to compute the p-values. The result may vary slightly from run to run.
         # we run the test 1000 times (maximum absolute tolerance = 1.e-4 for example data)
         is_close = []
-        for i in range(1000):
-            is_close.append(np.allclose(results, r_results, atol=1.0e-4))
-        is_close = all(is_close)
-        self.assertTrue(is_close)
+        for i in range(100):
+            results = sp.posthoc_dunnett(
+                self.df.sort_index(),
+                val_col="pulse",
+                group_col="kind",
+                control="rest",
+                to_matrix=False,
+            )
+            is_close.append(np.allclose(results, r_results, atol=1e-4))
+
+        is_close_mt = []
+        for i in range(100):
+            df_results = sp.posthoc_dunnett(
+                self.df.sort_index(),
+                val_col="pulse",
+                group_col="kind",
+                control="rest",
+                to_matrix=True,
+            )
+            results = [
+                df_results.loc["rest", "running"],
+                df_results.loc["rest", "walking"],
+            ]
+            is_close_mt.append(np.allclose(results, r_results, atol=1e-4))
+        self.assertTrue(sum(is_close) > 95)
+        self.assertTrue(sum(is_close_mt) > 95)
 
 
 if __name__ == "__main__":

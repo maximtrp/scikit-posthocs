@@ -723,13 +723,13 @@ def posthoc_conover_friedman(
     def compare_stats(i, j):
         dif = np.abs(R.loc[groups[i]] - R.loc[groups[j]])
         tval = dif / np.sqrt(A) / np.sqrt(B)
-        pval = 2.0 * ss.t.sf(np.abs(tval), df=(m * n * k - k - n + 1))
+        pval = 2.0 * ss.t.sf(np.abs(tval), df=(m * n * k - k - n + 1)).item()
         return pval
 
     def compare_tukey(i, j):
         dif = np.abs(R.loc[groups[i]] - R.loc[groups[j]])
         qval = np.sqrt(2.0) * dif / (np.sqrt(A) * np.sqrt(B))
-        pval = psturng(qval, k, np.inf)
+        pval = ss.studentized_range.sf(qval, k, np.inf).item()
         return pval
 
     x, _y_col, _group_col, _block_col = __convert_to_block_df(
@@ -1331,6 +1331,7 @@ def posthoc_anderson(
                 x.loc[x[_group_col] == groups[j], _val_col],
             ],
             midrank=midrank,
+            method=ss.PermutationMethod(),
         )[2]
 
     if p_adjust:

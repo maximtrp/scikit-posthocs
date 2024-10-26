@@ -4,9 +4,8 @@ from scipy.stats import t
 
 
 def outliers_iqr(
-        x: Union[List, np.ndarray],
-        ret: str = 'filtered',
-        coef: float = 1.5) -> np.ndarray:
+    x: Union[List, np.ndarray], ret: str = "filtered", coef: float = 1.5
+) -> np.ndarray:
     """Simple detection of potential outliers based on interquartile range
     (IQR). Data that lie within the lower and upper limits are considered
     non-outliers. The lower limit is the number that lies 1.5 IQRs below
@@ -56,20 +55,19 @@ def outliers_iqr(
     ll = q1 - iqr * coef
     ul = q3 + iqr * coef
 
-    if ret == 'indices':
+    if ret == "indices":
         return np.where((arr > ll) & (arr < ul))[0]
-    elif ret == 'outliers':
+    elif ret == "outliers":
         return arr[(arr < ll) | (arr > ul)]
-    elif ret == 'outliers_indices':
+    elif ret == "outliers_indices":
         return np.where((arr < ll) | (arr > ul))[0]
     else:
         return x[(x > ll) & (x < ul)]
 
 
 def outliers_grubbs(
-        x: Union[List, np.ndarray],
-        hypo: bool = False,
-        alpha: float = 0.05) -> Union[np.ndarray, bool]:
+    x: Union[List, np.ndarray], hypo: bool = False, alpha: float = 0.05
+) -> Union[np.ndarray, bool]:
     """Grubbs' Test for Outliers [1]_. This is the two-sided version
     of the test. The null hypothesis implies that there are no outliers
     in the data set.
@@ -113,10 +111,10 @@ def outliers_grubbs(
     ind = np.argmax(np.abs(arr - np.mean(arr)))
     G = val / np.std(arr, ddof=1)
     N = len(arr)
-    result = G > (N-1) / np.sqrt(N) *\
-        np.sqrt(
-            (t.ppf(1-alpha/(2*N), N-2) ** 2) /
-            (N - 2 + t.ppf(1-alpha/(2*N), N-2) ** 2))
+    result = G > (N - 1) / np.sqrt(N) * np.sqrt(
+        (t.ppf(1 - alpha / (2 * N), N - 2) ** 2)
+        / (N - 2 + t.ppf(1 - alpha / (2 * N), N - 2) ** 2)
+    )
 
     if hypo:
         return result
@@ -128,10 +126,8 @@ def outliers_grubbs(
 
 
 def outliers_tietjen(
-        x: Union[List, np.ndarray],
-        k: int,
-        hypo: bool = False,
-        alpha: float = 0.05) -> Union[np.ndarray, bool]:
+    x: Union[List, np.ndarray], k: int, hypo: bool = False, alpha: float = 0.05
+) -> Union[np.ndarray, bool]:
     """Tietjen-Moore test [1]_ to detect multiple outliers in a univariate
     data set that follows an approximately normal distribution.
     The Tietjen-Moore test [2]_ is a generalization of the Grubbs' test to
@@ -213,11 +209,12 @@ def outliers_tietjen(
 
 
 def outliers_gesd(
-        x: Union[List, np.ndarray],
-        outliers: int = 5,
-        hypo: bool = False,
-        report: bool = False,
-        alpha: float = 0.05) -> np.ndarray:
+    x: Union[List, np.ndarray],
+    outliers: int = 5,
+    hypo: bool = False,
+    report: bool = False,
+    alpha: float = 0.05,
+) -> np.ndarray:
     """The generalized (Extreme Studentized Deviate) ESD test is used
     to detect one or more outliers in a univariate data set that follows
     an approximately normal distribution [1]_.
@@ -303,7 +300,6 @@ def outliers_gesd(
     ls = ((n - nol - 1) * t_ppr) / np.sqrt((df + t_ppr**2) * (n - nol))
 
     for i in np.arange(outliers):
-
         abs_d = np.abs(data_proc - np.mean(data_proc))
 
         # R-value calculation
@@ -312,32 +308,35 @@ def outliers_gesd(
 
         # Masked values
         lms = ms[-1] if len(ms) > 0 else []
-        ms.append(
-            lms + np.where(data == data_proc[np.argmax(abs_d)])[0].tolist())
+        ms.append(lms + np.where(data == data_proc[np.argmax(abs_d)])[0].tolist())
 
         # Remove the observation that maximizes |xi − xmean|
         data_proc = np.delete(data_proc, np.argmax(abs_d))
 
     if report:
+        report_str = [
+            "H0: no outliers in the data",
+            "Ha: up to " + str(outliers) + " outliers in the data",
+            "Significance level:  α = " + str(alpha),
+            "Reject H0 if Ri > Critical Value (λi)",
+            "",
+            "Summary Table for Two-Tailed Test",
+            "---------------------------------------",
+            "      Exact           Test     Critical",
+            "  Number of      Statistic    Value, λi",
+            "Outliers, i      Value, Ri      {:5.3g} %".format(100 * alpha),
+            "---------------------------------------",
+        ]
 
-        report = ["H0: no outliers in the data",
-                  "Ha: up to " + str(outliers) + " outliers in the data",
-                  "Significance level:  α = " + str(alpha),
-                  "Reject H0 if Ri > Critical Value (λi)", "",
-                  "Summary Table for Two-Tailed Test",
-                  "---------------------------------------",
-                  "      Exact           Test     Critical",
-                  "  Number of      Statistic    Value, λi",
-                  "Outliers, i      Value, Ri      {:5.3g} %".format(100*alpha),
-                  "---------------------------------------"]
+        for i, (stat, crit_val) in enumerate(zip(rs, ls)):
+            report_str.append(
+                "{: >11s}".format(str(i + 1))
+                + "{: >15s}".format(str(np.round(stat, 3)))
+                + "{: >13s}".format(str(np.round(crit_val, 3)))
+                + (" *" if stat > crit_val else "")
+            )
 
-        for i, (r, l) in enumerate(zip(rs, ls)):
-            report.append('{: >11s}'.format(str(i+1)) +
-                          '{: >15s}'.format(str(np.round(r, 3))) +
-                          '{: >13s}'.format(str(np.round(l, 3))) +
-                          (" *" if r > l else ""))
-
-        print("\n".join(report))
+        print("\n".join(report_str))
 
     # Remove masked values
     # for which the test statistic is greater
@@ -349,8 +348,8 @@ def outliers_gesd(
             data[ms[np.max(np.where(rs > ls))]] = True
             # rearrange data so mask is in same order as incoming data
             data = np.vstack((data, np.arange(0, data.shape[0])[argsort_index]))
-            data = data[0, data.argsort()[1, ]]
-            data = data.astype('bool')
+            data = data[0, data.argsort()[1,]]
+            data = data.astype("bool")
         else:
             data = np.delete(data, ms[np.max(np.where(rs > ls))])
 
