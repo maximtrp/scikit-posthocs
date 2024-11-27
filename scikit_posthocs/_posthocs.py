@@ -1,9 +1,9 @@
 import itertools as it
-from typing import Optional, Tuple, Union, Literal
+from typing import Optional, Union, Literal
 import numpy as np
+from numpy.typing import ArrayLike
 import scipy.stats as ss
 from statsmodels.sandbox.stats.multicomp import multipletests
-from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame, Series, MultiIndex
 
 
@@ -13,7 +13,7 @@ def __convert_to_df(
     group_col: Optional[str] = "groups",
     val_id: Optional[int] = None,
     group_id: Optional[int] = None,
-) -> Tuple[DataFrame, str, str]:
+) -> tuple[DataFrame, str, str]:
     """Hidden helper method to create a DataFrame with input data for further
     processing.
 
@@ -46,7 +46,7 @@ def __convert_to_df(
 
     Returns
     -------
-    Tuple[DataFrame, str, str]
+    tuple[DataFrame, str, str]
         Returns a tuple of DataFrame and two strings:
         - DataFrame with input data, `val_col` column contains numerical values
           and `group_col` column contains categorical values.
@@ -108,59 +108,62 @@ def __convert_to_df(
 
 
 def __convert_to_block_df(
-    a,
+    a: Union[DataFrame, ArrayLike],
     y_col: Optional[Union[str, int]] = None,
     group_col: Optional[Union[str, int]] = None,
     block_col: Optional[Union[str, int]] = None,
+    block_id_col: Optional[Union[str, int]] = None,
     melted: bool = False,
-) -> Tuple[DataFrame, str, str, str]:
-    # TODO: refactor conversion of block data to DataFrame
-    if melted and not all([i is not None for i in [block_col, group_col, y_col]]):
+) -> tuple[DataFrame, str, str, str, str]:
+    if melted and np.any(np.array([block_col, group_col, y_col]) == None):
         raise ValueError(
             "`block_col`, `group_col`, `y_col` should be explicitly specified if using melted data"
         )
+    
+    new_block_id_col = "block_ids"
+    new_group_col = "groups"
+    new_block_col = "blocks"
+    new_y_col = "y"
 
     if isinstance(a, DataFrame) and not melted:
         x = a.copy(deep=True)
-        group_col = "groups"
-        block_col = "blocks"
-        y_col = "y"
-        x.columns.name = group_col
-        x.index.name = block_col
+        x.columns.name = new_group_col
+        x.index.name = new_block_col
+        x[new_block_id_col] = np.arange(x.shape[0])
         x = x.reset_index().melt(
-            id_vars=block_col, var_name=group_col, value_name=y_col
+            id_vars=[new_block_col, new_block_id_col], var_name=new_group_col, value_name=new_y_col
         )
 
     elif isinstance(a, DataFrame) and melted:
+        if a[block_col].duplicated().sum() > 0 and not block_id_col:
+            raise ValueError(
+                "`block_col` contains duplicated entries, `block_id_col` should be explicitly specified"
+            )
+
         x = DataFrame.from_dict(
-            {"groups": a[group_col], "blocks": a[block_col], "y": a[y_col]}
+            {new_group_col: a[group_col], new_block_col: a[block_col], new_y_col: a[y_col], new_block_id_col: a[block_id_col]}
         )
 
-    elif not isinstance(a, DataFrame):
+    else:
         x = np.array(a)
         x = DataFrame(x, index=np.arange(x.shape[0]), columns=np.arange(x.shape[1]))
 
         if not melted:
-            group_col = "groups"
-            block_col = "blocks"
-            y_col = "y"
-            x.columns.name = group_col
-            x.index.name = block_col
+            x.columns.name = new_group_col
+            x.index.name = new_block_col
+            x[new_block_id_col] = np.arange(x.shape[0])
             x = x.reset_index().melt(
-                id_vars=block_col, var_name=group_col, value_name=y_col
+                id_vars=[new_block_col, new_block_id_col], var_name=new_group_col, value_name=new_y_col
             )
 
         else:
             x.rename(
-                columns={group_col: "groups", block_col: "blocks", y_col: "y"},
+                columns={group_col: new_group_col, block_col: new_block_col, y_col: new_y_col, block_id_col: new_block_id_col},
                 inplace=True,
             )
 
-    group_col = "groups"
-    block_col = "blocks"
-    y_col = "y"
 
-    return x, y_col, group_col, block_col
+    return x, new_y_col, new_group_col, new_block_col, new_block_id_col
 
 
 def posthoc_conover(
@@ -512,8 +515,9 @@ def posthoc_nemenyi(
 def posthoc_nemenyi_friedman(
     a: Union[list, np.ndarray, DataFrame],
     y_col: Optional[str] = None,
-    block_col: Optional[str] = None,
     group_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    block_id_col: Optional[str] = None,
     melted: bool = False,
     sort: bool = False,
 ) -> DataFrame:
@@ -597,17 +601,17 @@ def posthoc_nemenyi_friedman(
         qval = dif / np.sqrt(k * (k + 1.0) / (6.0 * n))
         return qval
 
-    x, _y_col, _group_col, _block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted
+    x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, block_id_col, melted
     )
     x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[_group_col].unique()
     k = groups.size
-    n = x[_block_col].unique().size
+    n = x[_block_id_col].unique().size
 
-    x["mat"] = x.groupby(_block_col)[_y_col].rank()
+    x["mat"] = x.groupby(_block_id_col)[_y_col].rank()
     R = x.groupby(_group_col)["mat"].mean()
     vs = np.zeros((k, k))
     combs = it.combinations(range(k), 2)
@@ -630,6 +634,7 @@ def posthoc_conover_friedman(
     a: Union[list, np.ndarray, DataFrame],
     y_col: Optional[str] = None,
     block_col: Optional[str] = None,
+    block_id_col: Optional[str] = None,
     group_col: Optional[str] = None,
     melted: bool = False,
     sort: bool = False,
@@ -662,11 +667,15 @@ def posthoc_conover_friedman(
         Name of the column that contains y data.
 
     block_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
+        Must be specified if `a` is a melted pandas DataFrame object.
         Name of the column that contains blocking factor values.
+    
+    block_id_col : str or int
+        Must be specified if `a` is a melted pandas DataFrame object.
+        Name of the column that contains identifiers of blocking factor values.
 
     group_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
+        Must be specified if `a` is a melted pandas DataFrame object.
         Name of the column that contains treatment (group) factor values.
 
     melted : bool, optional
@@ -728,26 +737,26 @@ def posthoc_conover_friedman(
 
     def compare_tukey(i, j):
         dif = np.abs(R.loc[groups[i]] - R.loc[groups[j]])
-        qval = np.sqrt(2.0) * dif / (np.sqrt(A) * np.sqrt(B))
+        qval = np.sqrt(2.0) * dif / np.sqrt(A) / np.sqrt(B)
         pval = ss.studentized_range.sf(qval, k, np.inf).item()
         return pval
 
-    x, _y_col, _group_col, _block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted
+    x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, block_id_col, melted
     )
     x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
     groups = x[_group_col].unique()
     k = groups.size
-    n = x[_block_col].unique().size
+    n = x[_block_id_col].unique().size
 
-    x["mat"] = x.groupby(_block_col)[_y_col].rank()
+    x["mat"] = x.groupby(_block_id_col)[_y_col].rank()
     R = x.groupby(_group_col)["mat"].sum()
     A1 = (x["mat"] ** 2).sum()
     m = 1
-    S2 = m / (m * k - 1.0) * (A1 - m * k * n * (m * k + 1.0) ** 2.0 / 4.0)
-    T2 = 1.0 / S2 * np.sum((R.to_numpy() - n * m * ((m * k + 1.0) / 2.0)) ** 2.0)
+    S2 = m / (m * k - 1.0) * (A1 - m * k * n * ((m * k + 1.0) ** 2.0) / 4.0)
+    T2 = 1.0 / S2 * (np.sum((R.to_numpy() - n * m * (m * k + 1.0) / 2.0) ** 2.0))
     A = S2 * (2.0 * n * (m * k - 1.0)) / (m * n * k - k - n + 1.0)
     B = 1.0 - T2 / (n * (m * k - 1.0))
 
@@ -895,8 +904,9 @@ def posthoc_npm_test(
 def posthoc_siegel_friedman(
     a: Union[list, np.ndarray, DataFrame],
     y_col: Optional[str] = None,
-    block_col: Optional[str] = None,
     group_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    block_id_col: Optional[str] = None,
     p_adjust: Optional[str] = None,
     melted: bool = False,
     sort: bool = False,
@@ -922,16 +932,20 @@ def posthoc_siegel_friedman(
         y_col, block_col and group_col must specify columns names (strings).
 
     y_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
+        Must be specified if `a` is a melted pandas DataFrame object.
         Name of the column that contains y data.
 
     block_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
+        Must be specified if `a` is a melted pandas DataFrame object.
         Name of the column that contains blocking factor values.
 
     group_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
+        Must be specified if `a` is a melted pandas DataFrame object.
         Name of the column that contains treatment (group) factor values.
+
+    block_id_col : str or int
+        Must be specified if `a` is a melted pandas DataFrame object.
+        Name of the column that contains identifiers of blocking factor values.
 
     melted : bool, optional
         Specifies if data are given as melted columns "y", "blocks", and
@@ -980,18 +994,18 @@ def posthoc_siegel_friedman(
         zval = dif / np.sqrt(k * (k + 1.0) / (6.0 * n))
         return zval
 
-    x, y_col, group_col, block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted
+    x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, block_id_col, melted
     )
-    x = x.sort_values(by=[group_col, block_col], ascending=True) if sort else x
+    x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
-    groups = x[group_col].unique()
+    groups = x[_group_col].unique()
     k = groups.size
-    n = x[block_col].unique().size
+    n = x[_block_id_col].unique().size
 
-    x["mat"] = x.groupby(block_col)[y_col].rank()
-    R = x.groupby(group_col)["mat"].mean()
+    x["mat"] = x.groupby(_block_id_col)[_y_col].rank()
+    R = x.groupby(_group_col)["mat"].mean()
 
     vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
@@ -1016,8 +1030,9 @@ def posthoc_siegel_friedman(
 def posthoc_miller_friedman(
     a: Union[list, np.ndarray, DataFrame],
     y_col: Optional[str] = None,
-    block_col: Optional[str] = None,
     group_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    block_id_col: Optional[str] = None,
     melted: bool = False,
     sort: bool = False,
 ) -> DataFrame:
@@ -1046,13 +1061,17 @@ def posthoc_miller_friedman(
         Must be specified if `a` is a pandas DataFrame object.
         Name of the column that contains y data.
 
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains treatment (group) factor values.
+
     block_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
         Name of the column that contains blocking factor values.
 
-    group_col : str or int
-        Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains treatment (group) factor values.
+    block_id_col : str or int
+        Must be specified if `a` is a melted pandas DataFrame object.
+        Name of the column that contains identifiers of blocking factor values.
 
     melted : bool, optional
         Specifies if data are given as melted columns "y", "blocks", and
@@ -1094,18 +1113,18 @@ def posthoc_miller_friedman(
         qval = dif / np.sqrt(k * (k + 1.0) / (6.0 * n))
         return qval
 
-    x, y_col, group_col, block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted
+    x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, block_id_col, melted
     )
-    x = x.sort_values(by=[group_col, block_col], ascending=True) if sort else x
+    x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
-    groups = x[group_col].unique()
+    groups = x[_group_col].unique()
     k = groups.size
-    n = x[block_col].unique().size
+    n = x[_block_id_col].unique().size
 
-    x["mat"] = x.groupby(block_col)[y_col].rank()
-    R = x.groupby(group_col)["mat"].mean()
+    x["mat"] = x.groupby(_block_id_col)[_y_col].rank()
+    R = x.groupby(_group_col)["mat"].mean()
 
     vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
@@ -1126,8 +1145,9 @@ def posthoc_miller_friedman(
 def posthoc_durbin(
     a: Union[list, np.ndarray, DataFrame],
     y_col: Optional[str] = None,
-    block_col: Optional[str] = None,
     group_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    block_id_col: Optional[str] = None,
     p_adjust: Optional[str] = None,
     melted: bool = False,
     sort: bool = False,
@@ -1157,13 +1177,17 @@ def posthoc_durbin(
         Must be specified if `a` is a pandas DataFrame object.
         Name of the column that contains y data.
 
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains treatment (group) factor values.
+
     block_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
         Name of the column that contains blocking factor values.
 
-    group_col : str or int
+    block_id_col : str or int
         Must be specified if `a` is a pandas DataFrame object.
-        Name of the column that contains treatment (group) factor values.
+        Name of the column that contains identifiers of blocking factor values.
 
     melted : bool, optional
         Specifies if data are given as melted columns "y", "blocks", and
@@ -1203,8 +1227,8 @@ def posthoc_durbin(
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_durbin(x)
     """
-    x, y_col, group_col, block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted
+    x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, block_id_col, melted
     )
 
     def compare_stats(i, j):
@@ -1213,22 +1237,25 @@ def posthoc_durbin(
         pval = 2.0 * ss.t.sf(np.abs(tval), df=df)
         return pval
 
-    x = x.sort_values(by=[block_col, group_col], ascending=True) if sort else x
+    x = x.sort_values(by=[_block_col, _group_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
-    groups = x[group_col].unique()
+    groups = x[_group_col].unique()
     t = len(groups)
-    b = x[block_col].unique().size
+    b = x[_block_id_col].unique().size
     r = b
     k = t
-    x["y_ranked"] = x.groupby(block_col)[y_col].rank()
-    rj = x.groupby(group_col)["y_ranked"].sum()
+    x["y_ranked"] = x.groupby(_block_id_col)[_y_col].rank()
+    rj = x.groupby(_group_col)["y_ranked"].sum()
     A = (x["y_ranked"] ** 2).sum()
     C = (b * k * (k + 1) ** 2) / 4.0
     D = (rj.to_numpy() ** 2).sum() - r * C
     T1 = (t - 1) / (A - C) * D
     denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1) * (1 - T1 / (b * (k - 1))))
     df = b * k - b - t + 1
+    print(t,b,r,k)
+    print(A,C,D,T1)
+    print(denom, df)
 
     vs = np.zeros((t, t), dtype=float)
     combs = it.combinations(range(t), 2)
@@ -1345,8 +1372,9 @@ def posthoc_anderson(
 def posthoc_quade(
     a: Union[list, np.ndarray, DataFrame],
     y_col: Optional[str] = None,
-    block_col: Optional[str] = None,
     group_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    block_id_col: Optional[str] = None,
     dist: str = "t",
     p_adjust: Optional[str] = None,
     melted: bool = False,
@@ -1447,29 +1475,29 @@ def posthoc_quade(
         pval = 2.0 * ss.norm.sf(np.abs(zval))
         return pval
 
-    x, y_col, group_col, block_col = __convert_to_block_df(
-        a, y_col, group_col, block_col, melted
+    x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, block_id_col, melted
     )
 
-    x = x.sort_values(by=[block_col, group_col], ascending=True) if sort else x
+    x = x.sort_values(by=[_block_col, _group_col], ascending=True) if sort else x
     x.dropna(inplace=True)
 
-    groups = x[group_col].unique()
+    groups = x[_group_col].unique()
     k = len(groups)
-    b = x[block_col].unique().size
+    b = x[_block_id_col].unique().size
 
-    x["r"] = x.groupby(block_col)[y_col].rank()
+    x["r"] = x.groupby(_block_id_col)[_y_col].rank()
     q = Series(
-        x.groupby(block_col)[y_col].max() - x.groupby(block_col)[y_col].min().to_numpy()
+        x.groupby(_block_id_col)[_y_col].max() - x.groupby(_block_id_col)[_y_col].min().to_numpy()
     ).rank()
     x["rr"] = x["r"] - (k + 1) / 2
-    x["s"] = x.apply(lambda row: row["rr"] * q[row[block_col]], axis=1)
-    x["w"] = x.apply(lambda row: row["r"] * q[row[block_col]], axis=1)
+    x["s"] = x.apply(lambda row: row["rr"] * q[row[_block_id_col]], axis=1)
+    x["w"] = x.apply(lambda row: row["r"] * q[row[_block_id_col]], axis=1)
 
     A = (x["s"] ** 2).sum()
-    S = x.groupby(group_col)["s"].sum()
+    S = x.groupby(_group_col)["s"].sum()
     B = np.sum(S.to_numpy() ** 2) / b
-    W = x.groupby(group_col)["w"].sum()
+    W = x.groupby(_group_col)["w"].sum()
 
     vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
@@ -2385,7 +2413,7 @@ def posthoc_tukey(
     for i, j in combs:
         vs[i, j] = compare(groups[i], groups[j])
 
-    vs[tri_upper] = psturng(np.abs(vs[tri_upper]), groups.size, n - groups.size)
+    vs[tri_upper] = ss.studentized_range.sf(np.abs(vs[tri_upper]), groups.size, n - groups.size)
     vs[tri_lower] = np.transpose(vs)[tri_lower]
 
     np.fill_diagonal(vs, 1)
@@ -2490,7 +2518,7 @@ def posthoc_dscf(
     for i, j in combs:
         vs[i, j] = compare(groups[i], groups[j])
 
-    vs[tri_upper] = psturng(np.abs(vs[tri_upper]), k, np.inf)
+    vs[tri_upper] = ss.studentized_range.sf(np.abs(vs[tri_upper]), k, np.inf)
     vs[tri_lower] = np.transpose(vs)[tri_lower]
 
     np.fill_diagonal(vs, 1)

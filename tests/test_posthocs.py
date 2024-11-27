@@ -66,14 +66,10 @@ class TestPosthocs(unittest.TestCase):
             splt.sign_table(p_values, lower=False, upper=False)
 
         self.assertTrue(
-            np.all(
-                splt.sign_table(p_values, lower=False, upper=True) == correct_resultsu
-            )
+            np.all(splt.sign_table(p_values, lower=False, upper=True) == correct_resultsu)
         )
         self.assertTrue(
-            np.all(
-                splt.sign_table(p_values, lower=True, upper=False) == correct_resultsl
-            )
+            np.all(splt.sign_table(p_values, lower=True, upper=False) == correct_resultsl)
         )
         self.assertTrue(
             np.all(splt.sign_table(p_values, lower=True, upper=True) == correct_results)
@@ -210,9 +206,7 @@ class TestPosthocs(unittest.TestCase):
     def test_outliers_grubbs(self):
         x = np.array([199.31, 199.53, 200.19, 200.82, 201.92, 201.95, 202.18, 245.57])
         test_results = so.outliers_grubbs(x)
-        correct_results = np.array(
-            [199.31, 199.53, 200.19, 200.82, 201.92, 201.95, 202.18]
-        )
+        correct_results = np.array([199.31, 199.53, 200.19, 200.82, 201.92, 201.95, 202.18])
         self.assertTrue(so.outliers_grubbs(x, hypo=True))
         self.assertTrue(np.all(test_results == correct_results))
 
@@ -381,49 +375,50 @@ class TestPosthocs(unittest.TestCase):
 
     # Statistical tests
     df = sb.load_dataset("exercise")
-    df[df.columns[df.dtypes == "category"]] = df[
-        df.columns[df.dtypes == "category"]
-    ].astype(object)
-    df_bn = np.array(
-        [[4, 3, 4, 4, 5, 6, 3], [1, 2, 3, 5, 6, 7, 7], [1, 2, 6, 4, 1, 5, 1]]
-    )
+    df[df.columns[df.dtypes == "category"]] = df[df.columns[df.dtypes == "category"]].astype(object)
+    df_bn = np.array([[4, 3, 4, 4, 5, 6, 3], [1, 2, 3, 5, 6, 7, 7], [1, 2, 6, 4, 1, 5, 1]])
 
     # DataFrame conversion tests
     def test_convert_to_block_df(self):
         a = np.array(
             [
-                [0, 0, 4],
-                [1, 0, 1],
-                [2, 0, 1],
-                [0, 1, 3],
-                [1, 1, 2],
-                [2, 1, 2],
-                [0, 2, 4],
-                [1, 2, 3],
-                [2, 2, 6],
-                [0, 3, 4],
-                [1, 3, 5],
-                [2, 3, 4],
-                [0, 4, 5],
-                [1, 4, 6],
-                [2, 4, 1],
-                [0, 5, 6],
-                [1, 5, 7],
-                [2, 5, 5],
-                [0, 6, 3],
-                [1, 6, 7],
-                [2, 6, 1],
+                [0, 0, 0, 4],
+                [1, 1, 0, 1],
+                [2, 2, 0, 1],
+                [0, 0, 1, 3],
+                [1, 1, 1, 2],
+                [2, 2, 1, 2],
+                [0, 0, 2, 4],
+                [1, 1, 2, 3],
+                [2, 2, 2, 6],
+                [0, 0, 3, 4],
+                [1, 1, 3, 5],
+                [2, 2, 3, 4],
+                [0, 0, 4, 5],
+                [1, 1, 4, 6],
+                [2, 2, 4, 1],
+                [0, 0, 5, 6],
+                [1, 1, 5, 7],
+                [2, 2, 5, 5],
+                [0, 0, 6, 3],
+                [1, 1, 6, 7],
+                [2, 2, 6, 1],
             ],
             dtype=float,
         )
-        df_a = DataFrame(a, columns=["blk_col", "grp_col", "y_col"])
+        df_a = DataFrame(a, columns=["blk_col", "blk_id_col", "grp_col", "y_col"])
 
         result = sp.posthoc_nemenyi_friedman(
-            a, y_col=2, group_col=1, block_col=0, melted=True
+            a, y_col=3, group_col=2, block_col=0, block_id_col=1, melted=True
         )[0].values
         result2 = sp.posthoc_nemenyi_friedman(self.df_bn)[0].values
         result3 = sp.posthoc_nemenyi_friedman(
-            df_a, y_col="y_col", group_col="grp_col", block_col="blk_col", melted=True
+            df_a,
+            y_col="y_col",
+            group_col="grp_col",
+            block_col="blk_col",
+            block_id_col="blk_id_col",
+            melted=True,
         )[0].values
         self.assertTrue(np.allclose(result, result2))
         self.assertTrue(np.allclose(result, result3))
@@ -477,9 +472,7 @@ class TestPosthocs(unittest.TestCase):
             ]
         )
 
-        results = sp.posthoc_anderson(
-            self.df, val_col="pulse", group_col="kind", p_adjust="holm"
-        )
+        results = sp.posthoc_anderson(self.df, val_col="pulse", group_col="kind", p_adjust="holm")
         self.assertTrue(np.allclose(results.values, r_results, atol=3.0e-3))
 
     def test_posthoc_conover(self):
@@ -1032,9 +1025,7 @@ class TestPosthocs(unittest.TestCase):
             ]
         )
 
-        results = sp.posthoc_vanwaerden(
-            self.df, val_col="pulse", group_col="kind", p_adjust="holm"
-        )
+        results = sp.posthoc_vanwaerden(self.df, val_col="pulse", group_col="kind", p_adjust="holm")
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_dscf(self):
@@ -1111,9 +1102,7 @@ class TestPosthocs(unittest.TestCase):
         x = np.array(_x)
         g = np.repeat([0, 1, 2], 5)
         nd = np.column_stack((x.ravel(), g))
-        xdf = DataFrame(dict(zip(list("abc"), _x))).melt(
-            var_name="groups", value_name="vals"
-        )
+        xdf = DataFrame(dict(zip(list("abc"), _x))).melt(var_name="groups", value_name="vals")
         results = sp.posthoc_mannwhitney(xdf, val_col="vals", group_col="groups").values
         nd_results = sp.posthoc_mannwhitney(nd, val_col=0, group_col=1).values
         self.assertTrue(np.allclose(nd_results, results))
@@ -1148,9 +1137,7 @@ class TestPosthocs(unittest.TestCase):
             ]
         )
 
-        results = sp.posthoc_scheffe(
-            self.df.sort_index(), val_col="pulse", group_col="kind"
-        )
+        results = sp.posthoc_scheffe(self.df.sort_index(), val_col="pulse", group_col="kind")
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_tamhane(self):
@@ -1162,9 +1149,7 @@ class TestPosthocs(unittest.TestCase):
             ]
         )
 
-        results = sp.posthoc_tamhane(
-            self.df.sort_index(), val_col="pulse", group_col="kind"
-        )
+        results = sp.posthoc_tamhane(self.df.sort_index(), val_col="pulse", group_col="kind")
         self.assertTrue(np.allclose(results, r_results))
 
     def test_posthoc_tamhane_nw(self):
@@ -1190,9 +1175,7 @@ class TestPosthocs(unittest.TestCase):
             ]
         )
 
-        results = sp.posthoc_tukey(
-            self.df.sort_index(), val_col="pulse", group_col="kind"
-        )
+        results = sp.posthoc_tukey(self.df.sort_index(), val_col="pulse", group_col="kind")
         self.assertTrue(np.allclose(results, r_results, atol=1.0e-3))
 
     def test_posthoc_dunnett(self):

@@ -26,6 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 urls.homepage = "https://github.com/maximtrp/scikit-posthocs"
 urls.documentation = "https://scikit-posthocs.rtfd.io"
@@ -38,6 +39,14 @@ dependencies = [
     "matplotlib",
 ]
 
+[tool.basedpyright]
+pythonVersion = "3.9"
+
+[tool.ruff]
+target-version = "py39"
+respect-gitignore = true
+line-length = 100
+
 [tool.setuptools]
 packages = ["scikit_posthocs"]
 
@@ -46,7 +55,6 @@ version = {attr = "scikit_posthocs.__version__"}
 
 [project.optional-dependencies]
 test = ["pytest", "coverage"]
-
 
 [tool.pytest.ini_options]
 log_cli = true

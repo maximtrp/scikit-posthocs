@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, Union, List, Tuple, cast
+from typing import Optional, Union, List, cast
 import itertools as it
 import numpy as np
+from numpy.typing import ArrayLike
 import scipy.stats as ss
-from statsmodels.stats.libqsturng import psturng
 from pandas import DataFrame, Categorical, Series
 from scikit_posthocs._posthocs import __convert_to_df, __convert_to_block_df
 
 
 def test_mackwolfe(
-    data: Union[List, np.ndarray, DataFrame],
+    data: Union[ArrayLike, DataFrame],
     val_col: Optional[str] = None,
     group_col: Optional[str] = None,
     p: Optional[int] = None,
     n_perm: int = 100,
     sort: bool = False,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Mack-Wolfe Test for Umbrella Alternatives.
 
     In dose-finding studies one may assume an increasing treatment effect with
@@ -57,7 +57,7 @@ def test_mackwolfe(
 
     Returns
     -------
-    Tuple[float, float]
+    tuple[float, float]
         P value and statistic.
 
     References
@@ -75,9 +75,7 @@ def test_mackwolfe(
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
 
     if not sort:
-        x[_group_col] = Categorical(
-            x[_group_col], categories=x[_group_col].unique(), ordered=True
-        )
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
     x.sort_values(by=[_group_col], ascending=True, inplace=True)
 
     k = x[_group_col].unique().size
@@ -101,12 +99,8 @@ def test_mackwolfe(
 
         for i in range(k):
             for j in range(i):
-                U[i, j] = _fn(
-                    Rij[x[_group_col] == levels[i]], Rij[x[_group_col] == levels[j]]
-                )
-                U[j, i] = _fn(
-                    Rij[x[_group_col] == levels[j]], Rij[x[_group_col] == levels[i]]
-                )
+                U[i, j] = _fn(Rij[x[_group_col] == levels[i]], Rij[x[_group_col] == levels[j]])
+                U[j, i] = _fn(Rij[x[_group_col] == levels[j]], Rij[x[_group_col] == levels[i]])
 
         return U
 
@@ -186,7 +180,7 @@ def test_osrt(
     val_col: Optional[str] = None,
     group_col: Optional[str] = None,
     sort: bool = False,
-) -> Tuple[float, float, int]:
+) -> tuple[float, float, int]:
     """Hayter's one-sided studentised range test (OSRT)
 
     Tests a hypothesis against an ordered alternative for normal data with
@@ -213,7 +207,7 @@ def test_osrt(
 
     Returns
     -------
-    Tuple[float, float, int]
+    tuple[float, float, int]
         P value, statistic, and number of degrees of freedom.
 
     Notes
@@ -237,9 +231,7 @@ def test_osrt(
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
 
     if not sort:
-        x[_group_col] = Categorical(
-            x[_group_col], categories=x[_group_col].unique(), ordered=True
-        )
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
 
     x.sort_values(by=[_group_col], ascending=True, inplace=True)
     groups = np.unique(x[_group_col])
@@ -274,18 +266,19 @@ def test_osrt(
         vs[i, j] = compare(i, j)
 
     stat = np.max(vs)
-    pval = psturng(stat, k, df)
+    pval = ss.studentized_range.sf(stat, k, df)
     return pval, stat, df
 
 
 def test_durbin(
     data: Union[List, np.ndarray, DataFrame],
     y_col: Optional[Union[str, int]] = None,
-    block_col: Optional[Union[str, int]] = None,
     group_col: Optional[Union[str, int]] = None,
+    block_col: Optional[Union[str, int]] = None,
+    block_id_col: Optional[Union[str, int]] = None,
     melted: bool = False,
     sort: bool = True,
-) -> Tuple[float, float, int]:
+) -> tuple[float, float, int]:
     """Durbin's test whether k groups (or treatments) in a two-way
     balanced incomplete block design (BIBD) have identical effects. See
     references for additional information [1]_, [2]_.
@@ -298,7 +291,7 @@ def test_durbin(
 
         If ``melted`` argument is set to False (default), ``a`` is a typical
         matrix of block design, i.e. rows are blocks, and columns are groups.
-        In this case you do not need to specify col arguments.
+        In this case, you do not need to specify col arguments.
 
         If ``a`` is an array and ``melted`` is set to True,
         y_col, block_col and group_col must specify the indices of columns
@@ -308,16 +301,22 @@ def test_durbin(
         y_col, block_col and group_col must specify columns names (string).
 
     y_col : Union[str, int] = None
-        Must be specified if ``a`` is a pandas DataFrame object.
+        Must be specified if ``a`` is a melted pandas DataFrame object.
         Name of the column that contains y data.
 
+    group_col : Union[str, int] = None
+        Must be specified if ``a`` is a melted pandas DataFrame object.
+        Name of the column that contains group names.
+
     block_col : Union[str, int] = None
-        Must be specified if ``a`` is a pandas DataFrame object.
+        Must be specified if ``a`` is a melted pandas DataFrame object.
         Name of the column that contains block names.
 
-    group_col : Union[str, int] = None
-        Must be specified if ``a`` is a pandas DataFrame object.
-        Name of the column that contains group names.
+    block_id_col : Union[str, int] = None
+        Must be specified if ``a`` is a melted pandas DataFrame object.
+        Name of the column that contains identifiers of block names.
+        In most cases, this is the same as `block_col` except for those
+        cases when you have multiple instances of the same blocks.
 
     melted : bool = False
         Specifies if data are given as melted columns "y", "blocks", and
@@ -328,7 +327,7 @@ def test_durbin(
 
     Returns
     -------
-    Tuple[float, float, int]
+    tuple[float, float, int]
         P value, statistic, and number of degrees of freedom.
 
     References
@@ -344,17 +343,12 @@ def test_durbin(
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.test_durbin(x)
     """
-    if melted and not all([block_col, group_col, y_col]):
-        raise ValueError(
-            "block_col, group_col, y_col should be explicitly specified if using melted data"
-        )
-
-    x, _y_col, _group_col, _block_col = __convert_to_block_df(
-        data, y_col, group_col, block_col, melted
+    x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
+        data, y_col, group_col, block_col, block_id_col, melted
     )
 
     groups = x[_group_col].unique()
-    blocks = x[_block_col].unique()
+    blocks = x[_block_id_col].unique()
     if not sort:
         x[_group_col] = Categorical(x[_group_col], categories=groups, ordered=True)
         x[_block_col] = Categorical(x[_block_col], categories=blocks, ordered=True)
@@ -363,21 +357,16 @@ def test_durbin(
 
     t = len(groups)
     b = len(blocks)
-    r = np.unique(x.groupby(_group_col).count())
-    k = np.unique(x.groupby(_block_col).count())
-    if r.size > 1 and k.size > 1:
-        raise ValueError("Data appear to be unbalanced. Please correct your input data")
-    else:
-        r = float(r.item())
-        k = float(k.item())
-    x["y_ranks"] = x.groupby(_block_col)[_y_col].rank()
-    x["y_ranks_sum"] = x.groupby(_group_col)["y_ranks"].sum()
+    r = float(b)
+    k = float(t)
+
+    x["y_ranks"] = x.groupby(_block_id_col)[_y_col].rank()
+    rs = x.groupby(_group_col)["y_ranks"].sum().to_numpy()
 
     A = float(np.sum(x["y_ranks"] ** 2.0))
     C = float(b * k * (k + 1) ** 2.0) / 4.0
-    D = float(np.sum(x["y_ranks_sum"] ** 2.0)) - r * C
+    D = float(np.sum(rs**2.0)) - r * C
     T1 = (t - 1.0) / (A - C) * D
-
     stat = T1
     df = t - 1
     pval = ss.chi2.sf(stat, df).item()
