@@ -10,9 +10,7 @@ from pandas import DataFrame, Index, Series
 from seaborn import heatmap
 
 
-def sign_array(
-    p_values: Union[List, np.ndarray, DataFrame], alpha: float = 0.05
-) -> np.ndarray:
+def sign_array(p_values: Union[List, np.ndarray, DataFrame], alpha: float = 0.05) -> np.ndarray:
     """Significance array.
 
     Converts an array with p values to a significance array where
@@ -44,12 +42,12 @@ def sign_array(
            [1, 1, 0],
            [1, 0, 1]])
     """
-    p_values = np.array(p_values)
-    p_values[p_values > alpha] = 0
-    p_values[(p_values < alpha) & (p_values > 0)] = 1
-    np.fill_diagonal(p_values, 1)
+    sig_array = np.array(p_values, copy=True)
+    sig_array[sig_array > alpha] = 0
+    sig_array[(sig_array < alpha) & (sig_array > 0)] = 1
+    np.fill_diagonal(sig_array, 1)
 
-    return p_values
+    return sig_array
 
 
 def sign_table(
@@ -90,11 +88,7 @@ def sign_table(
     if not any([lower, upper]):
         raise ValueError("Either lower or upper triangle must be returned")
 
-    pv = (
-        DataFrame(p_values, copy=True)
-        if not isinstance(p_values, DataFrame)
-        else p_values.copy()
-    )
+    pv = DataFrame(p_values, copy=True) if not isinstance(p_values, DataFrame) else p_values.copy()
 
     ns = pv > 0.05
     three = (pv < 0.001) & (pv >= 0)
@@ -198,10 +192,11 @@ def sign_plot(
 
     if isinstance(x, DataFrame):
         df = x.copy()
+        xc = df.values
     else:
-        x = np.array(x)
-        g = g or np.arange(x.shape[0])
-        df = DataFrame(np.copy(x), index=Index(g), columns=Index(g))
+        xc = np.array(x, copy=True)
+        g = g or np.arange(xc.shape[0])
+        df = DataFrame(xc, index=Index(g), columns=Index(g))
 
     dtype = df.values.dtype
 
@@ -219,19 +214,17 @@ def sign_plot(
 
     if flat:
         np.fill_diagonal(df.values, -1)
-        hax = heatmap(
-            df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax, **kwargs
-        )
+        hax = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax, **kwargs)
         if not labels:
             hax.set_xlabel("")
             hax.set_ylabel("")
         return hax
 
     else:
-        df[(x < 0.001) & (x >= 0)] = 1
-        df[(x < 0.01) & (x >= 0.001)] = 2
-        df[(x < 0.05) & (x >= 0.01)] = 3
-        df[(x >= 0.05)] = 0
+        df[(xc < 0.001) & (xc >= 0)] = 1
+        df[(xc < 0.01) & (xc >= 0.001)] = 2
+        df[(xc < 0.05) & (xc >= 0.01)] = 3
+        df[(xc >= 0.05)] = 0
 
         np.fill_diagonal(df.values, -1)
 
@@ -483,9 +476,7 @@ def critical_difference_diagram(
     elif isinstance(color_palette, List) and (len(ranks) <= len(color_palette)):
         pass
     else:
-        raise ValueError(
-            "color_palette keys are not consistent, or list size too small"
-        )
+        raise ValueError("color_palette keys are not consistent, or list size too small")
 
     elbow_props = elbow_props or {}
     marker_props = {"zorder": 3, **(marker_props or {})}
