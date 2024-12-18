@@ -125,10 +125,10 @@ def sign_plot(
     Parameters
     ----------
     x : Union[List, np.ndarray, DataFrame]
-        If flat is False (default), x must be an array, any object exposing
-        the array interface, containing p values. If flat is True, x must be
-        a sign_array (returned by :py:meth:`scikit_posthocs.sign_array`
-        function).
+        If `flat` is False (default), `x` must be a square array, any object
+        exposing the array interface, containing p values. If `flat` is True,
+        `x` must be a sign_array
+        (returned by :py:meth:`scikit_posthocs.sign_array` function).
 
     g : Union[List, np.ndarray]
         An array, any object exposing the array interface, containing
@@ -192,11 +192,9 @@ def sign_plot(
 
     if isinstance(x, DataFrame):
         df = x.copy()
-        xc = df.values
     else:
-        xc = np.array(x, copy=True)
-        g = g or np.arange(xc.shape[0])
-        df = DataFrame(xc, index=Index(g), columns=Index(g))
+        g = g or np.arange(len(x))
+        df = DataFrame(x, index=Index(g), columns=Index(g), copy=True)
 
     dtype = df.values.dtype
 
@@ -221,6 +219,7 @@ def sign_plot(
         return hax
 
     else:
+        xc = df.values.copy()
         df[(xc < 0.001) & (xc >= 0)] = 1
         df[(xc < 0.01) & (xc >= 0.001)] = 2
         df[(xc < 0.05) & (xc >= 0.01)] = 3
