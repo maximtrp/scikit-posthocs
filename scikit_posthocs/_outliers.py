@@ -1,5 +1,6 @@
 from typing import Union, List
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.stats import t
 
 
@@ -112,8 +113,7 @@ def outliers_grubbs(
     G = val / np.std(arr, ddof=1)
     N = len(arr)
     result = G > (N - 1) / np.sqrt(N) * np.sqrt(
-        (t.ppf(1 - alpha / (2 * N), N - 2) ** 2)
-        / (N - 2 + t.ppf(1 - alpha / (2 * N), N - 2) ** 2)
+        (t.ppf(1 - alpha / (2 * N), N - 2) ** 2) / (N - 2 + t.ppf(1 - alpha / (2 * N), N - 2) ** 2)
     )
 
     if hypo:
@@ -209,7 +209,7 @@ def outliers_tietjen(
 
 
 def outliers_gesd(
-    x: Union[List, np.ndarray],
+    x: ArrayLike,
     outliers: int = 5,
     hypo: bool = False,
     report: bool = False,
@@ -245,8 +245,8 @@ def outliers_gesd(
     Returns
     -------
     np.ndarray
-        Returns the filtered array if alternative hypo is True, otherwise an
-        unfiltered (input) array.
+        If hypo is True, returns a boolean array where True indicates an outlier.
+        If hypo is False, returns the filtered array with outliers removed.
 
     Notes
     -----
@@ -308,7 +308,7 @@ def outliers_gesd(
 
         # Masked values
         lms = ms[-1] if len(ms) > 0 else []
-        ms.append(lms + np.where(data == data_proc[np.argmax(abs_d)])[0].tolist())
+        ms.append(lms + [np.where(data == data_proc[np.argmax(abs_d)])[0][0]])
 
         # Remove the observation that maximizes |xi − xmean|
         data_proc = np.delete(data_proc, np.argmax(abs_d))
@@ -341,16 +341,12 @@ def outliers_gesd(
     # Remove masked values
     # for which the test statistic is greater
     # than the critical value and return the result
-
-    if any(rs > ls):
-        if hypo:
-            data[:] = False
+    if hypo:
+        data = np.zeros(n, dtype=bool)
+        if any(rs > ls):
             data[ms[np.max(np.where(rs > ls))]] = True
-            # rearrange data so mask is in same order as incoming data
-            data = np.vstack((data, np.arange(0, data.shape[0])[argsort_index]))
-            data = data[0, data.argsort()[1,]]
-            data = data.astype("bool")
-        else:
-            data = np.delete(data, ms[np.max(np.where(rs > ls))])
-
-    return data
+        return data
+    else:
+        if any(rs > ls):
+            return np.delete(data, ms[np.max(np.where(rs > ls))])
+        return data
