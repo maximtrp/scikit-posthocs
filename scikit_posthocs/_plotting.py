@@ -1,11 +1,11 @@
-from typing import Optional, Union, List, Tuple, Dict, Set
+from copy import deepcopy
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
-from matplotlib import colors
+from matplotlib import colors, pyplot
 from matplotlib.axes import Axes
-from matplotlib.colorbar import ColorbarBase, Colorbar
+from matplotlib.colorbar import Colorbar, ColorbarBase
 from matplotlib.colors import ListedColormap
-from matplotlib import pyplot
 from pandas import DataFrame, Index, Series
 from seaborn import heatmap
 
@@ -38,11 +38,11 @@ def sign_array(p_values: Union[List, np.ndarray, DataFrame], alpha: float = 0.05
                              [ 0.00119517,  1.        ,  0.18672227],
                              [ 0.00278329,  0.18672227,  1.        ]])
     >>> ph.sign_array(p_values)
-    array([[1, 1, 1],
-           [1, 1, 0],
-           [1, 0, 1]])
+    array([[-1,  1,  1],
+           [ 1, -1,  0],
+           [ 1,  0, -1]])
     """
-    sig_array = np.array(p_values, copy=True)
+    sig_array = deepcopy(np.array(p_values))
     sig_array[sig_array == 0] = 1e-10
     sig_array[sig_array > alpha] = 0
     sig_array[(sig_array < alpha) & (sig_array > 0)] = 1
