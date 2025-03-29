@@ -40,7 +40,7 @@ class TestPosthocs(unittest.TestCase):
             ]
         )
         test_results = splt.sign_array(p_values)
-        correct_results = np.array([[1, 1, 1], [1, 1, 0], [1, 0, 1]])
+        correct_results = np.array([[-1, 1, 1], [1, -1, 0], [1, 0, -1]])
         self.assertTrue(np.all(test_results == correct_results))
 
     def test_sign_table(self):
@@ -372,8 +372,15 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(isinstance(so.outliers_gesd(x, 5, report=True), np.ndarray))
         self.assertTrue(np.array_equal(test_results, correct_results))
         self.assertTrue(np.array_equal(test_mask_results, correct_mask))
-        self.assertTrue(np.array_equal(so.outliers_gesd(correct_results, 5, hypo=False), correct_results))
-        self.assertTrue(np.array_equal(so.outliers_gesd(correct_results, 5, hypo=True), np.zeros_like(correct_results, dtype=bool)))
+        self.assertTrue(
+            np.array_equal(so.outliers_gesd(correct_results, 5, hypo=False), correct_results)
+        )
+        self.assertTrue(
+            np.array_equal(
+                so.outliers_gesd(correct_results, 5, hypo=True),
+                np.zeros_like(correct_results, dtype=bool),
+            )
+        )
 
     # Statistical tests
     df = sb.load_dataset("exercise")
