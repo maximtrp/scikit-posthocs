@@ -438,7 +438,7 @@ def critical_difference_diagram(
         that indicate lack of statistically significant difference. By default
         None.
 
-    color_palette: dict, optional
+    color_palette: dict or list, optional
         Parameters to be passed when you need specific colors for each category
 
     text_h_margin : float, optional
@@ -604,7 +604,9 @@ def critical_difference_diagram(
             points_right[::-1],
             xpos=points_right.iloc[-1] + text_h_margin,
             label_fmt=label_fmt_right,
-            color_palette=list(reversed(color_palette)),
+            color_palette=list(reversed(color_palette))
+            if isinstance(color_palette, list)
+            else color_palette,
             label_props={"ha": "left", **label_props},
         )
 
