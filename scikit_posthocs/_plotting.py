@@ -43,9 +43,10 @@ def sign_array(p_values: Union[List, np.ndarray, DataFrame], alpha: float = 0.05
            [1, 0, 1]])
     """
     sig_array = np.array(p_values, copy=True)
+    sig_array[sig_array == 0] = 1e-10
     sig_array[sig_array > alpha] = 0
     sig_array[(sig_array < alpha) & (sig_array > 0)] = 1
-    np.fill_diagonal(sig_array, 1)
+    np.fill_diagonal(sig_array, -1)
 
     return sig_array
 
