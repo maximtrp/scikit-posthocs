@@ -68,16 +68,12 @@ def __convert_to_df(
     if isinstance(a, DataFrame):
         x = a.copy()
         if not {group_col, val_col}.issubset(a.columns):
-            raise ValueError(
-                "Specify correct column names using `group_col` and `val_col` args"
-            )
+            raise ValueError("Specify correct column names using `group_col` and `val_col` args")
         return x, val_col, group_col
 
     elif isinstance(a, list) or (isinstance(a, np.ndarray) and not a.shape.count(2)):
         grps_len = map(len, a)
-        grps = list(
-            it.chain(*[[i + 1] * grp_len for i, grp_len in enumerate(grps_len)])
-        )
+        grps = list(it.chain(*[[i + 1] * grp_len for i, grp_len in enumerate(grps_len)]))
         vals = list(it.chain(*a))
 
         return DataFrame({val_col: vals, group_col: grps}), val_col, group_col
@@ -119,7 +115,7 @@ def __convert_to_block_df(
         raise ValueError(
             "`block_col`, `group_col`, `y_col` should be explicitly specified if using melted data"
         )
-    
+
     new_block_id_col = "block_ids"
     new_group_col = "groups"
     new_block_col = "blocks"
@@ -141,7 +137,12 @@ def __convert_to_block_df(
             )
 
         x = DataFrame.from_dict(
-            {new_group_col: a[group_col], new_block_col: a[block_col], new_y_col: a[y_col], new_block_id_col: a[block_id_col]}
+            {
+                new_group_col: a[group_col],
+                new_block_col: a[block_col],
+                new_y_col: a[y_col],
+                new_block_id_col: a[block_id_col],
+            }
         )
 
     else:
@@ -153,15 +154,21 @@ def __convert_to_block_df(
             x.index.name = new_block_col
             x[new_block_id_col] = np.arange(x.shape[0])
             x = x.reset_index().melt(
-                id_vars=[new_block_col, new_block_id_col], var_name=new_group_col, value_name=new_y_col
+                id_vars=[new_block_col, new_block_id_col],
+                var_name=new_group_col,
+                value_name=new_y_col,
             )
 
         else:
             x.rename(
-                columns={group_col: new_group_col, block_col: new_block_col, y_col: new_y_col, block_id_col: new_block_id_col},
+                columns={
+                    group_col: new_group_col,
+                    block_col: new_block_col,
+                    y_col: new_y_col,
+                    block_id_col: new_block_id_col,
+                },
                 inplace=True,
             )
-
 
     return x, new_y_col, new_group_col, new_block_col, new_block_id_col
 
@@ -246,11 +253,11 @@ def posthoc_conover(
     n = len(x.index)
     x_groups_unique = x[_group_col].unique()
     x_len = x_groups_unique.size
-    x_lens = x.groupby(_group_col)[_val_col].count()
+    x_lens = x.groupby(_group_col, observed=True)[_val_col].count()
 
     x["ranks"] = x[_val_col].rank()
-    x_ranks_avg = x.groupby(_group_col)["ranks"].mean()
-    x_ranks_sum = x.groupby(_group_col)["ranks"].sum().to_numpy()
+    x_ranks_avg = x.groupby(_group_col, observed=True)["ranks"].mean()
+    x_ranks_sum = x.groupby(_group_col, observed=True)["ranks"].sum().to_numpy()
 
     # ties
     vals = x.groupby("ranks").count()[_val_col].to_numpy()
@@ -264,9 +271,7 @@ def posthoc_conover(
     if x_ties == 1:
         S2 = n * (n + 1.0) / 12.0
     else:
-        S2 = (1.0 / (n - 1.0)) * (
-            np.sum(x["ranks"] ** 2.0) - (n * (((n + 1.0) ** 2.0) / 4.0))
-        )
+        S2 = (1.0 / (n - 1.0)) * (np.sum(x["ranks"] ** 2.0) - (n * (((n + 1.0) ** 2.0) / 4.0)))
 
     vs = np.zeros((x_len, x_len))
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -368,10 +373,10 @@ def posthoc_dunn(
     n = len(x.index)
     x_groups_unique = x[_group_col].unique()
     x_len = x_groups_unique.size
-    x_lens = x.groupby(_group_col)[_val_col].count()
+    x_lens = x.groupby(_group_col, observed=True)[_val_col].count()
 
     x["ranks"] = x[_val_col].rank()
-    x_ranks_avg = x.groupby(_group_col)["ranks"].mean()
+    x_ranks_avg = x.groupby(_group_col, observed=True)["ranks"].mean()
 
     # ties
     vals = x.groupby("ranks").count()[_val_col].to_numpy()
@@ -472,10 +477,10 @@ def posthoc_nemenyi(
     n = len(x.index)
     x_groups_unique = x[_group_col].unique()
     x_len = x_groups_unique.size
-    x_lens = x.groupby(_group_col)[_val_col].count()
+    x_lens = x.groupby(_group_col, observed=True)[_val_col].count()
 
     x["ranks"] = x[_val_col].rank()
-    x_ranks_avg = x.groupby(_group_col)["ranks"].mean()
+    x_ranks_avg = x.groupby(_group_col, observed=True)["ranks"].mean()
 
     # ties
     vals = x.groupby("ranks").count()[_val_col].to_numpy()
@@ -492,17 +497,13 @@ def posthoc_nemenyi(
 
     if dist == "chi":
         for i, j in combs:
-            vs[i, j] = (
-                compare_stats_chi(x_groups_unique[i], x_groups_unique[j]) / x_ties
-            )
+            vs[i, j] = compare_stats_chi(x_groups_unique[i], x_groups_unique[j]) / x_ties
 
         vs[tri_upper] = ss.chi2.sf(vs[tri_upper], x_len - 1)
 
     elif dist == "tukey":
         for i, j in combs:
-            vs[i, j] = compare_stats_tukey(
-                x_groups_unique[i], x_groups_unique[j]
-            ) * np.sqrt(2.0)
+            vs[i, j] = compare_stats_tukey(x_groups_unique[i], x_groups_unique[j]) * np.sqrt(2.0)
 
         vs[tri_upper] = ss.studentized_range.sf(vs[tri_upper], x_len, np.inf)
 
@@ -611,8 +612,8 @@ def posthoc_nemenyi_friedman(
     k = groups.size
     n = x[_block_id_col].unique().size
 
-    x["mat"] = x.groupby(_block_id_col)[_y_col].rank()
-    R = x.groupby(_group_col)["mat"].mean()
+    x["mat"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
+    R = x.groupby(_group_col, observed=True)["mat"].mean()
     vs = np.zeros((k, k))
     combs = it.combinations(range(k), 2)
 
@@ -669,7 +670,7 @@ def posthoc_conover_friedman(
     block_col : str or int
         Must be specified if `a` is a melted pandas DataFrame object.
         Name of the column that contains blocking factor values.
-    
+
     block_id_col : str or int
         Must be specified if `a` is a melted pandas DataFrame object.
         Name of the column that contains identifiers of blocking factor values.
@@ -751,8 +752,8 @@ def posthoc_conover_friedman(
     k = groups.size
     n = x[_block_id_col].unique().size
 
-    x["mat"] = x.groupby(_block_id_col)[_y_col].rank()
-    R = x.groupby(_group_col)["mat"].sum()
+    x["mat"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
+    R = x.groupby(_group_col, observed=True)["mat"].sum()
     A1 = (x["mat"] ** 2).sum()
     m = 1
     S2 = m / (m * k - 1.0) * (A1 - m * k * n * ((m * k + 1.0) ** 2.0) / 4.0)
@@ -858,8 +859,8 @@ def posthoc_npm_test(
         x0 = x.copy()
         x0.loc[:, _val_col] = x0.loc[ix, _val_col].values
         x0["ranks"] = x0[_val_col].rank()
-        ri = x0.groupby(_group_col)["ranks"].mean()
-        ni = x0.groupby(_group_col)[_val_col].count()
+        ri = x0.groupby(_group_col, observed=True)["ranks"].mean()
+        ni = x0.groupby(_group_col, observed=True)[_val_col].count()
         is_balanced = all(ni == n)
         stat = np.ones((k, k))
 
@@ -874,12 +875,7 @@ def posthoc_npm_test(
                 else:
                     tmp = [
                         (ri.loc[groups[j]] - ri.loc[groups[_mi]])
-                        / (
-                            sigma
-                            * np.sqrt(
-                                1.0 / ni.loc[groups[_mi]] + 1.0 / ni.loc[groups[j]]
-                            )
-                        )
+                        / (sigma * np.sqrt(1.0 / ni.loc[groups[_mi]] + 1.0 / ni.loc[groups[j]]))
                         for _mi in m
                     ]
                 stat[j, i] = np.max(tmp)
@@ -1004,8 +1000,8 @@ def posthoc_siegel_friedman(
     k = groups.size
     n = x[_block_id_col].unique().size
 
-    x["mat"] = x.groupby(_block_id_col)[_y_col].rank()
-    R = x.groupby(_group_col)["mat"].mean()
+    x["mat"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
+    R = x.groupby(_group_col, observed=True)["mat"].mean()
 
     vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
@@ -1123,8 +1119,8 @@ def posthoc_miller_friedman(
     k = groups.size
     n = x[_block_id_col].unique().size
 
-    x["mat"] = x.groupby(_block_id_col)[_y_col].rank()
-    R = x.groupby(_group_col)["mat"].mean()
+    x["mat"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
+    R = x.groupby(_group_col, observed=True)["mat"].mean()
 
     vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
@@ -1245,16 +1241,16 @@ def posthoc_durbin(
     b = x[_block_id_col].unique().size
     r = b
     k = t
-    x["y_ranked"] = x.groupby(_block_id_col)[_y_col].rank()
-    rj = x.groupby(_group_col)["y_ranked"].sum()
+    x["y_ranked"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
+    rj = x.groupby(_group_col, observed=True)["y_ranked"].sum()
     A = (x["y_ranked"] ** 2).sum()
     C = (b * k * (k + 1) ** 2) / 4.0
     D = (rj.to_numpy() ** 2).sum() - r * C
     T1 = (t - 1) / (A - C) * D
     denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1) * (1 - T1 / (b * (k - 1))))
     df = b * k - b - t + 1
-    print(t,b,r,k)
-    print(A,C,D,T1)
+    print(t, b, r, k)
+    print(A, C, D, T1)
     print(denom, df)
 
     vs = np.zeros((t, t), dtype=float)
@@ -1486,18 +1482,19 @@ def posthoc_quade(
     k = len(groups)
     b = x[_block_id_col].unique().size
 
-    x["r"] = x.groupby(_block_id_col)[_y_col].rank()
+    x["r"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
     q = Series(
-        x.groupby(_block_id_col)[_y_col].max() - x.groupby(_block_id_col)[_y_col].min().to_numpy()
+        x.groupby(_block_id_col, observed=True)[_y_col].max()
+        - x.groupby(_block_id_col, observed=True)[_y_col].min().to_numpy()
     ).rank()
     x["rr"] = x["r"] - (k + 1) / 2
     x["s"] = x.apply(lambda row: row["rr"] * q[row[_block_id_col]], axis=1)
     x["w"] = x.apply(lambda row: row["r"] * q[row[_block_id_col]], axis=1)
 
     A = (x["s"] ** 2).sum()
-    S = x.groupby(_group_col)["s"].sum()
+    S = x.groupby(_group_col, observed=True)["s"].sum()
     B = np.sum(S.to_numpy() ** 2) / b
-    W = x.groupby(_group_col)["w"].sum()
+    W = x.groupby(_group_col, observed=True)["w"].sum()
 
     vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
@@ -1514,9 +1511,7 @@ def posthoc_quade(
 
     else:
         n = b * k
-        denom = np.sqrt(
-            (k * (k + 1.0) * (2.0 * n + 1.0) * (k - 1.0)) / (18.0 * n * (n + 1.0))
-        )
+        denom = np.sqrt((k * (k + 1.0) * (2.0 * n + 1.0) * (k - 1.0)) / (18.0 * n * (n + 1.0)))
         ff = 1.0 / (b * (b + 1.0) / 2.0)
 
         for i, j in combs:
@@ -1612,8 +1607,8 @@ def posthoc_vanwaerden(
     r = ss.rankdata(x[_val_col])
     x["z_scores"] = ss.norm.ppf(r / (n + 1))
 
-    aj = x.groupby(_group_col)["z_scores"].sum().to_numpy()
-    nj = x.groupby(_group_col)["z_scores"].count()
+    aj = x.groupby(_group_col, observed=True)["z_scores"].sum().to_numpy()
+    nj = x.groupby(_group_col, observed=True)["z_scores"].count()
     s2 = (1.0 / (n - 1.0)) * (x["z_scores"] ** 2.0).sum()
     sts = (1.0 / s2) * np.sum(aj**2.0 / nj)
     A = aj / nj
@@ -1705,13 +1700,11 @@ def posthoc_dunnett(
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     x = x.set_index(_group_col)[_val_col]
-    x_embedded = x.groupby(_group_col).agg(lambda y: y.dropna().tolist())
+    x_embedded = x.groupby(_group_col, observed=True).agg(lambda y: y.dropna().tolist())
     control_data = x_embedded.loc[control]
     treatment_data = x_embedded.drop(control)
 
-    pvals = ss.dunnett(
-        *treatment_data, control=control_data, alternative=alternative
-    ).pvalue
+    pvals = ss.dunnett(*treatment_data, control=control_data, alternative=alternative).pvalue
 
     multi_index = MultiIndex.from_product([[control], treatment_data.index.tolist()])
     dunnett_sr = Series(pvals, index=multi_index)
@@ -1815,7 +1808,7 @@ def posthoc_ttest(
 
     groups = x[_group_col].unique()
     k = groups.size
-    xg = x.groupby(by=_group_col)[_val_col]
+    xg = x.groupby(by=_group_col, observed=True)[_val_col]
 
     vs = np.zeros((k, k), dtype=float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -1898,7 +1891,7 @@ def posthoc_tukey_hsd(
     results = ss.tukey_hsd(
         *[
             x.loc[idx, _val_col].to_numpy()
-            for idx in x.groupby(_group_col).groups.values()
+            for idx in x.groupby(_group_col, observed=True).groups.values()
         ]
     )
 
@@ -1980,7 +1973,7 @@ def posthoc_mannwhitney(
     groups = x[_group_col].unique()
     x_len = groups.size
     vs = np.zeros((x_len, x_len))
-    xg = x.groupby(_group_col)[_val_col]
+    xg = x.groupby(_group_col, observed=True)[_val_col]
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
@@ -2092,7 +2085,7 @@ def posthoc_wilcoxon(
     groups = x[_group_col].unique()
     x_len = groups.size
     vs = np.zeros((x_len, x_len))
-    xg = x.groupby(_group_col)[_val_col]
+    xg = x.groupby(_group_col, observed=True)[_val_col]
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
@@ -2178,7 +2171,7 @@ def posthoc_scheffe(
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
-    x_grouped = x.groupby(_group_col)[_val_col]
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
     ni = x_grouped.count()
     xi = x_grouped.mean()
     si = x_grouped.var()
@@ -2272,7 +2265,7 @@ def posthoc_tamhane(
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
-    x_grouped = x.groupby(_group_col)[_val_col]
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
     ni = x_grouped.count()
     xi = x_grouped.mean()
     si = x_grouped.var()
@@ -2306,9 +2299,7 @@ def posthoc_tamhane(
             )
             OK = any([ok1, ok2, ok3, ok4])
             if not OK:
-                print(
-                    "Sample sizes or standard errors are not balanced. T2 test is recommended."
-                )
+                print("Sample sizes or standard errors are not balanced. T2 test is recommended.")
             df = ni[i] + ni[j] - 2.0
         p_val = 2.0 * ss.t.sf(np.abs(t_val), df=df)
         return p_val
@@ -2389,7 +2380,7 @@ def posthoc_tukey(
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     groups = x[_group_col].unique()
-    x_grouped = x.groupby(_group_col)[_val_col]
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
 
     ni = x_grouped.count()
     n = ni.sum()
@@ -2484,7 +2475,7 @@ def posthoc_dscf(
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     groups = x[_group_col].unique()
-    x_grouped = x.groupby(_group_col)[_val_col]
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
     n = x_grouped.count()
     k = groups.size
 
@@ -2498,13 +2489,11 @@ def posthoc_dscf(
         nj = n.loc[j]
         x_raw = x.loc[(x[_group_col] == i) | (x[_group_col] == j)].copy()
         x_raw["ranks"] = x_raw.loc[:, _val_col].rank()
-        r = x_raw.groupby(_group_col)["ranks"].sum().loc[[j, i]]
+        r = x_raw.groupby(_group_col, observed=True)["ranks"].sum().loc[[j, i]]
         u = np.array([nj * ni + (nj * (nj + 1) / 2), nj * ni + (ni * (ni + 1) / 2)]) - r
         u_min = np.min(u)
         s = ni + nj
-        var = (nj * ni / (s * (s - 1.0))) * (
-            (s**3 - s) / 12.0 - get_ties(x_raw["ranks"])
-        )
+        var = (nj * ni / (s * (s - 1.0))) * ((s**3 - s) / 12.0 - get_ties(x_raw["ranks"]))
         p = np.sqrt(2.0) * (u_min - nj * ni / 2.0) / np.sqrt(var)
         return p
 

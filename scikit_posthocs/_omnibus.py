@@ -88,7 +88,7 @@ def test_mackwolfe(
         return (np.nan, np.nan)
 
     Rij = x[_val_col].rank()
-    n = cast(Series, x.groupby(_group_col, observed=False)[_val_col].count())
+    n = cast(Series, x.groupby(_group_col, observed=True)[_val_col].count())
 
     def _fn(Ri, Rj):
         return np.sum(Ri.apply(lambda x: Rj[Rj > x].size))
@@ -235,7 +235,7 @@ def test_osrt(
 
     x.sort_values(by=[_group_col], ascending=True, inplace=True)
     groups = np.unique(x[_group_col])
-    x_grouped = x.groupby(_group_col, observed=False)[_val_col]
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
 
     xi = x_grouped.mean()
     ni = x_grouped.count()
@@ -360,8 +360,8 @@ def test_durbin(
     r = float(b)
     k = float(t)
 
-    x["y_ranks"] = x.groupby(_block_id_col)[_y_col].rank()
-    rs = x.groupby(_group_col)["y_ranks"].sum().to_numpy()
+    x["y_ranks"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
+    rs = x.groupby(_group_col, observed=True)["y_ranks"].sum().to_numpy()
 
     A = float(np.sum(x["y_ranks"] ** 2.0))
     C = float(b * k * (k + 1) ** 2.0) / 4.0
