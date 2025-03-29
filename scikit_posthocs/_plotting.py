@@ -116,7 +116,7 @@ def sign_plot(
     flat: bool = False,
     labels: bool = True,
     cmap: Optional[List] = None,
-    cbar_ax_bbox: Optional[List] = None,
+    cbar_ax_bbox: Optional[Tuple[float, float, float, float]] = None,
     ax: Optional[Axes] = None,
     **kwargs,
 ) -> Union[Axes, Tuple[Axes, Colorbar]]:
@@ -244,7 +244,7 @@ def sign_plot(
             hax.set_xlabel("")
             hax.set_ylabel("")
 
-        cbar_ax = hax.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
+        cbar_ax = hax.figure.add_axes(cbar_ax_bbox or (0.95, 0.35, 0.04, 0.3))
         cbar = ColorbarBase(
             cbar_ax,
             cmap=(ListedColormap(cmap[2:] + [cmap[1]])),
@@ -603,7 +603,7 @@ def critical_difference_diagram(
             points_right[::-1],
             xpos=points_right.iloc[-1] + text_h_margin,
             label_fmt=label_fmt_right,
-            color_palette=color_palette,
+            color_palette=list(reversed(color_palette)),
             label_props={"ha": "left", **label_props},
         )
 
