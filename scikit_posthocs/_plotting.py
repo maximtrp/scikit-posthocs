@@ -521,10 +521,7 @@ def critical_difference_diagram(
     # Sets of points under the same crossbar
     crossbar_sets = [bar for bar in _find_maximal_cliques(adj_matrix) if len(bar) > 1]
 
-    if not crossbar_sets:  # All points are significantly different
-        # The list of crossbars is left empty
-        lowest_crossbar_ypos = -1
-    else:
+    if crossbar_sets:  # If there are any crossbars to plot
         crossbar_min_max = [  # Will be used to check if two crossbars intersect
             ranks.reindex(bar).agg(["min", "max"])
             for bar in crossbar_sets
@@ -560,7 +557,7 @@ def critical_difference_diagram(
                 plotted_bars_in_level.append(plotted_bar)
             crossbars.append(plotted_bars_in_level)
 
-        lowest_crossbar_ypos = -len(crossbar_levels)
+    lowest_crossbar_ypos = -len(crossbar_levels)
 
     def plot_items(points, xpos, label_fmt, color_palette, label_props):
         """Plot each marker + elbow + label."""
