@@ -160,6 +160,20 @@ class TestPosthocs(unittest.TestCase):
             set(map(frozenset, expected)),
         )
 
+    def test_cd_diagram_single_bar(self):
+        index = list("abcdef")
+        ranks = Series([2.1, 1.2, 4.5, 3.2, 5.7, 6.5], index=index)
+        sig_matrix = DataFrame(
+            1,  # No significant differences
+            index=index,
+            columns=index,
+        )
+        output = splt.critical_difference_diagram(ranks, sig_matrix)
+        self.assertEqual(len(output["markers"]), len(ranks))
+        self.assertEqual(len(output["elbows"]), len(ranks))
+        self.assertEqual(len(output["labels"]), len(ranks))
+        self.assertEqual(len(output["crossbars"]), 1)
+
     def test_cd_diagram_number_of_artists(self):
         index = list("abcdef")
         ranks = Series([2.1, 1.2, 4.5, 3.2, 5.7, 6.5], index=index)
@@ -181,6 +195,60 @@ class TestPosthocs(unittest.TestCase):
         self.assertEqual(len(output["elbows"]), len(ranks))
         self.assertEqual(len(output["labels"]), len(ranks))
         self.assertEqual(len(output["crossbars"]), 2)
+
+    def test_cd_diagram_all_significant(self):
+        index = list("abcdef")
+        ranks = Series(np.arange(len(index)), index=index)
+        sig_matrix = DataFrame(
+            np.eye(len(index)),  # All significant
+            index=index,
+            columns=index,
+        )
+        output = splt.critical_difference_diagram(ranks, sig_matrix)
+        self.assertEqual(len(output["markers"]), len(ranks))
+        self.assertEqual(len(output["elbows"]), len(ranks))
+        self.assertEqual(len(output["labels"]), len(ranks))
+        self.assertEqual(len(output["crossbars"]), 0)
+
+    def test_cd_diagram_non_intersecting_crossbars(self):
+        index = list("abcdef")
+        # Swap the ranks of 'c' and 'd'
+        ranks = Series([0, 1, 3, 2, 4, 5], index=index)
+        sig_matrix = DataFrame(
+            [
+                [1, 1, 1, 0, 0, 0],
+                [1, 1, 1, 0, 0, 0],
+                [1, 1, 1, 0, 0, 0],
+                [0, 0, 0, 1, 1, 1],
+                [0, 0, 0, 1, 1, 1],
+                [0, 0, 0, 1, 1, 1],
+            ],
+            index=index,
+            columns=index,
+        )
+        output = splt.critical_difference_diagram(ranks, sig_matrix)
+        crossbars = output["crossbars"]
+        y_positions = set(bar.get_ydata()[0] for level in crossbars for bar in level)
+        self.assertEqual(len(crossbars), len(y_positions))
+
+    def test_cd_diagram_normal_distributions(self):
+        rng = np.random.default_rng(0)
+        experiment_values = rng.normal(
+            loc=[-5.2, -6, -2.1, -1.7, -6.4],
+            scale=np.full(fill_value=.1, shape=(10, 1)),
+        )
+        df = DataFrame(experiment_values, columns=["A", "B", "C", "D", "E"])
+
+        test_result = sp.posthoc_conover_friedman(df.to_numpy())
+        average_ranks = df.rank(ascending=False, axis=1).mean(axis=0)
+
+        output = splt.critical_difference_diagram(
+            ranks=average_ranks, sig_matrix=test_result
+        )
+        self.assertEqual(len(output["markers"]), df.shape[1])
+        self.assertEqual(len(output["elbows"]), df.shape[1])
+        self.assertEqual(len(output["labels"]), df.shape[1])
+        self.assertEqual(len(output["crossbars"]), 0)
 
     # Outliers tests
     def test_outliers_iqr(self):

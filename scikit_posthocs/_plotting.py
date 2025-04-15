@@ -1,5 +1,5 @@
-from copy import deepcopy
 from typing import Dict, List, Optional, Set, Tuple, Union
+from itertools import combinations
 
 import numpy as np
 from matplotlib import colors, pyplot
@@ -42,13 +42,12 @@ def sign_array(p_values: Union[List, np.ndarray, DataFrame], alpha: float = 0.05
            [ 1, -1,  0],
            [ 1,  0, -1]])
     """
-    sig_array = deepcopy(np.array(p_values))
-    sig_array[sig_array == 0] = 1e-10
-    sig_array[sig_array > alpha] = 0
-    sig_array[(sig_array < alpha) & (sig_array > 0)] = 1
-    np.fill_diagonal(sig_array, -1)
-
-    return sig_array
+    p_values = np.asarray(p_values)
+    if (p_values < 0).any():
+        raise ValueError("P values matrix must be non-negative")
+    result = (p_values <= alpha).astype(np.int8)  # Returns a copy
+    np.fill_diagonal(result, -1)
+    return result
 
 
 def sign_table(
@@ -518,41 +517,51 @@ def critical_difference_diagram(
             ranks.iloc[: len(ranks) // 2],
             ranks.iloc[len(ranks) // 2 :],
         )
-    # points_left, points_right = np.array_split(ranks.sort_values(), 2)
 
     # Sets of points under the same crossbar
-    crossbar_sets = _find_maximal_cliques(adj_matrix)
+    crossbar_sets = [bar for bar in _find_maximal_cliques(adj_matrix) if len(bar) > 1]
 
-    # Sort by lowest rank and filter single-valued sets
-    crossbar_sets = sorted(
-        (x for x in crossbar_sets if len(x) > 1), key=lambda x: ranks[list(x)].min()
-    )
+    if not crossbar_sets:  # All points are significantly different
+        # The list of crossbars is left empty
+        lowest_crossbar_ypos = -1
+    else:
+        crossbar_min_max = [  # Will be used to check if two crossbars intersect
+            ranks.reindex(bar).agg(["min", "max"])
+            for bar in crossbar_sets
+        ]
 
-    # Create stacking of crossbars: for each level, try to fit the crossbar,
-    # so that it does not intersect with any other in the level. If it does not
-    # fit in any level, create a new level for it.
-    crossbar_levels: list[list[set]] = []
-    for bar in crossbar_sets:
-        for level, bars_in_level in enumerate(crossbar_levels):
-            if not any(bool(bar & bar_in_lvl) for bar_in_lvl in bars_in_level):
-                ypos = -level - 1
-                bars_in_level.append(bar)
-                break
-        else:
-            ypos = -len(crossbar_levels) - 1
-            crossbar_levels.append([bar])
+        # Create an adjacency matrix of the crossbars, where 1 means that the two
+        # crossbars do not intersect, meaning that they can be plotted on the same
+        # level.
+        n_bars = len(crossbar_sets)
+        on_same_level = DataFrame(True, index=range(n_bars), columns=range(n_bars))
 
-        crossbars.append(
-            ax.plot(
-                # Adding a separate line between each pair enables showing a
-                # marker over each elbow with crossbar_props={'marker': 'o'}.
-                [ranks[i] for i in bar],
-                [ypos] * len(bar),
-                **crossbar_props,
+        for (i, bar_i), (j, bar_j) in combinations(enumerate(crossbar_min_max), 2):
+            on_same_level.loc[i, j] = on_same_level.loc[j, i] = (
+                (bar_i["max"] < bar_j["min"]) or (bar_i["min"] > bar_j["max"])
             )
-        )
 
-    lowest_crossbar_ypos = -len(crossbar_levels)
+        # The levels are the maximal cliques of the crossbar adjacency matrix.
+        crossbar_levels = _find_maximal_cliques(on_same_level)
+
+        # Plot the crossbars in each level
+        crossbars = []
+        for level, bars_in_level in enumerate(crossbar_levels):
+            plotted_bars_in_level = []
+            for bar_index in bars_in_level:
+                bar = crossbar_sets[bar_index]
+                plotted_bar, *_ = ax.plot(
+                    # We could plot a single line segment between min and max. However,
+                    # adding a separate segment between each pair enables showing a
+                    # marker over each elbow, e.g. crossbar_props={'marker': 'o'}.
+                    [ranks[i] for i in bar],
+                    [-level - 1] * len(bar),
+                    **crossbar_props,
+                )
+                plotted_bars_in_level.append(plotted_bar)
+            crossbars.append(plotted_bars_in_level)
+
+        lowest_crossbar_ypos = -len(crossbar_levels)
 
     def plot_items(points, xpos, label_fmt, color_palette, label_props):
         """Plot each marker + elbow + label."""
