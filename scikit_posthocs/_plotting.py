@@ -557,7 +557,7 @@ def critical_difference_diagram(
                 plotted_bars_in_level.append(plotted_bar)
             crossbars.append(plotted_bars_in_level)
 
-    lowest_crossbar_ypos = -len(crossbar_levels)
+    lowest_crossbar_ypos = -len(crossbars)
 
     def plot_items(points, xpos, label_fmt, color_palette, label_props):
         """Plot each marker + elbow + label."""
