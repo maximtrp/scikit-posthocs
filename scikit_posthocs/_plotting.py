@@ -545,7 +545,6 @@ def critical_difference_diagram(
         crossbar_levels = _find_maximal_cliques(on_same_level)
 
         # Plot the crossbars in each level
-        crossbars = []
         for level, bars_in_level in enumerate(crossbar_levels):
             plotted_bars_in_level = []
             for bar_index in bars_in_level:
