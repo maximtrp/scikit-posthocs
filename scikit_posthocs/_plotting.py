@@ -499,7 +499,6 @@ def critical_difference_diagram(
     markers = []
     elbows = []
     labels = []
-    crossbars = []
 
     # True if pairwise comparison is NOT significant
     adj_matrix = DataFrame(
