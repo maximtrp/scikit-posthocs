@@ -518,40 +518,36 @@ def critical_difference_diagram(
             ranks.iloc[len(ranks) // 2 :],
         )
 
-    # Sets of points under the same crossbar
+    # Arrays of ranks for each crossbar (each crossbar is a maximal clique)
     crossbar_ranks = (
         ranks.reindex(bar).sort_values().values
         for bar in _find_maximal_cliques(adj_matrix)
         if len(bar) > 1
     )
-    # Try to fit wider crossbars first
-    crossbar_ranks = list(sorted(crossbar_ranks, key=lambda x: x[0] - x[-1]))
 
-    # If any crossbar is found, plot them
-    if crossbar_ranks:
-        # Create stacking of crossbars: for each level, try to fit the crossbar,
-        # so that it does not intersect with any other in the level. If it does not
-        # fit in any level, create a new level for it.
-        crossbar_levels: list[list[np.ndarray]] = []
-        for bar_i in crossbar_ranks:
-            for bars_in_level in crossbar_levels:
-                if all(
-                    (bar_i[-1] < bar_j[0]) or (bar_i[0] > bar_j[-1])
-                    for bar_j in bars_in_level
-                ):
-                    bars_in_level.append(bar_i)
-                    break
-            else:
-                crossbar_levels.append([bar_i])  # Create a new level
+    # Create stacking of crossbars: for each level, try to fit the widest crossbar,
+    # so that it does not intersect with any other in the level. If it does not
+    # fit in any level, create a new level for it.
+    crossbar_levels: list[list[np.ndarray]] = []
+    for bar_i in sorted(crossbar_ranks, key=lambda x: x[0] - x[-1]):
+        for bars_in_level in crossbar_levels:
+            if all(
+                (bar_i[-1] < bar_j[0]) or (bar_i[0] > bar_j[-1])
+                for bar_j in bars_in_level
+            ):
+                bars_in_level.append(bar_i)
+                break
+        else:
+            crossbar_levels.append([bar_i])  # Create a new level
 
-        # Plot crossbars
-        # We could plot a single line segment between min and max. However,
-        # adding a separate segment between each pair enables showing a
-        # marker over each elbow, e.g. crossbar_props={'marker': 'o'}.
-        crossbars = [
-            [ax.plot(bar, [-i] * len(bar), **crossbar_props) for bar in level]
-            for i, level in enumerate(crossbar_levels)
-        ]
+    # Plot crossbars.
+    # We could plot a single line segment for the whole crossbar. However,
+    # we add a separate segment between each elbow, enabling the display of a
+    # marker over each elbow, e.g. crossbar_props={'marker': 'o'}.
+    crossbars = [
+        [ax.plot(bar, [-i] * len(bar), **crossbar_props) for bar in level]
+        for i, level in enumerate(crossbar_levels)
+    ]
 
     elbow_start_y = -len(crossbars)
 
