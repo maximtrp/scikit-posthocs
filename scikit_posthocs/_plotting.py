@@ -532,7 +532,7 @@ def critical_difference_diagram(
     for bar_i in sorted(crossbar_ranks, key=lambda x: x[0] - x[-1]):
         for bars_in_level in crossbar_levels:
             if all(
-                (bar_i[-1] < bar_j[0]) or (bar_i[0] > bar_j[-1])
+                (bar_i[-1] < bar_j[0]) or (bar_i[0] > bar_j[-1])  # True if no intersection
                 for bar_j in bars_in_level
             ):
                 bars_in_level.append(bar_i)
@@ -541,8 +541,7 @@ def critical_difference_diagram(
             crossbar_levels.append([bar_i])  # Create a new level
 
     # Plot crossbars.
-    # We could plot a single line segment for the whole crossbar. However,
-    # we add a separate segment between each elbow, enabling the display of a
+    # We add a separate segment between each elbow, enabling the display of a
     # marker over each elbow, e.g. crossbar_props={'marker': 'o'}.
     crossbars = [
         [ax.plot(bar, [-i] * len(bar), **crossbar_props) for bar in level]
