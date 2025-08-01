@@ -1,5 +1,5 @@
-from copy import deepcopy
 from typing import Dict, List, Optional, Set, Tuple, Union
+from itertools import combinations
 
 import numpy as np
 from matplotlib import colors, pyplot
@@ -42,13 +42,12 @@ def sign_array(p_values: Union[List, np.ndarray, DataFrame], alpha: float = 0.05
            [ 1, -1,  0],
            [ 1,  0, -1]])
     """
-    sig_array = deepcopy(np.array(p_values))
-    sig_array[sig_array == 0] = 1e-10
-    sig_array[sig_array > alpha] = 0
-    sig_array[(sig_array < alpha) & (sig_array > 0)] = 1
-    np.fill_diagonal(sig_array, -1)
-
-    return sig_array
+    p_values = np.asarray(p_values)
+    if (p_values < 0).any():
+        raise ValueError("P values matrix must be non-negative")
+    result = (p_values <= alpha).astype(np.int8)  # Returns a copy
+    np.fill_diagonal(result, -1)
+    return result
 
 
 def sign_table(
@@ -505,7 +504,6 @@ def critical_difference_diagram(
     markers = []
     elbows = []
     labels = []
-    crossbars = []
 
     # True if pairwise comparison is NOT significant
     adj_matrix = DataFrame(
@@ -523,45 +521,42 @@ def critical_difference_diagram(
             ranks.iloc[: len(ranks) // 2],
             ranks.iloc[len(ranks) // 2 :],
         )
-    # points_left, points_right = np.array_split(ranks.sort_values(), 2)
 
-    # Sets of points under the same crossbar
-    crossbar_sets = _find_maximal_cliques(adj_matrix)
-
-    # Sort by lowest rank and filter single-valued sets
-    crossbar_sets = sorted(
-        (x for x in crossbar_sets if len(x) > 1), key=lambda x: ranks[list(x)].min()
+    # Arrays of ranks for each crossbar (each crossbar is a maximal clique)
+    crossbar_ranks = (
+        ranks.reindex(bar).sort_values().values
+        for bar in _find_maximal_cliques(adj_matrix)
+        if len(bar) > 1
     )
 
-    # Create stacking of crossbars: for each level, try to fit the crossbar,
+    # Create stacking of crossbars: for each level, try to fit the widest crossbar,
     # so that it does not intersect with any other in the level. If it does not
     # fit in any level, create a new level for it.
-    crossbar_levels: list[list[set]] = []
-    for bar in crossbar_sets:
-        for level, bars_in_level in enumerate(crossbar_levels):
-            if not any(bool(bar & bar_in_lvl) for bar_in_lvl in bars_in_level):
-                ypos = -level - 1
-                bars_in_level.append(bar)
+    crossbar_levels: list[list[np.ndarray]] = []
+    for bar_i in sorted(crossbar_ranks, key=lambda x: x[0] - x[-1]):
+        for bars_in_level in crossbar_levels:
+            if all(
+                (bar_i[-1] < bar_j[0]) or (bar_i[0] > bar_j[-1])  # True if no intersection
+                for bar_j in bars_in_level
+            ):
+                bars_in_level.append(bar_i)
                 break
         else:
-            ypos = -len(crossbar_levels) - 1
-            crossbar_levels.append([bar])
+            crossbar_levels.append([bar_i])  # Create a new level
 
-        crossbars.append(
-            ax.plot(
-                # Adding a separate line between each pair enables showing a
-                # marker over each elbow with crossbar_props={'marker': 'o'}.
-                [ranks[i] for i in bar],
-                [ypos] * len(bar),
-                **crossbar_props,
-            )
-        )
+    # Plot crossbars.
+    # We add a separate segment between each elbow, enabling the display of a
+    # marker over each elbow, e.g. crossbar_props={'marker': 'o'}.
+    crossbars = [
+        [ax.plot(bar, [-i] * len(bar), **crossbar_props) for bar in level]
+        for i, level in enumerate(crossbar_levels)
+    ]
 
-    lowest_crossbar_ypos = -len(crossbar_levels)
+    elbow_start_y = -len(crossbars)
 
     def plot_items(points, xpos, label_fmt, color_palette, label_props):
         """Plot each marker + elbow + label."""
-        ypos = lowest_crossbar_ypos - 1
+        ypos = elbow_start_y
         for idx, (label, rank) in enumerate(points.items()):
             if not color_palette or len(color_palette) == 0:
                 elbow, *_ = ax.plot(
