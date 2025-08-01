@@ -364,6 +364,7 @@ def critical_difference_diagram(
     ranks: Union[dict, Series],
     sig_matrix: DataFrame,
     *,
+    alpha: float = 0.05,
     ax: Optional[Axes] = None,
     label_fmt_left: str = "{label} ({rank:.2g})",
     label_fmt_right: str = "({rank:.2g}) {label}",
@@ -407,6 +408,10 @@ def critical_difference_diagram(
     sig_matrix : DataFrame
         The corresponding p-value matrix outputted by post-hoc tests, with
         indices matching the labels in the ranks argument.
+
+    alpha : float, optional = 0.05
+        Significance level. Default is 0.05.
+        Values below this will be considered statistically different.
 
     ax : matplotlib.SubplotBase, optional
         The object in which the plot will be built. Gets the current Axes
@@ -504,7 +509,7 @@ def critical_difference_diagram(
 
     # True if pairwise comparison is NOT significant
     adj_matrix = DataFrame(
-        1 - sign_array(sig_matrix),
+        1 - sign_array(sig_matrix, alpha=alpha),
         index=sig_matrix.index,
         columns=sig_matrix.columns,
         dtype=bool,
