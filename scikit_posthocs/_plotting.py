@@ -530,7 +530,7 @@ def critical_difference_diagram(
 
     # Sort by lowest rank and filter single-valued sets
     crossbar_sets = sorted(
-        (x for x in crossbar_sets if len(x) > 1), key=lambda x: ranks[list(x)].min()
+        (x for x in crossbar_sets if len(x) > 1), key=lambda x: ranks.loc[list(x)].min()
     )
 
     # Create stacking of crossbars: for each level, try to fit the crossbar,
