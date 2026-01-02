@@ -603,7 +603,7 @@ def critical_difference_diagram(
             x_min, x_max = ax.get_xlim()
             ax.axhline(0.5, 0, (cd / (x_max - x_min)), **crossbar_props)
             ax.text((x_min + cd / 2), 0.65, f"CD = {cd:.2g}", **label_props)
-    
+
     plot_cd(
         cd,
         crossbar_props=crossbar_props,
