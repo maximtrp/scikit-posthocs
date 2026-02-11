@@ -102,11 +102,12 @@ def sign_table(
     pv[two] = "**"
     pv[one] = "*"
 
-    np.fill_diagonal(pv.values, "-")
+    for i in range(pv.shape[0]):
+        pv.iat[i, i] = "-"
     if not lower:
-        pv.values[np.tril_indices(pv.shape[0], -1)] = ""
+        pv = pv.where(~np.tril(np.ones(pv.shape, dtype=bool), -1), other="")
     elif not upper:
-        pv.values[np.triu_indices(pv.shape[0], 1)] = ""
+        pv = pv.where(~np.triu(np.ones(pv.shape, dtype=bool), 1), other="")
 
     return pv
 
@@ -212,7 +213,8 @@ def sign_plot(
         cmap = ["1", "#fbd7d4", "#005a32", "#238b45", "#a1d99b"]
 
     if flat:
-        np.fill_diagonal(df.values, -1)
+        for i in range(df.shape[0]):
+            df.iat[i, i] = -1
         hax = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax, **kwargs)
         if not labels:
             hax.set_xlabel("")
@@ -226,7 +228,8 @@ def sign_plot(
         df[(xc < 0.05) & (xc >= 0.01)] = 3
         df[(xc >= 0.05)] = 0
 
-        np.fill_diagonal(df.values, -1)
+        for i in range(df.shape[0]):
+            df.iat[i, i] = -1
 
         if len(cmap) != 5:
             raise ValueError("Cmap list must contain 5 items")

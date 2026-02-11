@@ -1353,9 +1353,9 @@ def posthoc_anderson(
                 x.loc[x[_group_col] == groups[i], _val_col],
                 x.loc[x[_group_col] == groups[j], _val_col],
             ],
-            midrank=midrank,
+            variant="midrank" if midrank else "right",
             method=ss.PermutationMethod(),
-        )[2]
+        ).pvalue
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
