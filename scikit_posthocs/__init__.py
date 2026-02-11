@@ -35,6 +35,9 @@ from scikit_posthocs._plotting import (
     sign_table,
     critical_difference_diagram,
 )
+from scikit_posthocs._grouping import (
+    compact_letter_display,
+)
 from scikit_posthocs._outliers import (
     outliers_gesd,
     outliers_grubbs,

@@ -7,6 +7,7 @@ import scikit_posthocs._omnibus as som
 import scikit_posthocs._outliers as so
 import scikit_posthocs._plotting as splt
 import scikit_posthocs._global as spg
+import scikit_posthocs._grouping as spg2
 import seaborn as sb
 import numpy as np
 import matplotlib.axes as ma
@@ -1220,6 +1221,67 @@ class TestPosthocs(unittest.TestCase):
             is_close_mt.append(np.allclose(results, r_results, atol=1e-4))
         self.assertTrue(sum(is_close) > 95)
         self.assertTrue(sum(is_close_mt) > 95)
+
+
+class TestCompactLetterDisplay(unittest.TestCase):
+    # Piepho (2004) Example 1:
+    # Groups 0-3, significant pairs: (0,1), (0,2), (0,3), (1,3)
+    # Expected: ['a  ', ' b ', ' bc', '  c']
+    piepho1_pv = np.array([
+        [-1.0, 0.01, 0.01, 0.01],
+        [ 0.01, -1.0, 0.50, 0.01],
+        [ 0.01,  0.50, -1.0, 0.50],
+        [ 0.01,  0.01, 0.50, -1.0],
+    ])
+
+    def test_piepho_example1_letters(self):
+        result = spg2.compact_letter_display(self.piepho1_pv)
+        self.assertEqual(list(result), ['a  ', ' b ', ' bc', '  c'])
+
+    def test_piepho_example1_index(self):
+        result = spg2.compact_letter_display(self.piepho1_pv)
+        self.assertEqual(list(result.index), [0, 1, 2, 3])
+
+    def test_dataframe_input_preserves_names(self):
+        df = DataFrame(self.piepho1_pv,
+                       index=['A', 'B', 'C', 'D'],
+                       columns=['A', 'B', 'C', 'D'])
+        result = spg2.compact_letter_display(df)
+        self.assertEqual(list(result.index), ['A', 'B', 'C', 'D'])
+        self.assertEqual(list(result), ['a  ', ' b ', ' bc', '  c'])
+
+    def test_custom_names(self):
+        result = spg2.compact_letter_display(self.piepho1_pv, names=['w', 'x', 'y', 'z'])
+        self.assertEqual(list(result.index), ['w', 'x', 'y', 'z'])
+
+    def test_all_different(self):
+        # All pairs significantly different -> each group gets its own letter
+        pv = np.array([
+            [-1.0, 0.01, 0.01],
+            [ 0.01, -1.0, 0.01],
+            [ 0.01,  0.01, -1.0],
+        ])
+        result = spg2.compact_letter_display(pv)
+        # Each group belongs to exactly one unique letter group
+        letters = [s.strip() for s in result]
+        self.assertEqual(len(set(letters)), 3)
+        self.assertTrue(all(len(s.strip()) == 1 for s in result))
+
+    def test_none_different(self):
+        # No pairs significantly different -> all groups share the same letter
+        pv = np.array([
+            [-1.0, 0.80, 0.90],
+            [ 0.80, -1.0, 0.70],
+            [ 0.90,  0.70, -1.0],
+        ])
+        result = spg2.compact_letter_display(pv)
+        # All groups should have the same non-space letter
+        self.assertEqual(len(set(result)), 1)
+        self.assertEqual(result.iloc[0].strip(), 'a')
+
+    def test_series_name(self):
+        result = spg2.compact_letter_display(self.piepho1_pv)
+        self.assertEqual(result.name, 'letters')
 
 
 if __name__ == "__main__":

@@ -9,3 +9,4 @@ Plotting API reference
     sign_table
     sign_plot
     critical_difference_diagram
+    compact_letter_display

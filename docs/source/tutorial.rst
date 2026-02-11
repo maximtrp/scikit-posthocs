@@ -80,6 +80,30 @@ P value tells us we may reject the null hypothesis that the population medians o
 
 Pairwise comparisons show that we may reject the null hypothesis (p < 0.01) for each pair of species and conclude that all groups (species) differ in their sepal widths.
 
+Compact Letter Display
+~~~~~~~~~~~~~~~~~~~~~~
+
+Post hoc test results can be condensed into a compact letter display (CLD),
+where groups sharing at least one letter are not significantly different from
+each other. This is useful for annotating plots or summarizing results in
+tables.
+
+.. code:: python
+
+  >>> x = [[1, 2, 1, 3, 1, 4], [12, 3, 11, 9, 3, 8, 1],
+  ...      [10, 22, 12, 9, 8, 3], [14, 12, 16, 17, 5, 9]]
+  >>> pc = sp.posthoc_dunn(x, p_adjust='holm')
+  >>> sp.compact_letter_display(pc, alpha=0.05)
+  1    a
+  2    ab
+  3     b
+  4     b
+  Name: letters, dtype: object
+
+Groups 1 and 2 share letter ``a`` (not significantly different), while groups
+2, 3 and 4 share letter ``b`` (not significantly different). Group 1 is
+significantly different from groups 3 and 4.
+
 Block design
 ~~~~~~~~~~~~
 

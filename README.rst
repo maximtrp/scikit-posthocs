@@ -116,6 +116,7 @@ Features
   - Simes test.
 
 - Plotting functionality (e.g. significance plots).
+- Compact Letter Display for summarizing pairwise comparison results.
 
 All post hoc tests are capable of p adjustments for multiple
 pairwise comparisons.
@@ -475,6 +476,25 @@ Custom colormap applied to a plot:
   >>> sp.sign_plot(pc, **heatmap_args)
 
 .. image:: images/plot-conover-custom-cmap.png
+
+Compact Letter Display
+~~~~~~~~~~~~~~~~~~~~~~
+
+After running a post hoc test, results can be summarized as a compact letter
+display (CLD). Groups sharing at least one letter are not significantly
+different from each other:
+
+.. code:: python
+
+  >>> x = [[1, 2, 1, 3, 1, 4], [12, 3, 11, 9, 3, 8, 1],
+  ...      [10, 22, 12, 9, 8, 3], [14, 12, 16, 17, 5, 9]]
+  >>> pc = sp.posthoc_dunn(x, p_adjust='holm')
+  >>> sp.compact_letter_display(pc, alpha=0.05)
+  1    a
+  2    ab
+  3     b
+  4     b
+  Name: letters, dtype: str
 
 Citing
 ------
