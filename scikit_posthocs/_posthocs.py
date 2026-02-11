@@ -1,3 +1,4 @@
+import inspect
 import itertools as it
 from typing import Optional, Union, Literal
 import numpy as np
@@ -1347,15 +1348,22 @@ def posthoc_anderson(
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
 
+    _anderson_kwargs = (
+        {"variant": "midrank" if midrank else "right"}
+        if "variant" in inspect.signature(ss.anderson_ksamp).parameters
+        else {"midrank": midrank}
+    )
+
     for i, j in combs:
-        vs[i, j] = ss.anderson_ksamp(
+        result = ss.anderson_ksamp(
             [
                 x.loc[x[_group_col] == groups[i], _val_col],
                 x.loc[x[_group_col] == groups[j], _val_col],
             ],
-            variant="midrank" if midrank else "right",
+            **_anderson_kwargs,
             method=ss.PermutationMethod(),
-        ).pvalue
+        )
+        vs[i, j] = result.pvalue if hasattr(result, "pvalue") else result[2]
 
     if p_adjust:
         vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
