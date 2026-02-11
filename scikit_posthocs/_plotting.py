@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
@@ -42,7 +41,7 @@ def sign_array(p_values: Union[List, np.ndarray, DataFrame], alpha: float = 0.05
            [ 1, -1,  0],
            [ 1,  0, -1]])
     """
-    sig_array = deepcopy(np.array(p_values))
+    sig_array = np.array(p_values, dtype=float)
     sig_array[sig_array == 0] = 1e-10
     sig_array[sig_array > alpha] = 0
     sig_array[(sig_array < alpha) & (sig_array > 0)] = 1
@@ -577,13 +576,18 @@ def critical_difference_diagram(
         (x for x in crossbar_sets if len(x) > 1), key=lambda x: ranks.loc[list(x)].min()
     )
 
+    def _rank_intervals_overlap(bar1: Set, bar2: Set) -> bool:
+        lo1, hi1 = ranks.loc[list(bar1)].min(), ranks.loc[list(bar1)].max()
+        lo2, hi2 = ranks.loc[list(bar2)].min(), ranks.loc[list(bar2)].max()
+        return lo1 <= hi2 and lo2 <= hi1
+
     # Create stacking of crossbars: for each level, try to fit the crossbar,
     # so that it does not intersect with any other in the level. If it does not
     # fit in any level, create a new level for it.
     crossbar_levels: list[list[set]] = []
     for bar in crossbar_sets:
         for level, bars_in_level in enumerate(crossbar_levels):
-            if not any(bool(bar & bar_in_lvl) for bar_in_lvl in bars_in_level):
+            if not any(_rank_intervals_overlap(bar, bar_in_lvl) for bar_in_lvl in bars_in_level):
                 ypos = -level - 1
                 bars_in_level.append(bar)
                 break
