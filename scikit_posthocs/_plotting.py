@@ -378,6 +378,8 @@ def critical_difference_diagram(
     color_palette: Union[Dict[str, str], List, None] = None,
     text_h_margin: float = 0.01,
     left_only: bool = False,
+    hue: Union[Dict, Series, None] = None,
+    hue_order: Optional[List] = None,
 ) -> Dict[str, list]:
     """Plot a Critical Difference diagram from ranks and post-hoc results.
 
@@ -457,6 +459,16 @@ def critical_difference_diagram(
         Set all labels in a single left-sided block instead of splitting them
         into two block, one for the left and one for the right.
 
+    hue : dict or Series, optional
+        Maps each estimator name (same keys/index as ``ranks``) to a group
+        label. When provided, colors are assigned per group rather than per
+        estimator. By default None.
+
+    hue_order : list, optional
+        Order of the group levels for color assignment. Must contain all
+        unique values present in ``hue``. If None and ``hue`` is provided,
+        the order is determined by the first appearance in ``hue``.
+        By default None.
 
     Returns
     -------
@@ -474,17 +486,45 @@ def critical_difference_diagram(
 
     .. [2] https://mirkobunse.github.io/CriticalDifferenceDiagrams.jl/stable/
     """
-    ## check color_palette consistency
-    if not color_palette or len(color_palette) == 0:
-        pass
-    elif isinstance(color_palette, Dict) and (
-        (len(set(ranks.keys()) & set(color_palette.keys()))) == len(ranks)
-    ):
-        pass
-    elif isinstance(color_palette, List) and (len(ranks) <= len(color_palette)):
-        pass
+    if hue is not None:
+        hue = Series(hue)
+        if set(hue.index) != set(Series(ranks).index):
+            raise ValueError("hue index/keys must match ranks index/keys")
+
+        unique_groups = hue.unique()
+        if hue_order is None:
+            hue_order = list(unique_groups)
+        else:
+            hue_order = list(hue_order)
+            if not set(unique_groups).issubset(set(hue_order)):
+                raise ValueError("hue_order must contain all unique values present in hue")
+
+        if not color_palette:
+            default_colors = pyplot.rcParams["axes.prop_cycle"].by_key()["color"]
+            color_palette = {
+                group: default_colors[i % len(default_colors)]
+                for i, group in enumerate(hue_order)
+            }
+        elif isinstance(color_palette, list):
+            if len(color_palette) < len(hue_order):
+                raise ValueError(
+                    "color_palette list must have at least as many colors as there are groups in hue"
+                )
+        elif isinstance(color_palette, dict):
+            if not set(unique_groups).issubset(set(color_palette.keys())):
+                raise ValueError("color_palette dict must contain all group names present in hue")
     else:
-        raise ValueError("color_palette keys are not consistent, or list size too small")
+        ## check color_palette consistency
+        if not color_palette or len(color_palette) == 0:
+            pass
+        elif isinstance(color_palette, Dict) and (
+            (len(set(ranks.keys()) & set(color_palette.keys()))) == len(ranks)
+        ):
+            pass
+        elif isinstance(color_palette, List) and (len(ranks) <= len(color_palette)):
+            pass
+        else:
+            raise ValueError("color_palette keys are not consistent, or list size too small")
 
     elbow_props = elbow_props or {}
     marker_props = {"zorder": 3, **(marker_props or {})}
@@ -519,6 +559,7 @@ def critical_difference_diagram(
     )
 
     ranks = Series(ranks).sort_values()  # Standardize if ranks is dict
+    points_right: Series = ranks.iloc[len(ranks):]  # empty by default; reassigned below if not left_only
     if left_only:
         points_left = ranks
     else:
@@ -572,6 +613,20 @@ def critical_difference_diagram(
                     [ypos, ypos, 0],
                     **elbow_props,
                 )
+            elif hue is not None:
+                assert hue_order is not None  # guaranteed by validation above
+                group = hue[label]
+                color = (
+                    color_palette[group]
+                    if isinstance(color_palette, dict)
+                    else color_palette[hue_order.index(group)]
+                )
+                elbow, *_ = ax.plot(
+                    [xpos, rank, rank],
+                    [ypos, ypos, 0],
+                    c=color,
+                    **elbow_props,
+                )
             else:
                 elbow, *_ = ax.plot(
                     [xpos, rank, rank],
@@ -613,7 +668,7 @@ def critical_difference_diagram(
             xpos=points_right.iloc[-1] + text_h_margin,
             label_fmt=label_fmt_right,
             color_palette=list(reversed(color_palette))
-            if isinstance(color_palette, list)
+            if (hue is None and isinstance(color_palette, list))
             else color_palette,
             label_props={"ha": "left", **label_props},
         )
