@@ -600,18 +600,9 @@ def critical_difference_diagram(
     def plot_cd(cd, label_props, crossbar_props):
         """Plot CD horizontal line and label above OX axis if CD is passed."""
         if cd is not None:
-            x_min, x_max = ax.get_xlim()
-            ax.axhline(0.5, 0, (cd / (x_max - x_min)), **crossbar_props)
-            ax.text((x_min + cd / 2), 0.65, f"CD = {cd:.2g}", **label_props)
-
-    plot_cd(
-        cd,
-        crossbar_props=crossbar_props,
-        label_props={
-            "ha": "center",
-            **label_props,
-        }
-    )
+            x_start = ranks.iloc[0]
+            ax.plot([x_start, x_start + cd], [0.5, 0.5], **crossbar_props)
+            ax.text(x_start + cd / 2, 0.65, f"CD = {cd:.2g}", **label_props)
 
     plot_items(
         points_left,
@@ -634,6 +625,15 @@ def critical_difference_diagram(
             else color_palette,
             label_props={"ha": "left", **label_props},
         )
+
+    plot_cd(
+        cd,
+        crossbar_props=crossbar_props,
+        label_props={
+            "ha": "center",
+            **label_props,
+        }
+    )
 
     return {
         "markers": markers,
