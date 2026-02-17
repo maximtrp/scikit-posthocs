@@ -366,6 +366,7 @@ def critical_difference_diagram(
     ranks: Union[dict, Series],
     sig_matrix: DataFrame,
     *,
+    cd: Optional[float] = None,
     alpha: float = 0.05,
     ax: Optional[Axes] = None,
     label_fmt_left: str = "{label} ({rank:.2g})",
@@ -420,6 +421,9 @@ def critical_difference_diagram(
     ax : matplotlib.SubplotBase, optional
         The object in which the plot will be built. Gets the current Axes
         by default (if None is passed).
+
+    cd : float, optional
+        Critical difference value to be plotted as a horizontal line above the axis.
 
     label_fmt_left : str, optional
         The format string to apply to the labels on the left side. The keywords
@@ -655,6 +659,13 @@ def critical_difference_diagram(
             )
             ypos -= 1
 
+    def plot_cd(cd, label_props, crossbar_props):
+        """Plot CD horizontal line and label above OX axis if CD is passed."""
+        if cd is not None:
+            x_start = ranks.iloc[0]
+            ax.plot([x_start, x_start + cd], [0.5, 0.5], **crossbar_props)
+            ax.text(x_start + cd / 2, 0.65, f"CD = {cd:.2g}", **label_props)
+
     plot_items(
         points_left,
         xpos=points_left.iloc[0] - text_h_margin,
@@ -676,6 +687,15 @@ def critical_difference_diagram(
             else color_palette,
             label_props={"ha": "left", **label_props},
         )
+
+    plot_cd(
+        cd,
+        crossbar_props=crossbar_props,
+        label_props={
+            "ha": "center",
+            **label_props,
+        }
+    )
 
     return {
         "markers": markers,
