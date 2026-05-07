@@ -1833,8 +1833,8 @@ def posthoc_ttest(
         pooled_sd = np.sqrt(np.sum(sd**2.0 * deg_f) / total_deg_f)
 
         def compare_pooled(i, j):
-            diff = m.iloc[i] - m.iloc[j]
-            se_diff = pooled_sd * np.sqrt(1.0 / ni.iloc[i] + 1.0 / ni.iloc[j])
+            diff = m.loc[groups[i]] - m.loc[groups[j]]
+            se_diff = pooled_sd * np.sqrt(1.0 / ni.loc[groups[i]] + 1.0 / ni.loc[groups[j]])
             t_value = diff / se_diff
             return 2.0 * ss.t.cdf(-np.abs(t_value), total_deg_f)
 
@@ -1899,7 +1899,7 @@ def posthoc_tukey_hsd(
     results = ss.tukey_hsd(
         *[
             x.loc[idx, _val_col].to_numpy()
-            for idx in x.groupby(_group_col, observed=True).groups.values()
+            for idx in x.groupby(_group_col, observed=True, sort=False).groups.values()
         ]
     )
 
