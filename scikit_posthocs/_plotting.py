@@ -194,7 +194,8 @@ def sign_plot(
     if isinstance(x, DataFrame):
         df = x.copy()
     else:
-        g = g or np.arange(len(x))
+        if g is None or len(g) == 0:
+            g = np.arange(len(x))
         df = DataFrame(x, index=Index(g), columns=Index(g), copy=True)
 
     dtype = df.values.dtype

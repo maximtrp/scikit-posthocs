@@ -49,21 +49,23 @@ def outliers_iqr(
     >>> outliers_iqr(x, ret = 'outliers')
     array([12, 23])
     """
-    arr = np.copy(x)
+    arr = np.asarray(x)
 
     q1, q3 = np.percentile(arr, [25, 75])
     iqr = q3 - q1
     ll = q1 - iqr * coef
     ul = q3 + iqr * coef
 
+    non_outlier_mask = (arr >= ll) & (arr <= ul)
+
     if ret == "indices":
-        return np.where((arr > ll) & (arr < ul))[0]
+        return np.where(non_outlier_mask)[0]
     elif ret == "outliers":
-        return arr[(arr < ll) | (arr > ul)]
+        return arr[~non_outlier_mask]
     elif ret == "outliers_indices":
-        return np.where((arr < ll) | (arr > ul))[0]
+        return np.where(~non_outlier_mask)[0]
     else:
-        return x[(x > ll) & (x < ul)]
+        return arr[non_outlier_mask]
 
 
 def outliers_grubbs(

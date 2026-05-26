@@ -1,5 +1,6 @@
 import inspect
 import itertools as it
+import warnings
 from typing import Optional, Union, Literal
 import numpy as np
 from numpy.typing import ArrayLike
@@ -82,7 +83,7 @@ def __convert_to_df(
     elif isinstance(a, np.ndarray):
         # cols ids not defined
         # trying to infer
-        if not all([val_id, group_id]):
+        if val_id is None or group_id is None:
             if np.argmax(a.shape):
                 a = a.T
 
@@ -100,7 +101,7 @@ def __convert_to_df(
         else:
             cols = {val_id: val_col, group_id: group_col}
 
-        cols_vals = np.array(dict(sorted(cols.items())).values())
+        cols_vals = [v for _, v in sorted(cols.items())]
         return DataFrame(a, columns=cols_vals).dropna(), val_col, group_col
 
 
@@ -1250,9 +1251,6 @@ def posthoc_durbin(
     T1 = (t - 1) / (A - C) * D
     denom = np.sqrt(((A - C) * 2 * r) / (b * k - b - t + 1) * (1 - T1 / (b * (k - 1))))
     df = b * k - b - t + 1
-    print(t, b, r, k)
-    print(A, C, D, T1)
-    print(denom, df)
 
     vs = np.zeros((t, t), dtype=float)
     combs = it.combinations(range(t), 2)
@@ -1722,13 +1720,14 @@ def posthoc_dunnett(
 
     else:
         levels = x.index.unique().to_numpy()
-        result_df = DataFrame(index=levels, columns=levels)
+        result_df = DataFrame(index=levels, columns=levels, dtype=float)
 
         for pair in dunnett_sr.index:
             a, b = pair
             result_df.loc[a, b] = dunnett_sr[pair]
             result_df.loc[b, a] = dunnett_sr[pair]
-        result_df.loc[control, control] = 1.0
+        for level in levels:
+            result_df.loc[level, level] = 1.0
         return result_df
 
 
@@ -2307,7 +2306,11 @@ def posthoc_tamhane(
             )
             OK = any([ok1, ok2, ok3, ok4])
             if not OK:
-                print("Sample sizes or standard errors are not balanced. T2 test is recommended.")
+                warnings.warn(
+                    "Sample sizes or standard errors are not balanced. T2 test is recommended.",
+                    UserWarning,
+                    stacklevel=2,
+                )
             df = ni[i] + ni[j] - 2.0
         p_val = 2.0 * ss.t.sf(np.abs(t_val), df=df)
         return p_val

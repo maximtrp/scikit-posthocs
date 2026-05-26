@@ -28,8 +28,12 @@ class TestPosthocs(unittest.TestCase):
 
     def test_global_f_test(self):
         a = np.array([0.9, 0.1, 0.01, 0.99, 1.0, 0.02, 0.04])
-        result, _ = spg.global_f_test(a)
+        result = spg.global_f_test(a)
         self.assertAlmostEqual(result, 0.01294562)
+        # With stat=True a (p_value, t_stat) tuple is returned.
+        result_p, t_stat = spg.global_f_test(a, stat=True)
+        self.assertAlmostEqual(result_p, 0.01294562)
+        self.assertGreater(t_stat, 0)
 
     # Plotting tests
     def test_sign_array(self):
@@ -1282,6 +1286,199 @@ class TestCompactLetterDisplay(unittest.TestCase):
     def test_series_name(self):
         result = spg2.compact_letter_display(self.piepho1_pv)
         self.assertEqual(result.name, 'letters')
+
+
+class TestBugRegressions(unittest.TestCase):
+    """Regression tests guarding previously-fixed bugs and edge cases."""
+
+    df_bn = np.array([[4, 3, 4, 4, 5, 6, 3], [1, 2, 3, 5, 6, 7, 7], [1, 2, 6, 4, 1, 5, 1]])
+
+    # --- _global.global_f_test return type ---
+    def test_global_f_test_returns_scalar_by_default(self):
+        """global_f_test must return a float when stat=False (default)."""
+        a = np.array([0.9, 0.1, 0.01, 0.99, 1.0, 0.02, 0.04])
+        r = spg.global_f_test(a)
+        self.assertIsInstance(r, float)
+        self.assertAlmostEqual(r, 0.01294562)
+
+    def test_global_f_test_returns_tuple_when_stat_true(self):
+        a = np.array([0.9, 0.1, 0.01, 0.99, 1.0, 0.02, 0.04])
+        out = spg.global_f_test(a, stat=True)
+        self.assertIsInstance(out, tuple)
+        self.assertEqual(len(out), 2)
+
+    # --- _outliers.outliers_iqr list input and boundary handling ---
+    def test_outliers_iqr_accepts_list_input(self):
+        """outliers_iqr(ret='filtered') must accept python lists."""
+        x_list = [4, 5, 6, 10, 12, 4, 3, 1, 2, 3, 23, 5, 3]
+        filtered = so.outliers_iqr(x_list, ret="filtered")
+        np.testing.assert_array_equal(
+            filtered, np.array([4, 5, 6, 10, 4, 3, 1, 2, 3, 5, 3])
+        )
+
+    def test_outliers_iqr_boundary_values_kept(self):
+        """Values exactly at the IQR boundary must be returned as non-outliers
+        (and excluded from outliers); they must not disappear from both sets."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 11.5])
+        # Q1=2.75, Q3=6.25, IQR=3.5; upper limit = 6.25 + 1.5*3.5 = 11.5
+        filtered = so.outliers_iqr(x, ret="filtered")
+        outliers = so.outliers_iqr(x, ret="outliers")
+        self.assertIn(11.5, filtered.tolist())
+        self.assertNotIn(11.5, outliers.tolist())
+        # Filtered + outliers must equal the full input.
+        self.assertEqual(len(filtered) + len(outliers), len(x))
+
+    def test_outliers_iqr_indices_partition_is_complete(self):
+        """indices + outliers_indices must form a complete partition."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 11.5, 100.0])
+        ix = so.outliers_iqr(x, ret="indices")
+        ox = so.outliers_iqr(x, ret="outliers_indices")
+        self.assertEqual(sorted(ix.tolist() + ox.tolist()), list(range(len(x))))
+
+    # --- _plotting.sign_plot numpy array g ---
+    def test_sign_plot_accepts_numpy_array_g(self):
+        """sign_plot must accept numpy arrays as the group label argument."""
+        x = np.array([[1, 1, 1], [1, 1, 0], [1, 0, 1]])
+        ax = splt.sign_plot(x, g=np.array(["a", "b", "c"]), flat=True, labels=False)
+        self.assertTrue(isinstance(ax, ma._axes.Axes))
+
+    # --- _posthocs.__convert_to_df val_id=0 / group_id=0 ---
+    def test_convert_to_df_handles_zero_indices(self):
+        """When called via the public API with column index 0, the inference
+        path must produce the same result as the dataframe path."""
+        _x = [[1, 2, 3, 5, 1], [12, 31, 54, 50, 40], [10, 12, 6, 74, 11]]
+        x = np.array(_x)
+        g = np.repeat([0, 1, 2], 5)
+        nd = np.column_stack((x.ravel(), g))
+        results = sp.posthoc_mannwhitney(nd, val_col=0, group_col=1).values
+        xdf = DataFrame(dict(zip(list("abc"), _x))).melt(
+            var_name="groups", value_name="vals"
+        )
+        ref = sp.posthoc_mannwhitney(xdf, val_col="vals", group_col="groups").values
+        np.testing.assert_allclose(results, ref)
+
+    # --- _posthocs.posthoc_dunnett full diagonal ---
+    def test_posthoc_dunnett_diagonal_all_ones(self):
+        """The full diagonal of the matrix form must be 1.0, including
+        treatment-vs-self entries."""
+        np.random.seed(0)
+        x = DataFrame({
+            "val": list(np.random.normal(0, 1, 10))
+            + list(np.random.normal(1, 1, 10))
+            + list(np.random.normal(0.5, 1, 10)),
+            "grp": ["ctrl"] * 10 + ["a"] * 10 + ["b"] * 10,
+        })
+        r = sp.posthoc_dunnett(
+            x, val_col="val", group_col="grp", control="ctrl", to_matrix=True
+        )
+        self.assertEqual(r.loc["ctrl", "ctrl"], 1.0)
+        self.assertEqual(r.loc["a", "a"], 1.0)
+        self.assertEqual(r.loc["b", "b"], 1.0)
+
+    # --- Universal invariants: symmetry, unit diagonal, p-value range ---
+    def _assert_symmetric_with_unit_diagonal(self, mat, atol=1e-12):
+        arr = np.asarray(mat)
+        self.assertEqual(arr.shape[0], arr.shape[1])
+        np.testing.assert_allclose(arr, arr.T, atol=atol)
+        np.testing.assert_allclose(np.diag(arr), 1.0, atol=atol)
+
+    def test_pairwise_matrices_symmetric_and_unit_diagonal(self):
+        """All pairwise post-hoc tests must return a symmetric matrix with
+        ones on the diagonal."""
+        df = sb.load_dataset("exercise")
+        df[df.columns[df.dtypes == "category"]] = df[
+            df.columns[df.dtypes == "category"]
+        ].astype(object)
+
+        for fn in (
+            sp.posthoc_conover, sp.posthoc_dunn, sp.posthoc_nemenyi,
+            sp.posthoc_vanwaerden, sp.posthoc_dscf, sp.posthoc_ttest,
+            sp.posthoc_tukey, sp.posthoc_tukey_hsd, sp.posthoc_mannwhitney,
+            sp.posthoc_scheffe, sp.posthoc_tamhane,
+        ):
+            with self.subTest(func=fn.__name__):
+                result = fn(df, val_col="pulse", group_col="kind")
+                self._assert_symmetric_with_unit_diagonal(result)
+
+    def test_block_pairwise_matrices_symmetric_and_unit_diagonal(self):
+        """Same invariant for block-design pairwise tests."""
+        for fn in (
+            sp.posthoc_nemenyi_friedman,
+            sp.posthoc_conover_friedman,
+            sp.posthoc_siegel_friedman,
+            sp.posthoc_miller_friedman,
+            sp.posthoc_durbin,
+            sp.posthoc_quade,
+        ):
+            with self.subTest(func=fn.__name__):
+                result = fn(self.df_bn)
+                self._assert_symmetric_with_unit_diagonal(result)
+
+    def test_pairwise_matrices_pvalues_in_range(self):
+        """p-values must always lie in [0, 1]."""
+        df = sb.load_dataset("exercise")
+        df[df.columns[df.dtypes == "category"]] = df[
+            df.columns[df.dtypes == "category"]
+        ].astype(object)
+        for fn in (
+            sp.posthoc_conover, sp.posthoc_dunn, sp.posthoc_nemenyi,
+            sp.posthoc_vanwaerden, sp.posthoc_dscf, sp.posthoc_ttest,
+            sp.posthoc_tukey, sp.posthoc_tukey_hsd, sp.posthoc_mannwhitney,
+            sp.posthoc_scheffe, sp.posthoc_tamhane,
+        ):
+            with self.subTest(func=fn.__name__):
+                arr = np.asarray(fn(df, val_col="pulse", group_col="kind"))
+                self.assertTrue(np.all(arr >= 0))
+                self.assertTrue(np.all(arr <= 1.0 + 1e-12))
+
+    # --- posthoc_ttest correctness vs scipy ---
+    def test_posthoc_ttest_matches_scipy_independent(self):
+        """Without pooled SD, posthoc_ttest must match scipy.ttest_ind exactly
+        for each pair."""
+        import scipy.stats as ss
+
+        np.random.seed(123)
+        groups = {
+            "g1": np.random.normal(0, 1.0, 30),
+            "g2": np.random.normal(0.5, 1.0, 30),
+            "g3": np.random.normal(0.2, 1.0, 30),
+        }
+        x = DataFrame({
+            "val": np.concatenate(list(groups.values())),
+            "grp": np.repeat(list(groups.keys()), 30),
+        })
+        result = sp.posthoc_ttest(
+            x, val_col="val", group_col="grp", pool_sd=False, equal_var=True
+        )
+        ref_12 = ss.ttest_ind(groups["g1"], groups["g2"], equal_var=True)[1]
+        ref_13 = ss.ttest_ind(groups["g1"], groups["g3"], equal_var=True)[1]
+        ref_23 = ss.ttest_ind(groups["g2"], groups["g3"], equal_var=True)[1]
+        self.assertAlmostEqual(result.loc["g1", "g2"], ref_12, places=10)
+        self.assertAlmostEqual(result.loc["g1", "g3"], ref_13, places=10)
+        self.assertAlmostEqual(result.loc["g2", "g3"], ref_23, places=10)
+
+    # --- outliers_gesd null behavior ---
+    def test_outliers_gesd_no_outliers_returns_data_unchanged(self):
+        """When no outlier is detected, GESD should return the (sorted) input
+        unchanged and an all-False mask with hypo=True."""
+        np.random.seed(7)
+        data = np.random.normal(0, 1, 60)
+        filtered = so.outliers_gesd(data, 5, hypo=False)
+        mask = so.outliers_gesd(data, 5, hypo=True)
+        np.testing.assert_array_equal(filtered, np.sort(data))
+        self.assertEqual(mask.dtype, bool)
+        self.assertFalse(mask.any())
+
+    # --- sign_array values ---
+    def test_sign_array_returns_only_known_values(self):
+        """sign_array values must be among {-1, 0, 1}."""
+        rng = np.random.RandomState(0)
+        pv = rng.uniform(0, 1, size=(5, 5))
+        pv = (pv + pv.T) / 2.0
+        np.fill_diagonal(pv, 1.0)
+        sa = splt.sign_array(pv, alpha=0.1)
+        unique_vals = set(np.unique(sa).tolist())
+        self.assertTrue(unique_vals.issubset({-1.0, 0.0, 1.0}))
 
 
 if __name__ == "__main__":

@@ -70,5 +70,5 @@ def global_f_test(
     arr = array(p_vals)
     t_stat = -2 * sum(log(arr))
     p_value = chi2.sf(t_stat, df=2 * len(arr))
-    return p_value, t_stat if stat else p_value
+    return (p_value, t_stat) if stat else p_value
 

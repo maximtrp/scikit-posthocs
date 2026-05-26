@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import warnings
 from typing import Optional, Union, List, cast
 import itertools as it
 import numpy as np
@@ -81,10 +82,18 @@ def test_mackwolfe(
     k = x[_group_col].unique().size
 
     if p and p > k:
-        print("Selected 'p' > number of groups:", str(p), " > ", str(k))
+        warnings.warn(
+            f"Selected 'p' > number of groups: {p} > {k}",
+            UserWarning,
+            stacklevel=2,
+        )
         return (np.nan, np.nan)
     elif p is not None and p < 1:
-        print("Selected 'p' < 1: ", str(p))
+        warnings.warn(
+            f"Selected 'p' < 1: {p}",
+            UserWarning,
+            stacklevel=2,
+        )
         return (np.nan, np.nan)
 
     Rij = x[_val_col].rank()
