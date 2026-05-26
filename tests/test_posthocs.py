@@ -1289,6 +1289,7 @@ class TestCompactLetterDisplay(unittest.TestCase):
 
 
 class TestBugRegressions(unittest.TestCase):
+
     """Regression tests guarding previously-fixed bugs and edge cases."""
 
     df_bn = np.array([[4, 3, 4, 4, 5, 6, 3], [1, 2, 3, 5, 6, 7, 7], [1, 2, 6, 4, 1, 5, 1]])
@@ -1317,8 +1318,7 @@ class TestBugRegressions(unittest.TestCase):
         )
 
     def test_outliers_iqr_boundary_values_kept(self):
-        """Values exactly at the IQR boundary must be returned as non-outliers
-        (and excluded from outliers); they must not disappear from both sets."""
+        """Boundary values must be kept as non-outliers, not dropped from both sets."""
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 11.5])
         # Q1=2.75, Q3=6.25, IQR=3.5; upper limit = 6.25 + 1.5*3.5 = 11.5
         filtered = so.outliers_iqr(x, ret="filtered")
@@ -1329,7 +1329,7 @@ class TestBugRegressions(unittest.TestCase):
         self.assertEqual(len(filtered) + len(outliers), len(x))
 
     def test_outliers_iqr_indices_partition_is_complete(self):
-        """indices + outliers_indices must form a complete partition."""
+        """Indices and outliers_indices together must form a complete partition."""
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 11.5, 100.0])
         ix = so.outliers_iqr(x, ret="indices")
         ox = so.outliers_iqr(x, ret="outliers_indices")
@@ -1344,8 +1344,7 @@ class TestBugRegressions(unittest.TestCase):
 
     # --- _posthocs.__convert_to_df val_id=0 / group_id=0 ---
     def test_convert_to_df_handles_zero_indices(self):
-        """When called via the public API with column index 0, the inference
-        path must produce the same result as the dataframe path."""
+        """Column index 0 must not be treated as a missing argument by inference."""
         _x = [[1, 2, 3, 5, 1], [12, 31, 54, 50, 40], [10, 12, 6, 74, 11]]
         x = np.array(_x)
         g = np.repeat([0, 1, 2], 5)
@@ -1359,8 +1358,7 @@ class TestBugRegressions(unittest.TestCase):
 
     # --- _posthocs.posthoc_dunnett full diagonal ---
     def test_posthoc_dunnett_diagonal_all_ones(self):
-        """The full diagonal of the matrix form must be 1.0, including
-        treatment-vs-self entries."""
+        """Full diagonal of the matrix form must be 1.0, including treatments."""
         np.random.seed(0)
         x = DataFrame({
             "val": list(np.random.normal(0, 1, 10))
@@ -1383,8 +1381,7 @@ class TestBugRegressions(unittest.TestCase):
         np.testing.assert_allclose(np.diag(arr), 1.0, atol=atol)
 
     def test_pairwise_matrices_symmetric_and_unit_diagonal(self):
-        """All pairwise post-hoc tests must return a symmetric matrix with
-        ones on the diagonal."""
+        """Pairwise post-hoc tests must return a symmetric matrix with unit diagonal."""
         df = sb.load_dataset("exercise")
         df[df.columns[df.dtypes == "category"]] = df[
             df.columns[df.dtypes == "category"]
@@ -1433,8 +1430,7 @@ class TestBugRegressions(unittest.TestCase):
 
     # --- posthoc_ttest correctness vs scipy ---
     def test_posthoc_ttest_matches_scipy_independent(self):
-        """Without pooled SD, posthoc_ttest must match scipy.ttest_ind exactly
-        for each pair."""
+        """Non-pooled posthoc_ttest must match scipy.ttest_ind exactly per pair."""
         import scipy.stats as ss
 
         np.random.seed(123)
@@ -1459,8 +1455,7 @@ class TestBugRegressions(unittest.TestCase):
 
     # --- outliers_gesd null behavior ---
     def test_outliers_gesd_no_outliers_returns_data_unchanged(self):
-        """When no outlier is detected, GESD should return the (sorted) input
-        unchanged and an all-False mask with hypo=True."""
+        """GESD must return the sorted input unchanged when no outliers are detected."""
         np.random.seed(7)
         data = np.random.normal(0, 1, 60)
         filtered = so.outliers_gesd(data, 5, hypo=False)
