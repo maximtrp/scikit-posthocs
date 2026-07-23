@@ -71,13 +71,22 @@ Features
   - Durbin test (for balanced incomplete block design).
   - Mack-Wolfe test.
   - Hayter (OSRT) test.
+  - Jonckheere-Terpstra test.
+  - Page test.
+  - Hartley test (homogeneity of variances).
+  - Brown-Mood median test.
 
 - *Parametric* pairwise multiple comparisons tests:
 
   - Scheffe test.
   - Student T test.
   - Tamhane T2 test.
+  - Dunnett's T3 test.
+  - Games-Howell test.
   - TukeyHSD test.
+  - Fisher's LSD test.
+  - Student-Newman-Keuls (SNK) test.
+  - Duncan's multiple range test.
 
 - *Non-parametric* tests for factorial design:
 
@@ -89,6 +98,7 @@ Features
   - Nemenyi test.
   - van Waerden test.
   - Wilcoxon test.
+  - Brown-Mood median test.
 
 - *Non-parametric* tests for block design:
 
@@ -98,6 +108,12 @@ Features
   - Nemenyi test.
   - Quade test.
   - Siegel test.
+
+- Comparisons with a control group:
+
+  - Dunnett test (parametric).
+  - Steel test (non-parametric).
+  - Demsar test (non-parametric, block design).
 
 - Outliers detection tests:
 
@@ -111,7 +127,7 @@ Features
   - Anderson-Darling test.
 
 - Global null hypothesis tests:
-  
+
   - Fisher's combination test.
   - Simes test.
 

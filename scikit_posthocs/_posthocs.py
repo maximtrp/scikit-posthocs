@@ -2523,3 +2523,844 @@ def posthoc_dscf(
 
     np.fill_diagonal(vs, 1)
     return DataFrame(vs, index=groups, columns=groups)
+
+
+def posthoc_games_howell(
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Games-Howell all-pairs comparison test for normally distributed data
+    with unequal group variances. A total of m = k(k-1)/2 hypotheses can be
+    tested. The null hypothesis is tested in the two-tailed test against the
+    alternative hypothesis [1]_.
+
+    Parameters
+    ----------
+    a : Union[list, np.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str, optional
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
+
+    group_col : str, optional
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
+
+    sort : bool, optional
+        If True, sort data by group columns.
+
+    Returns
+    -------
+    result : pandas.DataFrame
+        P values.
+
+    Notes
+    -----
+    Games-Howell is the most common all-pairs alternative to Tukey's test
+    when group variances cannot be assumed equal. The p values are computed
+    from the studentized range (Tukey) distribution using Welch's
+    approximate degrees of freedom, same as `posthoc_tamhane` with
+    `welch=True` but using the studentized range rather than the
+    t-distribution.
+
+    References
+    ----------
+    .. [1] L. Sachs (1997), Angewandte Statistik. Berlin: Springer. Pages: 396.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_games_howell(x, val_col='values', group_col='groups')
+    """
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+
+    groups = x[_group_col].unique()
+    k = groups.size
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
+    ni = x_grouped.count()
+    xi = x_grouped.mean()
+    si = x_grouped.var()
+
+    def compare(i, j):
+        dif = xi[i] - xi[j]
+        A = si[i] / ni[i] + si[j] / ni[j]
+        qval = dif / np.sqrt(A) * np.sqrt(2.0)
+        df = A**2.0 / (
+            si[i] ** 2.0 / (ni[i] ** 2.0 * (ni[i] - 1.0))
+            + si[j] ** 2.0 / (ni[j] ** 2.0 * (ni[j] - 1.0))
+        )
+        p_val = ss.studentized_range.sf(np.abs(qval), k, df)
+        return p_val
+
+    vs = np.zeros((k, k), dtype=float)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:, :] = 0
+
+    combs = it.combinations(range(k), 2)
+
+    for i, j in combs:
+        vs[i, j] = compare(groups[i], groups[j])
+
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
+    np.fill_diagonal(vs, 1)
+    return DataFrame(vs, index=groups, columns=groups)
+
+
+def posthoc_dunnett_t3(
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Dunnett's T3 all-pairs comparison test for normally distributed data
+    with unequal group variances. A total of m = k(k-1)/2 hypotheses can be
+    tested. The null hypothesis is tested in the two-tailed test against the
+    alternative hypothesis [1]_.
+
+    Parameters
+    ----------
+    a : Union[list, np.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str, optional
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
+
+    group_col : str, optional
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
+
+    sort : bool, optional
+        If True, sort data by group columns.
+
+    Returns
+    -------
+    result : pandas.DataFrame
+        P values.
+
+    Notes
+    -----
+    Test statistics are Welch t values, with degrees of freedom rounded to
+    the nearest integer (matching PMCMRplus; this is what numerically
+    distinguishes T3 from `posthoc_tamhane`, whose Welch df are not
+    rounded). P values are obtained with a single-step Dunn-Sidak-type
+    adjustment, `1 - (1 - p) ** m` with `m = k * (k - 1) / 2` the number of
+    pairwise comparisons, applied to the raw two-sided Welch t p value of
+    each pair. This reproduces PMCMRplus's studentized maximum modulus
+    computation (an equicorrelated multivariate t distribution with zero
+    off-diagonal correlation reduces exactly to this closed form), without
+    requiring a multivariate-t dependency.
+
+    References
+    ----------
+    .. [1] C. W. Dunnett (1980), Pair wise multiple comparisons in the
+        unequal variance case, Journal of the American Statistical
+        Association, 75, 796-800.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_dunnett_t3(x, val_col='values', group_col='groups')
+    """
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+
+    groups = x[_group_col].unique()
+    k = groups.size
+    m = k * (k - 1) / 2.0
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
+    ni = x_grouped.count()
+    xi = x_grouped.mean()
+    si = x_grouped.var()
+
+    def compare(i, j):
+        dif = xi[i] - xi[j]
+        A = si[i] / ni[i] + si[j] / ni[j]
+        tval = dif / np.sqrt(A)
+        df = A**2.0 / (
+            si[i] ** 2.0 / (ni[i] ** 2.0 * (ni[i] - 1.0))
+            + si[j] ** 2.0 / (ni[j] ** 2.0 * (ni[j] - 1.0))
+        )
+        # PMCMRplus rounds df to the nearest integer for the studentized
+        # maximum modulus (pmvt) computation; this is the one place T3
+        # actually differs numerically from Tamhane's T2.
+        df = np.round(df)
+        p_raw = 2.0 * ss.t.sf(np.abs(tval), df=df)
+        p_val = 1.0 - (1.0 - p_raw) ** m
+        return p_val
+
+    vs = np.zeros((k, k), dtype=float)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:, :] = 0
+
+    combs = it.combinations(range(k), 2)
+
+    for i, j in combs:
+        vs[i, j] = compare(groups[i], groups[j])
+
+    vs[vs > 1] = 1.0
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
+    np.fill_diagonal(vs, 1)
+    return DataFrame(vs, index=groups, columns=groups)
+
+
+def posthoc_lsd(
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    p_adjust: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Fisher's Least Significant Difference (LSD) all-pairs comparison test
+    for normally distributed data with equal group variances, following a
+    parametric ANOVA [1]_.
+
+    Parameters
+    ----------
+    a : Union[list, np.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str, optional
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
+
+    group_col : str, optional
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
+
+    p_adjust : str, optional
+        Method for adjusting p values. See `statsmodels.sandbox.stats.multicomp`
+        for details. Left as `None` (the default), this reproduces Fisher's
+        *protected* LSD test, which is only valid when applied after a
+        significant omnibus ANOVA F-test.
+
+    sort : bool, optional
+        If True, sort data by group columns.
+
+    Returns
+    -------
+    result : pandas.DataFrame
+        P values.
+
+    Notes
+    -----
+    Test statistics use the pooled within-group variance, equivalent to
+    `posthoc_ttest` with `pool_sd=True` and no p value adjustment.
+
+    References
+    ----------
+    .. [1] L. Sachs (1997), Angewandte Statistik. Berlin: Springer.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_lsd(x, val_col='values', group_col='groups')
+    """
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+
+    groups = x[_group_col].unique()
+    k = groups.size
+    n = len(x.index)
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
+    ni = x_grouped.count()
+    xi = x_grouped.mean()
+    si = x_grouped.var()
+    s2in = (1.0 / (n - k)) * np.sum(si * (ni - 1.0))
+
+    def compare(i, j):
+        dif = xi[i] - xi[j]
+        A = s2in * (1.0 / ni[i] + 1.0 / ni[j])
+        tval = dif / np.sqrt(A)
+        p_val = 2.0 * ss.t.sf(np.abs(tval), df=n - k)
+        return p_val
+
+    vs = np.zeros((k, k), dtype=float)
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:, :] = 0
+
+    combs = it.combinations(range(k), 2)
+
+    for i, j in combs:
+        vs[i, j] = compare(groups[i], groups[j])
+
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
+
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
+    np.fill_diagonal(vs, 1)
+    return DataFrame(vs, index=groups, columns=groups)
+
+
+def posthoc_snk(
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Student-Newman-Keuls (SNK) all-pairs comparison test for normally
+    distributed data with equal group variances, following a parametric
+    ANOVA [1]_, [2]_, [3]_.
+
+    Parameters
+    ----------
+    a : Union[list, np.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str, optional
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
+
+    group_col : str, optional
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
+
+    sort : bool, optional
+        If True, sort data by group columns.
+
+    Returns
+    -------
+    result : pandas.DataFrame
+        P values.
+
+    Notes
+    -----
+    Unlike single-step procedures (Tukey, Games-Howell), SNK is a stepwise
+    range test: the p value for a pair of group means is computed from the
+    studentized range distribution using as `nmeans` the number of ordered
+    means the pair spans (i.e. 1 + the difference between their ranks when
+    means are sorted in decreasing order), not the total number of groups.
+    There is no separate p value adjustment argument, since the step-down
+    procedure is itself the adjustment.
+
+    References
+    ----------
+    .. [1] Newman, D. (1939), The distribution of range in samples from a
+        normal population, expressed in terms of an independent estimate of
+        standard deviation, Biometrika, 31, 20-30.
+    .. [2] Keuls, M. (1952), The use of the "studentized range" in connection
+        with an analysis of variance, Euphytica, 1, 112-122.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_snk(x, val_col='values', group_col='groups')
+    """
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+
+    groups = x[_group_col].unique()
+    k = groups.size
+    n = len(x.index)
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
+    ni = x_grouped.count()
+    xi = x_grouped.mean()
+    si = x_grouped.var()
+    s2in = (1.0 / (n - k)) * np.sum(si * (ni - 1.0))
+    df = n - k
+
+    # rank position of each group when means are sorted in decreasing order
+    order = xi.loc[groups].to_numpy().argsort()[::-1]
+    rank_pos = np.empty(k, dtype=int)
+    rank_pos[order] = np.arange(k)
+
+    def compare(i, j):
+        gi, gj = groups[i], groups[j]
+        dif = xi[gi] - xi[gj]
+        qval = dif / np.sqrt((s2in / 2.0) * (1.0 / ni[gi] + 1.0 / ni[gj]))
+        nmeans = 1 + abs(rank_pos[i] - rank_pos[j])
+        p_val = ss.studentized_range.sf(np.abs(qval), nmeans, df)
+        return p_val
+
+    vs = np.zeros((k, k), dtype=float)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:, :] = 0
+
+    combs = it.combinations(range(k), 2)
+
+    for i, j in combs:
+        vs[i, j] = compare(i, j)
+
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
+    np.fill_diagonal(vs, 1)
+    return DataFrame(vs, index=groups, columns=groups)
+
+
+def posthoc_duncan(
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Duncan's multiple range test for normally distributed data with equal
+    group variances, following a parametric ANOVA [1]_.
+
+    Parameters
+    ----------
+    a : Union[list, np.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str, optional
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
+
+    group_col : str, optional
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
+
+    sort : bool, optional
+        If True, sort data by group columns.
+
+    Returns
+    -------
+    result : pandas.DataFrame
+        P values.
+
+    Notes
+    -----
+    Like `posthoc_snk`, this is a stepwise range test using as `nmeans` the
+    number of ordered means a pair spans. The studentized-range p value for
+    each pair is further Bonferroni-adjusted as
+    `1 - (1 - p) ** (1 / (nmeans - 1))`, following Duncan (1955). There is no
+    separate p value adjustment argument, since the step-down procedure is
+    itself the adjustment.
+
+    References
+    ----------
+    .. [1] Duncan, D. B. (1955), Multiple range and multiple F tests,
+        Biometrics, 11, 1-42.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_duncan(x, val_col='values', group_col='groups')
+    """
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+
+    groups = x[_group_col].unique()
+    k = groups.size
+    n = len(x.index)
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
+    ni = x_grouped.count()
+    xi = x_grouped.mean()
+    si = x_grouped.var()
+    s2in = (1.0 / (n - k)) * np.sum(si * (ni - 1.0))
+    df = n - k
+    r = k / np.sum(1.0 / ni)
+
+    order = xi.loc[groups].to_numpy().argsort()[::-1]
+    rank_pos = np.empty(k, dtype=int)
+    rank_pos[order] = np.arange(k)
+
+    def compare(i, j):
+        gi, gj = groups[i], groups[j]
+        dif = xi[gi] - xi[gj]
+        tval = dif / np.sqrt(s2in / r)
+        nmeans = 1 + abs(rank_pos[i] - rank_pos[j])
+        p_val = ss.studentized_range.sf(np.abs(tval), nmeans, df)
+        p_val = 1.0 - (1.0 - p_val) ** (1.0 / (nmeans - 1))
+        return p_val
+
+    vs = np.zeros((k, k), dtype=float)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:, :] = 0
+
+    combs = it.combinations(range(k), 2)
+
+    for i, j in combs:
+        vs[i, j] = compare(i, j)
+
+    vs[vs > 1] = 1.0
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
+    np.fill_diagonal(vs, 1)
+    return DataFrame(vs, index=groups, columns=groups)
+
+
+def posthoc_median(
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    p_adjust: Optional[str] = None,
+    sort: bool = False,
+) -> DataFrame:
+    """Brown-Mood all-pairs median test, a nonparametric alternative to
+    Kruskal-Wallis-type all-pairs tests robust to outliers and skew [1]_.
+
+    Parameters
+    ----------
+    a : Union[list, np.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str, optional
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
+
+    group_col : str, optional
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
+
+    p_adjust : str, optional
+        Method for adjusting p values. See `statsmodels.sandbox.stats.multicomp`
+        for details.
+
+    sort : bool, optional
+        If True, sort data by group columns.
+
+    Returns
+    -------
+    result : pandas.DataFrame
+        P values.
+
+    Notes
+    -----
+    For each pair of groups, observations are classified as above or at-or-below
+    the grand median (computed once, from the pooled sample of both groups'
+    parent dataset) and compared with Pearson's chi-squared test (no continuity
+    correction), following PMCMRplus's `medianAllPairsTest`.
+
+    References
+    ----------
+    .. [1] G. W. Brown, A. M. Mood (1951), On median tests for linear
+        hypotheses, Proceedings of the Second Berkeley Symposium on
+        Mathematical Statistics and Probability, University of California
+        Press, 159-166.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_median(x, val_col='values', group_col='groups')
+    """
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+
+    groups = x[_group_col].unique()
+    k = groups.size
+    grand_median = x[_val_col].median()
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
+    n_gt = x_grouped.apply(lambda v: (v > grand_median).sum())
+    n_total = x_grouped.count()
+    n_le = n_total - n_gt
+
+    def compare(i, j):
+        table = np.array([[n_gt[i], n_le[i]], [n_gt[j], n_le[j]]])
+        _, p_val, _, _ = ss.chi2_contingency(table, correction=False)
+        return p_val
+
+    vs = np.zeros((k, k), dtype=float)
+    tri_upper = np.triu_indices(vs.shape[0], 1)
+    tri_lower = np.tril_indices(vs.shape[0], -1)
+    vs[:, :] = 0
+
+    combs = it.combinations(range(k), 2)
+
+    for i, j in combs:
+        vs[i, j] = compare(groups[i], groups[j])
+
+    if p_adjust:
+        vs[tri_upper] = multipletests(vs[tri_upper], method=p_adjust)[1]
+
+    vs[tri_lower] = np.transpose(vs)[tri_lower]
+    np.fill_diagonal(vs, 1)
+    return DataFrame(vs, index=groups, columns=groups)
+
+
+def posthoc_steel(
+    a: Union[list, np.ndarray, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    control: Optional[str] = None,
+    alternative: Literal["two-sided", "less", "greater"] = "two-sided",
+    p_adjust: Optional[str] = None,
+    sort: bool = False,
+    to_matrix: bool = True,
+) -> Union[Series, DataFrame]:
+    """Steel's many-to-one rank test [1]_, a nonparametric alternative to
+    Dunnett's test for comparisons of several treatment groups against one
+    control group.
+
+    Parameters
+    ----------
+    a : Union[list, np.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+    val_col : str, optional
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
+
+    group_col : str, optional
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
+
+    control : str, optional
+        Name of the control group within the `group_col` column. Must be
+        specified if `a` is a pandas DataFrame.
+
+    alternative : ['two-sided', 'less', or 'greater'], optional
+        Whether to get the p-value for the one-sided hypothesis
+        ('less' or 'greater') or for the two-sided hypothesis ('two-sided').
+        Defaults to 'two-sided'.
+
+    p_adjust : str, optional
+        Method for adjusting p values across the treatment-vs-control
+        comparisons. See `statsmodels.sandbox.stats.multicomp` for details.
+
+    sort : bool, optional
+        Specifies whether to sort DataFrame by group_col or not.
+
+    to_matrix : bool, optional
+        Specifies whether to return a DataFrame or a Series. If True, a
+        DataFrame is returned with some NaN values since it's not a pairwise
+        comparison. Default is True.
+
+    Returns
+    -------
+    result : pandas.Series or pandas.DataFrame
+        P values.
+
+    Notes
+    -----
+    This implements the normal-approximation variant of Steel's test: each
+    treatment group is compared to the control with a Mann-Whitney U test
+    (`scipy.stats.mannwhitneyu`), and the resulting p values across
+    treatments may be combined with `p_adjust`. PMCMRplus's `steelTest`
+    instead looks up exact critical rank-sum values from a fixed table
+    (balanced designs only, n <= 20, k <= 9, alpha = 0.05); that table is not
+    reproduced here.
+
+    References
+    ----------
+    .. [1] R. G. D. Steel (1959), A multiple comparison rank sum test:
+        treatments versus control, Biometrics, 15, 560-572.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({"a": [1,2,3,5,1], "b": [12,31,54,62,12], "c": [10,12,6,74,11]})
+    >>> x = x.melt(var_name='groups', value_name='values')
+    >>> sp.posthoc_steel(x, val_col='values', group_col='groups', control='a')
+    """
+    x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+    x = x.set_index(_group_col)[_val_col]
+    x_embedded = x.groupby(_group_col, observed=True).agg(lambda y: y.dropna().tolist())
+    control_data = x_embedded.loc[control]
+    treatment_data = x_embedded.drop(control)
+
+    pvals = np.array(
+        [
+            ss.mannwhitneyu(t, control_data, alternative=alternative).pvalue
+            for t in treatment_data
+        ]
+    )
+
+    if p_adjust:
+        pvals = multipletests(pvals, method=p_adjust)[1]
+
+    multi_index = MultiIndex.from_product([[control], treatment_data.index.tolist()])
+    steel_sr = Series(pvals, index=multi_index)
+
+    if not to_matrix:
+        return steel_sr
+
+    else:
+        levels = x.index.unique().to_numpy()
+        result_df = DataFrame(index=levels, columns=levels, dtype=float)
+
+        for pair in steel_sr.index:
+            ctl, trt = pair
+            result_df.loc[ctl, trt] = steel_sr[pair]
+            result_df.loc[trt, ctl] = steel_sr[pair]
+        for level in levels:
+            result_df.loc[level, level] = 1.0
+        return result_df
+
+
+def posthoc_demsar(
+    a: Union[list, np.ndarray, DataFrame],
+    y_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    block_col: Optional[str] = None,
+    block_id_col: Optional[str] = None,
+    control: Optional[str] = None,
+    alternative: Literal["two-sided", "less", "greater"] = "two-sided",
+    p_adjust: Optional[str] = None,
+    melted: bool = False,
+    sort: bool = False,
+    to_matrix: bool = True,
+) -> Union[Series, DataFrame]:
+    """Demsar's many-to-one test for unreplicated blocked data [1]_, comparing
+    several treatments against one control (e.g. a baseline algorithm)
+    across a set of blocks (e.g. datasets), based on Friedman-type ranks.
+
+    Parameters
+    ----------
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface or a pandas
+        DataFrame.
+
+        If `melted` is set to False (default), `a` is a typical matrix of
+        block design, i.e. rows are blocks, and columns are groups. In this
+        case you do not need to specify col arguments.
+
+        If `a` is an array and `melted` is set to True,
+        y_col, block_col and group_col must specify the indices of columns
+        containing elements of correspondary type.
+
+        If `a` is a Pandas DataFrame and `melted` is set to True,
+        y_col, block_col and group_col must specify columns names (strings).
+
+    y_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains y data.
+
+    group_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains treatment (group) factor values.
+
+    block_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains blocking factor values.
+
+    block_id_col : str or int
+        Must be specified if `a` is a pandas DataFrame object.
+        Name of the column that contains identifiers of blocking factor values.
+
+    control : str, optional
+        Name of the control group within the `group_col` column. Must be
+        specified if `a` is a pandas DataFrame.
+
+    alternative : ['two-sided', 'less', or 'greater'], optional
+        Whether to get the p-value for the one-sided hypothesis
+        ('less' or 'greater') or for the two-sided hypothesis ('two-sided').
+        Defaults to 'two-sided'.
+
+    p_adjust : str, optional
+        Method for adjusting p values across the treatment-vs-control
+        comparisons. See `statsmodels.sandbox.stats.multicomp` for details.
+
+    melted : bool, optional
+        Specifies if data are given as melted columns "y", "blocks", and
+        "groups".
+
+    sort : bool, optional
+        If True, sort data by block and group columns.
+
+    to_matrix : bool, optional
+        Specifies whether to return a DataFrame or a Series. If True, a
+        DataFrame is returned with some NaN values since it's not a pairwise
+        comparison. Default is True.
+
+    Returns
+    -------
+    result : pandas.Series or pandas.DataFrame
+        P values.
+
+    Notes
+    -----
+    P values are computed from the standard normal distribution applied to
+    the difference in mean Friedman-type ranks between each treatment and
+    the control. This is the standard procedure for comparing multiple
+    classifiers/algorithms against a baseline across multiple datasets [1]_.
+
+    References
+    ----------
+    .. [1] J. Demsar (2006), Statistical comparisons of classifiers over
+        multiple data sets, Journal of Machine Learning Research, 7, 1-30.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> import numpy as np
+    >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
+    >>> sp.posthoc_demsar(x, control=0)
+    """
+    x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
+        a, y_col, group_col, block_col, block_id_col, melted
+    )
+    x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
+    x.dropna(inplace=True)
+
+    groups = x[_group_col].unique()
+    k = groups.size
+    n = x[_block_id_col].unique().size
+
+    x["mat"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
+    R = x.groupby(_group_col, observed=True)["mat"].mean()
+
+    denom = np.sqrt(k * (k + 1.0) / (6.0 * n))
+    treatments = [g for g in groups if g != control]
+    zvals = np.array([(R[t] - R[control]) / denom for t in treatments])
+
+    if alternative == "two-sided":
+        pvals = 2.0 * ss.norm.sf(np.abs(zvals))
+    elif alternative == "greater":
+        pvals = ss.norm.sf(zvals)
+    else:
+        pvals = ss.norm.cdf(zvals)
+
+    if p_adjust:
+        pvals = multipletests(pvals, method=p_adjust)[1]
+
+    multi_index = MultiIndex.from_product([[control], treatments])
+    demsar_sr = Series(pvals, index=multi_index)
+
+    if not to_matrix:
+        return demsar_sr
+
+    else:
+        levels = groups
+        result_df = DataFrame(index=levels, columns=levels, dtype=float)
+
+        for pair in demsar_sr.index:
+            ctl, trt = pair
+            result_df.loc[ctl, trt] = demsar_sr[pair]
+            result_df.loc[trt, ctl] = demsar_sr[pair]
+        for level in levels:
+            result_df.loc[level, level] = 1.0
+        return result_df

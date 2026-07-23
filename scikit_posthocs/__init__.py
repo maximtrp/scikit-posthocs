@@ -1,16 +1,30 @@
 __version__ = "0.14.0"
 
 from scikit_posthocs._global import global_simes_test, global_f_test
-from scikit_posthocs._omnibus import test_osrt, test_durbin, test_mackwolfe
+from scikit_posthocs._omnibus import (
+    test_osrt,
+    test_durbin,
+    test_mackwolfe,
+    test_jonckheere,
+    test_page,
+    test_hartley,
+    test_median,
+)
 
 from scikit_posthocs._posthocs import (
     posthoc_anderson,
     posthoc_conover,
     posthoc_conover_friedman,
+    posthoc_demsar,
     posthoc_dscf,
+    posthoc_duncan,
     posthoc_dunn,
+    posthoc_dunnett_t3,
     posthoc_durbin,
+    posthoc_games_howell,
+    posthoc_lsd,
     posthoc_mannwhitney,
+    posthoc_median,
     posthoc_miller_friedman,
     posthoc_nemenyi,
     posthoc_nemenyi_friedman,
@@ -18,6 +32,8 @@ from scikit_posthocs._posthocs import (
     posthoc_quade,
     posthoc_scheffe,
     posthoc_siegel_friedman,
+    posthoc_snk,
+    posthoc_steel,
     posthoc_tamhane,
     posthoc_ttest,
     posthoc_tukey,

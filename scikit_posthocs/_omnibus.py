@@ -381,3 +381,414 @@ def test_durbin(
     pval = ss.chi2.sf(stat, df).item()
 
     return pval, stat, df
+
+
+def test_jonckheere(
+    data: Union[ArrayLike, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    alternative: str = "two-sided",
+    continuity: bool = False,
+    sort: bool = False,
+) -> tuple[float, float]:
+    """Jonckheere-Terpstra test for ordered alternatives.
+
+    The null hypothesis, H\\ :sub:`0`: theta_1 = theta_2 = ... = theta_k, is
+    tested against a simple order hypothesis,
+    H\\ :sub:`A`: theta_1 <= theta_2 <= ... <= theta_k (theta_1 < theta_k), where
+    group order is taken from the natural (or categorical) order of
+    `group_col`, i.e. the order in which groups first appear in the data
+    unless `sort` is True [1]_.
+
+    Parameters
+    ----------
+    data : Union[List, numpy.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame with data values.
+
+    val_col : str = None
+        Name of a DataFrame column that contains dependent variable values
+        (test or response variable). Values should have a non-nominal scale.
+        Must be specified if ``data`` is a pandas DataFrame object.
+
+    group_col : str = None
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable), given in the a priori hypothesized
+        order. Must be specified if ``data`` is a pandas DataFrame object.
+
+    alternative : str = "two-sided"
+        The alternative hypothesis, one of "two-sided", "greater", or
+        "less".
+
+    continuity : bool = False
+        Whether to apply a continuity correction, as for Kendall's tau.
+
+    sort : bool = False
+        If True, sort data by group_col (alphabetically) instead of
+        preserving the order in which groups appear in the data.
+
+    Returns
+    -------
+    tuple[float, float]
+        P value and z statistic.
+
+    Notes
+    -----
+    P values are computed from the standard normal distribution. In the
+    presence of ties, the standard deviation of the Jonckheere-Terpstra
+    statistic is corrected following Kloke and McKean (2015) [2]_.
+
+    References
+    ----------
+    .. [1] A. R. Jonckheere (1954), A distribution-free k-sample test
+        against ordered alternatives, Biometrika, 41, 133-145.
+    .. [2] J. Kloke, J. W. McKean (2015), Nonparametric statistical methods
+        using R, Boca Raton, FL: Chapman & Hall/CRC.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> x = [[22, 23, 35], [60, 59, 54], [98, 78, 50]]
+    >>> sp.test_jonckheere(x)
+    """
+    x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
+
+    if not sort:
+        x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
+    x = x.sort_values(by=[_group_col], ascending=True)
+
+    groups = x[_group_col].unique()
+    k = groups.size
+    n = len(x.index)
+    nij = x.groupby(_group_col, observed=True)[_val_col].count()
+    grouped_vals = [x.loc[x[_group_col] == g, _val_col].to_numpy() for g in groups]
+
+    def uij(xi, xj):
+        diff = xj[:, None] - xi[None, :]
+        return np.sum(diff > 0) + 0.5 * np.sum(diff == 0)
+
+    J = 0.0
+    for i in range(k - 1):
+        for j in range(i + 1, k):
+            J += uij(grouped_vals[i], grouped_vals[j])
+
+    nij_arr = nij.to_numpy().astype(float)
+    mu = (n**2.0 - np.sum(nij_arr**2.0)) / 4.0
+    S = J - mu
+
+    ranks = ss.rankdata(x[_val_col])
+    ties = np.unique(ranks, return_counts=True)[1]
+    has_ties = np.any(ties > 1)
+
+    if not has_ties:
+        s = np.sqrt((n**2.0 * (2.0 * n + 3.0) - np.sum(nij_arr**2.0 * (2.0 * nij_arr + 3.0))) / 72.0)
+    else:
+        warnings.warn(
+            "Ties are present. Jonckheere z was corrected for ties.",
+            UserWarning,
+            stacklevel=2,
+        )
+        nt = np.unique(x[_val_col], return_counts=True)[1].astype(float)
+        s = np.sqrt(
+            (
+                n * (n - 1.0) * (2.0 * n + 5.0)
+                - np.sum(nij_arr * (nij_arr - 1.0) * (2.0 * nij_arr + 5.0))
+                - np.sum(nt * (nt - 1.0) * (2.0 * nt + 5.0))
+            )
+            / 72.0
+            + (np.sum(nij_arr * (nij_arr - 1.0) * (nij_arr - 2.0)) * np.sum(nt * (nt - 1.0) * (nt - 2.0)))
+            / (36.0 * n * (n - 1.0) * (n - 2.0))
+            + (np.sum(nij_arr * (nij_arr - 1.0)) * np.sum(nt * (nt - 1.0))) / (8.0 * n * (n - 1.0))
+        )
+
+    if continuity:
+        S = np.sign(S) * (np.abs(S) - 0.5)
+
+    stat = S / s
+
+    if alternative == "two-sided":
+        pval = 2.0 * min(ss.norm.sf(np.abs(stat)), 0.5)
+    elif alternative == "greater":
+        pval = ss.norm.sf(stat)
+    else:
+        pval = ss.norm.cdf(stat)
+
+    return float(pval), float(stat)
+
+
+def test_page(
+    data: Union[ArrayLike, DataFrame],
+    y_col: Optional[Union[str, int]] = None,
+    group_col: Optional[Union[str, int]] = None,
+    block_col: Optional[Union[str, int]] = None,
+    block_id_col: Optional[Union[str, int]] = None,
+    alternative: str = "two-sided",
+    melted: bool = False,
+    sort: bool = False,
+) -> tuple[float, float]:
+    """Page's ordered aligned rank sum test for a randomized complete block
+    design against an a priori ordered alternative (group order is taken
+    from the natural order of `group_col`, i.e. the order in which groups
+    appear in the data / columns, unless `sort` is True) [1]_.
+
+    Parameters
+    ----------
+    data : Union[List, np.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame with data values.
+
+        If ``melted`` is set to False (default), ``data`` is a typical
+        matrix of block design, i.e. rows are blocks, and columns are
+        groups given in the a priori hypothesized order. In this case, you
+        do not need to specify col arguments.
+
+        If ``data`` is an array and ``melted`` is set to True, y_col,
+        block_col and group_col must specify the indices of columns
+        containing elements of correspondary type.
+
+        If ``data`` is a Pandas DataFrame and ``melted`` is set to True,
+        y_col, block_col and group_col must specify columns names (string).
+
+    y_col : Union[str, int] = None
+        Must be specified if ``data`` is a melted pandas DataFrame object.
+        Name of the column that contains y data.
+
+    group_col : Union[str, int] = None
+        Must be specified if ``data`` is a melted pandas DataFrame object.
+        Name of the column that contains group names, in the a priori
+        hypothesized order.
+
+    block_col : Union[str, int] = None
+        Must be specified if ``data`` is a melted pandas DataFrame object.
+        Name of the column that contains block names.
+
+    block_id_col : Union[str, int] = None
+        Must be specified if ``data`` is a melted pandas DataFrame object.
+        Name of the column that contains identifiers of block names.
+
+    alternative : str = "two-sided"
+        The alternative hypothesis, one of "two-sided", "greater", or
+        "less".
+
+    melted : bool = False
+        Specifies if data are given as melted columns "y", "blocks", and
+        "groups".
+
+    sort : bool = False
+        If True, sort data by group_col (alphabetically) instead of
+        preserving the order in which groups appear in the data.
+
+    Returns
+    -------
+    tuple[float, float]
+        P value and z statistic.
+
+    Notes
+    -----
+    P values are computed from the standard normal distribution, with a
+    continuity correction always applied (following Sachs 1997).
+
+    References
+    ----------
+    .. [1] E. B. Page (1963), Ordered hypotheses for multiple treatments: A
+        significance test for linear ranks, Journal of the American
+        Statistical Association, 58, 216-230.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
+    >>> sp.test_page(x, alternative="greater")
+    """
+    x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
+        data, y_col, group_col, block_col, block_id_col, melted
+    )
+
+    groups = x[_group_col].unique()
+    blocks = x[_block_id_col].unique()
+    if not sort:
+        x[_group_col] = Categorical(x[_group_col], categories=groups, ordered=True)
+        x[_block_col] = Categorical(x[_block_col], categories=blocks, ordered=True)
+    x = x.sort_values(by=[_block_col, _group_col], ascending=True)
+    x.dropna(inplace=True)
+
+    k = len(groups)
+    n = len(blocks)
+
+    x["y_ranks"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
+    r_sum = x.groupby(_group_col, observed=True)["y_ranks"].sum().to_numpy()
+
+    weights = np.arange(1, k + 1)
+    L = float(np.sum(r_sum * weights))
+    eL = n * k * (k + 1.0) ** 2.0 / 4.0
+    varL = n * k**2.0 * (k + 1.0) * (k**2.0 - 1.0) / 144.0
+
+    stat = (L - eL - 0.5) / np.sqrt(varL)
+
+    if alternative == "two-sided":
+        pval = 2.0 * min(ss.norm.sf(np.abs(stat)), 0.5)
+    elif alternative == "greater":
+        pval = ss.norm.sf(stat)
+    else:
+        pval = ss.norm.cdf(stat)
+
+    return float(pval), float(stat)
+
+
+def test_hartley(
+    data: Union[ArrayLike, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    n_perm: int = 100000,
+    sort: bool = False,
+) -> tuple[float, float, int]:
+    """Hartley's maximum F-ratio test of homogeneity of variances.
+
+    Tests the null hypothesis that the variances in each of the groups are
+    equal, against the alternative that at least one differs [1]_.
+
+    Parameters
+    ----------
+    data : Union[List, numpy.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame with data values.
+
+    val_col : str = None
+        Name of a DataFrame column that contains dependent variable values
+        (test or response variable). Values should have a non-nominal scale.
+        Must be specified if ``data`` is a pandas DataFrame object.
+
+    group_col : str = None
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Must be specified if ``data`` is a
+        pandas DataFrame object.
+
+    n_perm : int = 100000
+        Number of Monte Carlo samples used to approximate the null
+        distribution of the maximum F-ratio statistic.
+
+    sort : bool = False
+        If True, sort data by group_col.
+
+    Returns
+    -------
+    tuple[float, float, int]
+        P value, F-max statistic, and degrees of freedom (of the
+        minimum-variance group).
+
+    Notes
+    -----
+    Hartley's test requires a (nearly) balanced design; a warning is issued
+    otherwise. The p value is approximated by Monte Carlo simulation of `k`
+    independent chi-squared(df) variables (df taken from the
+    minimum-variance group, following PMCMRplus), rather than PMCMRplus's
+    exact `pmaxFratio` distribution (which has no scipy equivalent).
+
+    References
+    ----------
+    .. [1] H. O. Hartley (1950), The maximum F-ratio as a short cut test for
+        heterogeneity of variance, Biometrika, 37, 308-312.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> x = [[1,2,3,5,1], [12,31,54,62,12], [10,12,6,74,11]]
+    >>> sp.test_hartley(x)
+    """
+    x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
+    var = x_grouped.var().to_numpy()
+    ni = x_grouped.count().to_numpy()
+    k = var.size
+
+    if np.any(ni != ni[0]):
+        warnings.warn(
+            "Maximum F-ratio test is imprecise for unbalanced designs.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    df = int(ni[np.argmin(var)] - 1)
+    stat = float(np.max(var) / np.min(var))
+
+    sim = ss.chi2.rvs(df, size=(n_perm, k))
+    fmax_sim = sim.max(axis=1) / sim.min(axis=1)
+    pval = float(np.mean(fmax_sim >= stat))
+
+    return pval, stat, df
+
+
+def test_median(
+    data: Union[ArrayLike, DataFrame],
+    val_col: Optional[str] = None,
+    group_col: Optional[str] = None,
+    correction: bool = False,
+    sort: bool = False,
+) -> tuple[float, float, int]:
+    """Brown-Mood median test.
+
+    Tests the null hypothesis that all groups share a common population
+    median, against the alternative that at least one differs [1]_.
+
+    Parameters
+    ----------
+    data : Union[List, numpy.ndarray, DataFrame]
+        An array, any object exposing the array interface or a pandas
+        DataFrame with data values.
+
+    val_col : str = None
+        Name of a DataFrame column that contains dependent variable values
+        (test or response variable). Values should have a non-nominal scale.
+        Must be specified if ``data`` is a pandas DataFrame object.
+
+    group_col : str = None
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Must be specified if ``data`` is a
+        pandas DataFrame object.
+
+    correction : bool = False
+        Whether to apply Yates' continuity correction in the underlying
+        chi-squared test.
+
+    sort : bool = False
+        If True, sort data by group_col.
+
+    Returns
+    -------
+    tuple[float, float, int]
+        P value, chi-squared statistic, and degrees of freedom.
+
+    Notes
+    -----
+    Observations are classified as above or at-or-below the grand median
+    (computed once, from the pooled sample) and compared across groups with
+    Pearson's chi-squared test of independence.
+
+    References
+    ----------
+    .. [1] G. W. Brown, A. M. Mood (1951), On median tests for linear
+        hypotheses, Proceedings of the Second Berkeley Symposium on
+        Mathematical Statistics and Probability, University of California
+        Press, 159-166.
+
+    Examples
+    --------
+    >>> import scikit_posthocs as sp
+    >>> x = [[1,2,3,5,1], [12,31,54,62,12], [10,12,6,74,11]]
+    >>> sp.test_median(x)
+    """
+    x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
+    x = x.sort_values(by=[_group_col], ascending=True) if sort else x
+
+    grand_median = x[_val_col].median()
+    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
+    n_gt = x_grouped.apply(lambda v: (v > grand_median).sum()).to_numpy()
+    n_total = x_grouped.count().to_numpy()
+    n_le = n_total - n_gt
+
+    table = np.column_stack([n_gt, n_le])
+    stat, pval, dof, _ = ss.chi2_contingency(table, correction=correction)
+
+    return float(pval), float(stat), int(dof)

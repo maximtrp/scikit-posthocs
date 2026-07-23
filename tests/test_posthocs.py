@@ -30,7 +30,7 @@ class TestPosthocs(unittest.TestCase):
         a = np.array([0.9, 0.1, 0.01, 0.99, 1.0, 0.02, 0.04])
         result = spg.global_f_test(a)
         self.assertAlmostEqual(result, 0.01294562)
-        # With stat=True a (p_value, t_stat) tuple is returned.
+        # stat=True returns (p_value, t_stat).
         result_p, t_stat = spg.global_f_test(a, stat=True)
         self.assertAlmostEqual(result_p, 0.01294562)
         self.assertGreater(t_stat, 0)
@@ -1195,9 +1195,7 @@ class TestPosthocs(unittest.TestCase):
     def test_posthoc_dunnett(self):
         r_results = [8.125844e-11, 2.427434e-01]
 
-        # scipy use randomized Quasi-Monte Carlo integration of the multivariate-t distribution
-        # to compute the p-values. The result may vary slightly from run to run.
-        # we run the test 1000 times (maximum absolute tolerance = 1.e-4 for example data)
+        # scipy's p-values are randomized QMC estimates, so repeat and check most pass.
         is_close = []
         for i in range(100):
             results = sp.posthoc_dunnett(
@@ -1225,6 +1223,140 @@ class TestPosthocs(unittest.TestCase):
             is_close_mt.append(np.allclose(results, r_results, atol=1e-4))
         self.assertTrue(sum(is_close) > 95)
         self.assertTrue(sum(is_close_mt) > 95)
+
+    # Sachs-style 3-group example; reference p-values below come from PMCMRplus R.
+    new_x = [[1, 2, 3, 5, 1], [12, 31, 54, 62, 12], [10, 12, 6, 74, 11]]
+    # 6-block x 3-group design for the block-design tests below.
+    new_block = np.array(
+        [[31, 27, 24], [31, 28, 31], [45, 29, 46], [21, 18, 48], [42, 36, 46], [32, 17, 40]]
+    )
+
+    def test_posthoc_games_howell(self):
+        # PMCMRplus::gamesHowellTest reference.
+        r_results = np.array(
+            [
+                [1.0, 0.0785989, 0.3573167],
+                [0.0785989, 1.0, 0.7701901],
+                [0.3573167, 0.7701901, 1.0],
+            ]
+        )
+        results = sp.posthoc_games_howell(self.new_x)
+        self.assertTrue(np.allclose(results, r_results, atol=1e-6))
+
+    def test_posthoc_dunnett_t3(self):
+        # PMCMRplus::dunnettT3Test closed-form reference (R's own pmvt is noisy Monte Carlo).
+        r_results = np.array(
+            [
+                [1.0, 0.1096474, 0.4739797],
+                [0.1096474, 1.0, 0.8775769],
+                [0.4739797, 0.8775769, 1.0],
+            ]
+        )
+        results = sp.posthoc_dunnett_t3(self.new_x)
+        self.assertTrue(np.allclose(results, r_results, atol=1e-6))
+
+    def test_posthoc_lsd(self):
+        # PMCMRplus::lsdTest reference.
+        r_results = np.array(
+            [
+                [1.0, 0.03673861, 0.16138011],
+                [0.03673861, 1.0, 0.4081858],
+                [0.16138011, 0.4081858, 1.0],
+            ]
+        )
+        results = sp.posthoc_lsd(self.new_x)
+        self.assertTrue(np.allclose(results, r_results, atol=1e-6))
+
+    def test_posthoc_snk(self):
+        # PMCMRplus::snkTest reference.
+        r_results = np.array(
+            [
+                [1.0, 0.08675522, 0.16138011],
+                [0.08675522, 1.0, 0.4081858],
+                [0.16138011, 0.4081858, 1.0],
+            ]
+        )
+        results = sp.posthoc_snk(self.new_x)
+        self.assertTrue(np.allclose(results, r_results, atol=1e-6))
+
+    def test_posthoc_duncan(self):
+        # PMCMRplus::duncanTest reference.
+        r_results = np.array(
+            [
+                [1.0, 0.04436159, 0.16138011],
+                [0.04436159, 1.0, 0.4081858],
+                [0.16138011, 0.4081858, 1.0],
+            ]
+        )
+        results = sp.posthoc_duncan(self.new_x)
+        self.assertTrue(np.allclose(results, r_results, atol=1e-6))
+
+    def test_posthoc_median(self):
+        # PMCMRplus::medianAllPairsTest(p.adjust.method="none") reference.
+        r_results = np.array(
+            [
+                [1.0, 0.001565402, 0.113846298],
+                [0.001565402, 1.0, 0.03843393],
+                [0.113846298, 0.03843393, 1.0],
+            ]
+        )
+        results = sp.posthoc_median(self.new_x)
+        self.assertTrue(np.allclose(results, r_results, atol=1e-6))
+
+        # only off-diagonal entries should be adjusted
+        adjusted = sp.posthoc_median(self.new_x, p_adjust="holm")
+        self.assertTrue(np.allclose(np.diag(adjusted), 1.0))
+        self.assertTrue(np.all(adjusted.to_numpy() >= results.to_numpy() - 1e-12))
+
+    def test_posthoc_steel(self):
+        from scipy.stats import mannwhitneyu
+
+        results = sp.posthoc_steel(self.new_x, control=1, to_matrix=False)
+        # equivalent to pairwise Mann-Whitney U vs. control
+        expected = [
+            mannwhitneyu(self.new_x[1], self.new_x[0], alternative="two-sided").pvalue,
+            mannwhitneyu(self.new_x[2], self.new_x[0], alternative="two-sided").pvalue,
+        ]
+        self.assertTrue(np.allclose(results.to_numpy(), expected))
+
+        results_mt = sp.posthoc_steel(self.new_x, control=1, to_matrix=True)
+        self.assertAlmostEqual(results_mt.loc[1, 2], expected[0])
+        self.assertAlmostEqual(results_mt.loc[1, 3], expected[1])
+        self.assertTrue(np.all(np.diag(results_mt) == 1.0))
+
+    def test_posthoc_demsar(self):
+        # PMCMRplus::frdManyOneDemsarTest reference.
+        results = sp.posthoc_demsar(self.new_block, control=0, to_matrix=False)
+        self.assertTrue(np.allclose(results.to_numpy(), [0.06060197, 0.56370286], atol=1e-6))
+
+    def test_jonckheere(self):
+        x = [1, 2, 3, 5, 1, 12, 31, 54, 62, 12, 10, 12, 6, 74, 11]
+        g = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
+        # PMCMRplus::jonckheereTest reference.
+        with self.assertWarns(UserWarning):
+            p, stat = som.test_jonckheere(DataFrame({"x": x, "g": g}), val_col="x", group_col="g")
+        self.assertAlmostEqual(stat, 1.964161, places=5)
+        self.assertAlmostEqual(p, 0.04951137, places=5)
+
+    def test_page(self):
+        # PMCMRplus::pageTest reference.
+        p, stat = som.test_page(self.new_block, alternative="greater")
+        self.assertAlmostEqual(stat, 0.43301270, places=6)
+        self.assertAlmostEqual(p, 0.33250277, places=6)
+
+    def test_hartley(self):
+        p, stat, df = som.test_hartley(self.new_x, n_perm=20000)
+        # stat is deterministic; only the MC p-value varies
+        self.assertAlmostEqual(stat, 296.71428571428567, places=5)
+        self.assertEqual(df, 4)
+        self.assertTrue(0.0 <= p <= 0.05)
+
+    def test_test_median(self):
+        # PMCMRplus::medianTest reference.
+        p, stat, dof = som.test_median(self.new_x)
+        self.assertAlmostEqual(stat, 10.178571, places=5)
+        self.assertAlmostEqual(p, 0.006162420, places=6)
+        self.assertEqual(dof, 2)
 
 
 class TestCompactLetterDisplay(unittest.TestCase):
@@ -1259,27 +1391,25 @@ class TestCompactLetterDisplay(unittest.TestCase):
         self.assertEqual(list(result.index), ['w', 'x', 'y', 'z'])
 
     def test_all_different(self):
-        # All pairs significantly different -> each group gets its own letter
+        # all pairs differ -> unique letter each
         pv = np.array([
             [-1.0, 0.01, 0.01],
             [ 0.01, -1.0, 0.01],
             [ 0.01,  0.01, -1.0],
         ])
         result = spg2.compact_letter_display(pv)
-        # Each group belongs to exactly one unique letter group
         letters = [s.strip() for s in result]
         self.assertEqual(len(set(letters)), 3)
         self.assertTrue(all(len(s.strip()) == 1 for s in result))
 
     def test_none_different(self):
-        # No pairs significantly different -> all groups share the same letter
+        # no pairs differ -> shared letter
         pv = np.array([
             [-1.0, 0.80, 0.90],
             [ 0.80, -1.0, 0.70],
             [ 0.90,  0.70, -1.0],
         ])
         result = spg2.compact_letter_display(pv)
-        # All groups should have the same non-space letter
         self.assertEqual(len(set(result)), 1)
         self.assertEqual(result.iloc[0].strip(), 'a')
 
@@ -1320,12 +1450,11 @@ class TestBugRegressions(unittest.TestCase):
     def test_outliers_iqr_boundary_values_kept(self):
         """Boundary values must be kept as non-outliers, not dropped from both sets."""
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 11.5])
-        # Q1=2.75, Q3=6.25, IQR=3.5; upper limit = 6.25 + 1.5*3.5 = 11.5
+        # upper limit = 6.25 + 1.5*3.5 = 11.5
         filtered = so.outliers_iqr(x, ret="filtered")
         outliers = so.outliers_iqr(x, ret="outliers")
         self.assertIn(11.5, filtered.tolist())
         self.assertNotIn(11.5, outliers.tolist())
-        # Filtered + outliers must equal the full input.
         self.assertEqual(len(filtered) + len(outliers), len(x))
 
     def test_outliers_iqr_indices_partition_is_complete(self):

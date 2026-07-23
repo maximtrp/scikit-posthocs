@@ -26,3 +26,11 @@ Post-hocs API reference
     posthoc_tukey
     posthoc_dscf
     posthoc_dunnett
+    posthoc_dunnett_t3
+    posthoc_games_howell
+    posthoc_lsd
+    posthoc_snk
+    posthoc_duncan
+    posthoc_median
+    posthoc_steel
+    posthoc_demsar
