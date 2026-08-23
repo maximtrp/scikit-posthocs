@@ -239,7 +239,6 @@ def sign_plot(
             vmin=-1,
             vmax=3,
             cmap=ListedColormap(cmap),
-            center=1,
             cbar=False,
             ax=ax,
             **kwargs,
@@ -299,12 +298,31 @@ def _find_maximal_cliques(adj_matrix: DataFrame) -> List[Set]:
     if adj_matrix.empty or not (adj_matrix.T == adj_matrix).values.all():
         raise ValueError("Input matrix must be non-empty and symmetric")
 
+    vertices = list(adj_matrix.index)
+    order = {vertex: i for i, vertex in enumerate(vertices)}
+    adjacency = {
+        vertex: {
+            neighbor
+            for neighbor, connected in zip(vertices, adj_matrix.loc[vertex].to_numpy())
+            if connected and neighbor != vertex
+        }
+        for vertex in vertices
+    }
+
+    if len(vertices) == 1:
+        return [{vertices[0]}]
+    if all(len(adjacency[vertex]) == len(vertices) - 1 for vertex in vertices):
+        return [set(vertices)]
+    if all(not adjacency[vertex] for vertex in vertices):
+        return [{vertex} for vertex in vertices]
+
     result = []
     _bron_kerbosch(
         current_clique=set(),
-        candidates=set(adj_matrix.index),
+        candidates=set(vertices),
         visited=set(),
-        adj_matrix=adj_matrix,
+        adjacency=adjacency,
+        order=order,
         result=result,
     )
     return result
@@ -314,7 +332,8 @@ def _bron_kerbosch(
     current_clique: Set,
     candidates: Set,
     visited: Set,
-    adj_matrix: DataFrame,
+    adjacency: Dict,
+    order: Dict,
     result: List[Set],
 ) -> None:
     """Recursive algorithm to find the maximal fully connected subgraphs.
@@ -330,9 +349,10 @@ def _bron_kerbosch(
     visited : set
         Set of vertices already known to be part of another previously explored
         clique, that is not current_clique.
-    adj_matrix : pandas.DataFrame
-        Binary matrix with 1 if row item and column item do NOT significantly
-        differ. Diagonal must be zeroed.
+    adjacency : dict
+        Mapping from each vertex to its neighboring vertices.
+    order : dict
+        Mapping from each vertex to its input position for deterministic traversal.
     result : list[set]
         List where to append the maximal cliques.
 
@@ -344,23 +364,25 @@ def _bron_kerbosch(
     ----------
     .. [1] https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
     """
-    while candidates:
-        v = candidates.pop()
+    if not candidates and not visited:
+        result.append(current_clique)
+        return
+
+    pivot = max(
+        candidates | visited,
+        key=lambda vertex: (len(candidates & adjacency[vertex]), -order[vertex]),
+    )
+    for v in sorted(candidates - adjacency[pivot], key=order.__getitem__):
         _bron_kerbosch(
             current_clique | {v},
-            # Restrict candidate vertices to the neighbors of v
-            {n for n in candidates if adj_matrix.loc[v, n]},
-            # Restrict visited vertices to the neighbors of v
-            {n for n in visited if adj_matrix.loc[v, n]},
-            adj_matrix,
+            candidates & adjacency[v],
+            visited & adjacency[v],
+            adjacency,
+            order,
             result,
         )
+        candidates.remove(v)
         visited.add(v)
-
-    # We do not need to report a clique if a children call aready did it.
-    if not visited:
-        # If this is not a terminal call, i.e. if any clique was reported.
-        result.append(current_clique)
 
 
 def critical_difference_diagram(
@@ -506,8 +528,7 @@ def critical_difference_diagram(
         if not color_palette:
             default_colors = pyplot.rcParams["axes.prop_cycle"].by_key()["color"]
             color_palette = {
-                group: default_colors[i % len(default_colors)]
-                for i, group in enumerate(hue_order)
+                group: default_colors[i % len(default_colors)] for i, group in enumerate(hue_order)
             }
         elif isinstance(color_palette, list):
             if len(color_palette) < len(hue_order):
@@ -563,7 +584,9 @@ def critical_difference_diagram(
     )
 
     ranks = Series(ranks).sort_values()  # Standardize if ranks is dict
-    points_right: Series = ranks.iloc[len(ranks):]  # empty by default; reassigned below if not left_only
+    points_right: Series = ranks.iloc[
+        len(ranks) :
+    ]  # empty by default; reassigned below if not left_only
     if left_only:
         points_left = ranks
     else:
@@ -575,36 +598,39 @@ def critical_difference_diagram(
 
     # Sets of points under the same crossbar
     crossbar_sets = _find_maximal_cliques(adj_matrix)
+    rank_values = ranks.to_dict()
 
     # Sort by lowest rank and filter single-valued sets
-    crossbar_sets = sorted(
-        (x for x in crossbar_sets if len(x) > 1), key=lambda x: ranks.loc[list(x)].min()
+    crossbar_intervals = sorted(
+        (
+            (bar, min(rank_values[x] for x in bar), max(rank_values[x] for x in bar))
+            for bar in crossbar_sets
+            if len(bar) > 1
+        ),
+        key=lambda item: item[1],
     )
-
-    def _rank_intervals_overlap(bar1: Set, bar2: Set) -> bool:
-        lo1, hi1 = ranks.loc[list(bar1)].min(), ranks.loc[list(bar1)].max()
-        lo2, hi2 = ranks.loc[list(bar2)].min(), ranks.loc[list(bar2)].max()
-        return lo1 <= hi2 and lo2 <= hi1
 
     # Create stacking of crossbars: for each level, try to fit the crossbar,
     # so that it does not intersect with any other in the level. If it does not
     # fit in any level, create a new level for it.
-    crossbar_levels: list[list[set]] = []
-    for bar in crossbar_sets:
-        for level, bars_in_level in enumerate(crossbar_levels):
-            if not any(_rank_intervals_overlap(bar, bar_in_lvl) for bar_in_lvl in bars_in_level):
+    crossbar_levels: list[list[tuple[float, float]]] = []
+    for bar, low, high in crossbar_intervals:
+        for level, intervals in enumerate(crossbar_levels):
+            if not any(
+                low <= other_high and other_low <= high for other_low, other_high in intervals
+            ):
                 ypos = -level - 1
-                bars_in_level.append(bar)
+                intervals.append((low, high))
                 break
         else:
             ypos = -len(crossbar_levels) - 1
-            crossbar_levels.append([bar])
+            crossbar_levels.append([(low, high)])
 
         crossbars.append(
             ax.plot(
                 # Adding a separate line between each pair enables showing a
                 # marker over each elbow with crossbar_props={'marker': 'o'}.
-                [ranks.loc[i] for i in bar],
+                [rank_values[i] for i in bar],
                 [ypos] * len(bar),
                 **crossbar_props,
             )
@@ -695,7 +721,7 @@ def critical_difference_diagram(
         label_props={
             "ha": "center",
             **label_props,
-        }
+        },
     )
 
     return {

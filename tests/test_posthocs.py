@@ -10,6 +10,7 @@ import scikit_posthocs._global as spg
 import scikit_posthocs._grouping as spg2
 import seaborn as sb
 import numpy as np
+import pandas as pd
 import matplotlib.axes as ma
 from pandas import DataFrame, Series
 
@@ -256,6 +257,29 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(so.outliers_tietjen(x, 2, hypo=True))
         self.assertTrue(np.all(test_results == correct_results))
 
+    def test_outliers_tietjen_matches_seeded_scalar_reference(self):
+        x = np.array([-8.0, -0.7, -0.3, -0.1, 0.0, 0.2, 0.4, 0.8, 9.0])
+        k = 2
+
+        def statistic(values):
+            mean = values.mean()
+            ordered = values[np.abs(values - mean).argsort()]
+            kept = ordered[:-k]
+            return np.sum((kept - kept.mean()) ** 2) / np.sum((ordered - mean) ** 2)
+
+        np.random.seed(12345)
+        observed = statistic(x)
+        simulated = np.array([statistic(np.random.normal(size=x.size)) for _ in range(10000)])
+        expected = observed < np.percentile(simulated, 5.0)
+        expected_next = np.random.random(8)
+
+        np.random.seed(12345)
+        actual = so.outliers_tietjen(x, k, hypo=True)
+        actual_next = np.random.random(8)
+
+        self.assertEqual(actual, expected)
+        np.testing.assert_array_equal(actual_next, expected_next)
+
     def test_outliers_gesd(self):
         x = np.array(
             [
@@ -460,9 +484,11 @@ class TestPosthocs(unittest.TestCase):
             [23, 21, 25],
         ]
         result, _ = som.test_mackwolfe(x, p=2)
-        self.assertEqual(som.test_mackwolfe(x, p=20), (np.nan, np.nan))
-        self.assertEqual(som.test_mackwolfe(x, p=0), (np.nan, np.nan))
+        result_at_zero, _ = som.test_mackwolfe(x, p=0)
+        with self.assertRaisesRegex(ValueError, "p must be between 0 and 5; got 20"):
+            som.test_mackwolfe(x, p=20)
         self.assertTrue(np.allclose(result, 0.0006812725))
+        self.assertTrue(np.isfinite(result_at_zero))
 
     def test_mackwolfe_nperm(self):
         x = [
@@ -542,6 +568,97 @@ class TestPosthocs(unittest.TestCase):
             self.df, val_col="pulse", group_col="kind", dist="tukey"
         ).values
         self.assertTrue(np.allclose(results, r_results, atol=1.0e-3))
+
+    def test_rank_posthocs_preserve_unsorted_group_alignment(self):
+        data = DataFrame(
+            {
+                "group": ["z", "a", "m"] * 6,
+                "value": [
+                    1.0,
+                    2.0,
+                    1.0,
+                    2.0,
+                    3.0,
+                    4.0,
+                    3.0,
+                    np.nan,
+                    5.0,
+                    4.0,
+                    6.0,
+                    7.0,
+                    5.0,
+                    7.0,
+                    9.0,
+                    6.0,
+                    8.0,
+                    10.0,
+                ],
+            }
+        )
+        encounter_order = ["z", "a", "m"]
+
+        for function, kwargs in (
+            (sp.posthoc_conover, {"p_adjust": "holm"}),
+            (sp.posthoc_dunn, {"p_adjust": "holm"}),
+            (sp.posthoc_nemenyi, {"dist": "chi"}),
+            (sp.posthoc_nemenyi, {"dist": "tukey"}),
+        ):
+            with self.subTest(function=function.__name__, kwargs=kwargs):
+                unsorted = function(data, val_col="value", group_col="group", sort=False, **kwargs)
+                sorted_result = function(
+                    data, val_col="value", group_col="group", sort=True, **kwargs
+                ).loc[encounter_order, encounter_order]
+
+                self.assertEqual(list(unsorted.index), encounter_order)
+                self.assertEqual(list(unsorted.columns), encounter_order)
+                np.testing.assert_allclose(unsorted, sorted_result, equal_nan=True)
+
+    def test_parametric_posthocs_preserve_unsorted_group_alignment(self):
+        data = DataFrame(
+            {
+                "group": ["z", "a", "m"] * 6,
+                "value": [
+                    1.0,
+                    2.0,
+                    1.0,
+                    2.0,
+                    3.0,
+                    4.0,
+                    3.0,
+                    5.0,
+                    5.0,
+                    4.0,
+                    6.0,
+                    7.0,
+                    5.0,
+                    7.0,
+                    9.0,
+                    6.0,
+                    8.0,
+                    10.0,
+                ],
+            }
+        )
+        encounter_order = ["z", "a", "m"]
+
+        for function, kwargs in (
+            (sp.posthoc_scheffe, {}),
+            (sp.posthoc_tamhane, {}),
+            (sp.posthoc_games_howell, {}),
+            (sp.posthoc_dunnett_t3, {}),
+            (sp.posthoc_lsd, {"p_adjust": "holm"}),
+            (sp.posthoc_snk, {}),
+            (sp.posthoc_duncan, {}),
+        ):
+            with self.subTest(function=function.__name__):
+                unsorted = function(data, val_col="value", group_col="group", sort=False, **kwargs)
+                sorted_result = function(
+                    data, val_col="value", group_col="group", sort=True, **kwargs
+                ).loc[encounter_order, encounter_order]
+
+                self.assertEqual(list(unsorted.index), encounter_order)
+                self.assertEqual(list(unsorted.columns), encounter_order)
+                np.testing.assert_allclose(unsorted, sorted_result, rtol=1e-12, equal_nan=True)
 
     def test_posthoc_nemenyi_friedman(self):
         p_results = np.array(
@@ -714,6 +831,121 @@ class TestPosthocs(unittest.TestCase):
         p_results[tri_upper] = np.transpose(p_results)[tri_upper]
         np.fill_diagonal(p_results, 1)
         self.assertTrue(np.allclose(results, p_results))
+
+    def test_dense_friedman_paths_match_melted_tied_data(self):
+        wide = DataFrame(
+            [
+                [1.0, 1.0, 3.0],
+                [2.0, 4.0, 4.0],
+                [5.0, 3.0, 1.0],
+                [2.0, 2.0, 2.0],
+                [7.0, 6.0, 8.0],
+            ],
+            columns=["z", "a", "m"],
+            index=["b4", "b1", "b5", "b2", "b3"],
+        )
+        melted = wide.copy()
+        melted.index.name = "block"
+        melted = melted.reset_index()
+        melted["block_id"] = np.arange(wide.shape[0])
+        melted = melted.melt(id_vars=["block", "block_id"], var_name="group", value_name="value")
+
+        dense_nemenyi = sp.posthoc_nemenyi_friedman(wide)
+        melted_nemenyi = sp.posthoc_nemenyi_friedman(
+            melted,
+            y_col="value",
+            group_col="group",
+            block_col="block",
+            block_id_col="block_id",
+            melted=True,
+        ).loc[wide.columns, wide.columns]
+        np.testing.assert_allclose(dense_nemenyi, melted_nemenyi, rtol=1e-13)
+
+        for adjustment in (None, "holm", "single-step"):
+            with self.subTest(adjustment=adjustment):
+                dense = sp.posthoc_conover_friedman(wide, p_adjust=adjustment)
+                long = sp.posthoc_conover_friedman(
+                    melted,
+                    y_col="value",
+                    group_col="group",
+                    block_col="block",
+                    block_id_col="block_id",
+                    melted=True,
+                    p_adjust=adjustment,
+                ).loc[wide.columns, wide.columns]
+                np.testing.assert_allclose(dense, long, rtol=1e-13)
+
+        pairwise_functions = (
+            (sp.posthoc_siegel_friedman, {"p_adjust": "holm"}),
+            (sp.posthoc_miller_friedman, {}),
+            (sp.posthoc_durbin, {"p_adjust": "holm"}),
+            (sp.posthoc_quade, {"dist": "t", "p_adjust": "holm"}),
+            (sp.posthoc_quade, {"dist": "normal"}),
+        )
+        for function, kwargs in pairwise_functions:
+            with self.subTest(function=function.__name__, kwargs=kwargs):
+                dense = function(wide, **kwargs)
+                long = function(
+                    melted,
+                    y_col="value",
+                    group_col="group",
+                    block_col="block",
+                    block_id_col="block_id",
+                    melted=True,
+                    **kwargs,
+                ).loc[wide.columns, wide.columns]
+                np.testing.assert_allclose(dense, long, rtol=1e-13)
+
+        for alternative in ("two-sided", "less", "greater"):
+            with self.subTest(function="posthoc_demsar", alternative=alternative):
+                dense = sp.posthoc_demsar(
+                    wide,
+                    control="a",
+                    alternative=alternative,
+                    p_adjust="holm",
+                    to_matrix=False,
+                )
+                long = sp.posthoc_demsar(
+                    melted,
+                    y_col="value",
+                    group_col="group",
+                    block_col="block",
+                    block_id_col="block_id",
+                    control="a",
+                    alternative=alternative,
+                    p_adjust="holm",
+                    melted=True,
+                    to_matrix=False,
+                )
+                pd.testing.assert_series_equal(dense, long)
+
+        omnibus_melted = melted.copy()
+        omnibus_melted["block"] = omnibus_melted["block_id"]
+        dense_durbin = som.test_durbin(wide.to_numpy(), sort=False)
+        long_durbin = som.test_durbin(
+            omnibus_melted,
+            y_col="value",
+            group_col="group",
+            block_col="block",
+            block_id_col="block_id",
+            melted=True,
+            sort=False,
+        )
+        np.testing.assert_allclose(dense_durbin, long_durbin, rtol=1e-13)
+
+        for alternative in ("two-sided", "less", "greater"):
+            with self.subTest(function="test_page", alternative=alternative):
+                dense = som.test_page(wide.to_numpy(), alternative=alternative)
+                long = som.test_page(
+                    omnibus_melted,
+                    y_col="value",
+                    group_col="group",
+                    block_col="block",
+                    block_id_col="block_id",
+                    alternative=alternative,
+                    melted=True,
+                )
+                np.testing.assert_allclose(dense, long, rtol=1e-13)
 
     def test_posthoc_miller_friedman(self):
         results = sp.posthoc_miller_friedman(self.df_bn)
@@ -1054,6 +1286,45 @@ class TestPosthocs(unittest.TestCase):
         results = sp.posthoc_dscf(self.df, val_col="pulse", group_col="kind")
         self.assertTrue(np.allclose(results, r_results, atol=0.001))
 
+    def test_posthoc_dscf_matches_pairwise_pandas_reference(self):
+        import scipy.stats as ss
+
+        data = DataFrame(
+            {
+                "group": ["z", "a", "m", "z", "a", "m", "z", "a", "m", "z", "m"],
+                "value": [1.0, 1.0, 2.0, 2.0, 3.0, 2.0, np.nan, 3.0, 5.0, 6.0, 6.0],
+            }
+        )
+        groups = data["group"].unique()
+        expected = np.zeros((groups.size, groups.size))
+
+        for i, j in zip(*np.triu_indices(groups.size, 1)):
+            pair = data.loc[data["group"].isin([groups[i], groups[j]])].copy()
+            pair["rank"] = pair["value"].rank()
+            counts = pair.groupby("group", observed=True)["value"].count()
+            rank_sums = pair.groupby("group", observed=True)["rank"].sum()
+            ni, nj = counts.loc[groups[i]], counts.loc[groups[j]]
+            ri, rj = rank_sums.loc[groups[i]], rank_sums.loc[groups[j]]
+            u = np.array(
+                [
+                    ni * nj + nj * (nj + 1) / 2.0 - rj,
+                    ni * nj + ni * (ni + 1) / 2.0 - ri,
+                ]
+            )
+            size = ni + nj
+            tie_counts = pair["rank"].value_counts().to_numpy()
+            ties = np.sum((tie_counts**3 - tie_counts) / 12.0)
+            variance = (ni * nj / (size * (size - 1.0))) * ((size**3 - size) / 12.0 - ties)
+            statistic = np.sqrt(2.0) * (u.min() - ni * nj / 2.0) / np.sqrt(variance)
+            expected[i, j] = ss.studentized_range.sf(abs(statistic), groups.size, np.inf)
+            expected[j, i] = expected[i, j]
+
+        np.fill_diagonal(expected, 1.0)
+        result = sp.posthoc_dscf(data, val_col="value", group_col="group", sort=False)
+
+        self.assertEqual(list(result.index), ["z", "a", "m"])
+        np.testing.assert_allclose(result, expected, rtol=1e-13, equal_nan=True)
+
     def test_posthoc_ttest(self):
         r_results = np.array(
             [
@@ -1338,6 +1609,39 @@ class TestPosthocs(unittest.TestCase):
         self.assertAlmostEqual(stat, 1.964161, places=5)
         self.assertAlmostEqual(p, 0.04951137, places=5)
 
+    def test_jonckheere_pair_counts_with_ties(self):
+        groups = [np.array([1, 2, 2, 5]), np.array([2, 3, 5]), np.array([1, 5, 6, 6])]
+        expected_j = sum(
+            np.sum(xj[:, None] > xi[None, :]) + 0.5 * np.sum(xj[:, None] == xi[None, :])
+            for i, xi in enumerate(groups[:-1])
+            for xj in groups[i + 1 :]
+        )
+        sizes = np.array([group.size for group in groups], dtype=float)
+        expected_s = expected_j - (sizes.sum() ** 2 - np.sum(sizes**2)) / 4.0
+
+        with self.assertWarns(UserWarning):
+            _, stat = som.test_jonckheere(groups)
+
+        values = np.concatenate(groups)
+        tie_sizes = np.unique(values, return_counts=True)[1].astype(float)
+        n = sizes.sum()
+        scale = np.sqrt(
+            (
+                n * (n - 1.0) * (2.0 * n + 5.0)
+                - np.sum(sizes * (sizes - 1.0) * (2.0 * sizes + 5.0))
+                - np.sum(tie_sizes * (tie_sizes - 1.0) * (2.0 * tie_sizes + 5.0))
+            )
+            / 72.0
+            + (
+                np.sum(sizes * (sizes - 1.0) * (sizes - 2.0))
+                * np.sum(tie_sizes * (tie_sizes - 1.0) * (tie_sizes - 2.0))
+            )
+            / (36.0 * n * (n - 1.0) * (n - 2.0))
+            + (np.sum(sizes * (sizes - 1.0)) * np.sum(tie_sizes * (tie_sizes - 1.0)))
+            / (8.0 * n * (n - 1.0))
+        )
+        self.assertAlmostEqual(stat, expected_s / scale)
+
     def test_page(self):
         # PMCMRplus::pageTest reference.
         p, stat = som.test_page(self.new_block, alternative="greater")
@@ -1351,6 +1655,28 @@ class TestPosthocs(unittest.TestCase):
         self.assertEqual(df, 4)
         self.assertTrue(0.0 <= p <= 0.05)
 
+    def test_hartley_chunking_preserves_seeded_reference(self):
+        import scipy.stats as ss
+
+        data = [[1, 2, 3, 4, 5], [2, 3, 5, 7, 11], [4, 5, 6, 7, 8]]
+        variances = np.array([np.var(group, ddof=1) for group in data])
+        statistic = variances.max() / variances.min()
+        n_perm = 25001
+
+        np.random.seed(2468)
+        simulated = ss.chi2.rvs(4, size=(n_perm, len(data)))
+        expected = np.mean(simulated.max(axis=1) / simulated.min(axis=1) >= statistic)
+        expected_next = np.random.random(8)
+
+        np.random.seed(2468)
+        actual, actual_statistic, actual_df = som.test_hartley(data, n_perm=n_perm)
+        actual_next = np.random.random(8)
+
+        self.assertEqual(actual, expected)
+        self.assertEqual(actual_statistic, statistic)
+        self.assertEqual(actual_df, 4)
+        np.testing.assert_array_equal(actual_next, expected_next)
+
     def test_test_median(self):
         # PMCMRplus::medianTest reference.
         p, stat, dof = som.test_median(self.new_x)
@@ -1363,40 +1689,42 @@ class TestCompactLetterDisplay(unittest.TestCase):
     # Piepho (2004) Example 1:
     # Groups 0-3, significant pairs: (0,1), (0,2), (0,3), (1,3)
     # Expected: ['a  ', ' b ', ' bc', '  c']
-    piepho1_pv = np.array([
-        [-1.0, 0.01, 0.01, 0.01],
-        [ 0.01, -1.0, 0.50, 0.01],
-        [ 0.01,  0.50, -1.0, 0.50],
-        [ 0.01,  0.01, 0.50, -1.0],
-    ])
+    piepho1_pv = np.array(
+        [
+            [-1.0, 0.01, 0.01, 0.01],
+            [0.01, -1.0, 0.50, 0.01],
+            [0.01, 0.50, -1.0, 0.50],
+            [0.01, 0.01, 0.50, -1.0],
+        ]
+    )
 
     def test_piepho_example1_letters(self):
         result = spg2.compact_letter_display(self.piepho1_pv)
-        self.assertEqual(list(result), ['a  ', ' b ', ' bc', '  c'])
+        self.assertEqual(list(result), ["a  ", " b ", " bc", "  c"])
 
     def test_piepho_example1_index(self):
         result = spg2.compact_letter_display(self.piepho1_pv)
         self.assertEqual(list(result.index), [0, 1, 2, 3])
 
     def test_dataframe_input_preserves_names(self):
-        df = DataFrame(self.piepho1_pv,
-                       index=['A', 'B', 'C', 'D'],
-                       columns=['A', 'B', 'C', 'D'])
+        df = DataFrame(self.piepho1_pv, index=["A", "B", "C", "D"], columns=["A", "B", "C", "D"])
         result = spg2.compact_letter_display(df)
-        self.assertEqual(list(result.index), ['A', 'B', 'C', 'D'])
-        self.assertEqual(list(result), ['a  ', ' b ', ' bc', '  c'])
+        self.assertEqual(list(result.index), ["A", "B", "C", "D"])
+        self.assertEqual(list(result), ["a  ", " b ", " bc", "  c"])
 
     def test_custom_names(self):
-        result = spg2.compact_letter_display(self.piepho1_pv, names=['w', 'x', 'y', 'z'])
-        self.assertEqual(list(result.index), ['w', 'x', 'y', 'z'])
+        result = spg2.compact_letter_display(self.piepho1_pv, names=["w", "x", "y", "z"])
+        self.assertEqual(list(result.index), ["w", "x", "y", "z"])
 
     def test_all_different(self):
         # all pairs differ -> unique letter each
-        pv = np.array([
-            [-1.0, 0.01, 0.01],
-            [ 0.01, -1.0, 0.01],
-            [ 0.01,  0.01, -1.0],
-        ])
+        pv = np.array(
+            [
+                [-1.0, 0.01, 0.01],
+                [0.01, -1.0, 0.01],
+                [0.01, 0.01, -1.0],
+            ]
+        )
         result = spg2.compact_letter_display(pv)
         letters = [s.strip() for s in result]
         self.assertEqual(len(set(letters)), 3)
@@ -1404,22 +1732,23 @@ class TestCompactLetterDisplay(unittest.TestCase):
 
     def test_none_different(self):
         # no pairs differ -> shared letter
-        pv = np.array([
-            [-1.0, 0.80, 0.90],
-            [ 0.80, -1.0, 0.70],
-            [ 0.90,  0.70, -1.0],
-        ])
+        pv = np.array(
+            [
+                [-1.0, 0.80, 0.90],
+                [0.80, -1.0, 0.70],
+                [0.90, 0.70, -1.0],
+            ]
+        )
         result = spg2.compact_letter_display(pv)
         self.assertEqual(len(set(result)), 1)
-        self.assertEqual(result.iloc[0].strip(), 'a')
+        self.assertEqual(result.iloc[0].strip(), "a")
 
     def test_series_name(self):
         result = spg2.compact_letter_display(self.piepho1_pv)
-        self.assertEqual(result.name, 'letters')
+        self.assertEqual(result.name, "letters")
 
 
 class TestBugRegressions(unittest.TestCase):
-
     """Regression tests guarding previously-fixed bugs and edge cases."""
 
     df_bn = np.array([[4, 3, 4, 4, 5, 6, 3], [1, 2, 3, 5, 6, 7, 7], [1, 2, 6, 4, 1, 5, 1]])
@@ -1443,9 +1772,7 @@ class TestBugRegressions(unittest.TestCase):
         """outliers_iqr(ret='filtered') must accept python lists."""
         x_list = [4, 5, 6, 10, 12, 4, 3, 1, 2, 3, 23, 5, 3]
         filtered = so.outliers_iqr(x_list, ret="filtered")
-        np.testing.assert_array_equal(
-            filtered, np.array([4, 5, 6, 10, 4, 3, 1, 2, 3, 5, 3])
-        )
+        np.testing.assert_array_equal(filtered, np.array([4, 5, 6, 10, 4, 3, 1, 2, 3, 5, 3]))
 
     def test_outliers_iqr_boundary_values_kept(self):
         """Boundary values must be kept as non-outliers, not dropped from both sets."""
@@ -1479,9 +1806,7 @@ class TestBugRegressions(unittest.TestCase):
         g = np.repeat([0, 1, 2], 5)
         nd = np.column_stack((x.ravel(), g))
         results = sp.posthoc_mannwhitney(nd, val_col=0, group_col=1).values
-        xdf = DataFrame(dict(zip(list("abc"), _x))).melt(
-            var_name="groups", value_name="vals"
-        )
+        xdf = DataFrame(dict(zip(list("abc"), _x))).melt(var_name="groups", value_name="vals")
         ref = sp.posthoc_mannwhitney(xdf, val_col="vals", group_col="groups").values
         np.testing.assert_allclose(results, ref)
 
@@ -1489,15 +1814,15 @@ class TestBugRegressions(unittest.TestCase):
     def test_posthoc_dunnett_diagonal_all_ones(self):
         """Full diagonal of the matrix form must be 1.0, including treatments."""
         np.random.seed(0)
-        x = DataFrame({
-            "val": list(np.random.normal(0, 1, 10))
-            + list(np.random.normal(1, 1, 10))
-            + list(np.random.normal(0.5, 1, 10)),
-            "grp": ["ctrl"] * 10 + ["a"] * 10 + ["b"] * 10,
-        })
-        r = sp.posthoc_dunnett(
-            x, val_col="val", group_col="grp", control="ctrl", to_matrix=True
+        x = DataFrame(
+            {
+                "val": list(np.random.normal(0, 1, 10))
+                + list(np.random.normal(1, 1, 10))
+                + list(np.random.normal(0.5, 1, 10)),
+                "grp": ["ctrl"] * 10 + ["a"] * 10 + ["b"] * 10,
+            }
         )
+        r = sp.posthoc_dunnett(x, val_col="val", group_col="grp", control="ctrl", to_matrix=True)
         self.assertEqual(r.loc["ctrl", "ctrl"], 1.0)
         self.assertEqual(r.loc["a", "a"], 1.0)
         self.assertEqual(r.loc["b", "b"], 1.0)
@@ -1512,15 +1837,22 @@ class TestBugRegressions(unittest.TestCase):
     def test_pairwise_matrices_symmetric_and_unit_diagonal(self):
         """Pairwise post-hoc tests must return a symmetric matrix with unit diagonal."""
         df = sb.load_dataset("exercise")
-        df[df.columns[df.dtypes == "category"]] = df[
-            df.columns[df.dtypes == "category"]
-        ].astype(object)
+        df[df.columns[df.dtypes == "category"]] = df[df.columns[df.dtypes == "category"]].astype(
+            object
+        )
 
         for fn in (
-            sp.posthoc_conover, sp.posthoc_dunn, sp.posthoc_nemenyi,
-            sp.posthoc_vanwaerden, sp.posthoc_dscf, sp.posthoc_ttest,
-            sp.posthoc_tukey, sp.posthoc_tukey_hsd, sp.posthoc_mannwhitney,
-            sp.posthoc_scheffe, sp.posthoc_tamhane,
+            sp.posthoc_conover,
+            sp.posthoc_dunn,
+            sp.posthoc_nemenyi,
+            sp.posthoc_vanwaerden,
+            sp.posthoc_dscf,
+            sp.posthoc_ttest,
+            sp.posthoc_tukey,
+            sp.posthoc_tukey_hsd,
+            sp.posthoc_mannwhitney,
+            sp.posthoc_scheffe,
+            sp.posthoc_tamhane,
         ):
             with self.subTest(func=fn.__name__):
                 result = fn(df, val_col="pulse", group_col="kind")
@@ -1543,14 +1875,21 @@ class TestBugRegressions(unittest.TestCase):
     def test_pairwise_matrices_pvalues_in_range(self):
         """p-values must always lie in [0, 1]."""
         df = sb.load_dataset("exercise")
-        df[df.columns[df.dtypes == "category"]] = df[
-            df.columns[df.dtypes == "category"]
-        ].astype(object)
+        df[df.columns[df.dtypes == "category"]] = df[df.columns[df.dtypes == "category"]].astype(
+            object
+        )
         for fn in (
-            sp.posthoc_conover, sp.posthoc_dunn, sp.posthoc_nemenyi,
-            sp.posthoc_vanwaerden, sp.posthoc_dscf, sp.posthoc_ttest,
-            sp.posthoc_tukey, sp.posthoc_tukey_hsd, sp.posthoc_mannwhitney,
-            sp.posthoc_scheffe, sp.posthoc_tamhane,
+            sp.posthoc_conover,
+            sp.posthoc_dunn,
+            sp.posthoc_nemenyi,
+            sp.posthoc_vanwaerden,
+            sp.posthoc_dscf,
+            sp.posthoc_ttest,
+            sp.posthoc_tukey,
+            sp.posthoc_tukey_hsd,
+            sp.posthoc_mannwhitney,
+            sp.posthoc_scheffe,
+            sp.posthoc_tamhane,
         ):
             with self.subTest(func=fn.__name__):
                 arr = np.asarray(fn(df, val_col="pulse", group_col="kind"))
@@ -1568,13 +1907,13 @@ class TestBugRegressions(unittest.TestCase):
             "g2": np.random.normal(0.5, 1.0, 30),
             "g3": np.random.normal(0.2, 1.0, 30),
         }
-        x = DataFrame({
-            "val": np.concatenate(list(groups.values())),
-            "grp": np.repeat(list(groups.keys()), 30),
-        })
-        result = sp.posthoc_ttest(
-            x, val_col="val", group_col="grp", pool_sd=False, equal_var=True
+        x = DataFrame(
+            {
+                "val": np.concatenate(list(groups.values())),
+                "grp": np.repeat(list(groups.keys()), 30),
+            }
         )
+        result = sp.posthoc_ttest(x, val_col="val", group_col="grp", pool_sd=False, equal_var=True)
         ref_12 = ss.ttest_ind(groups["g1"], groups["g2"], equal_var=True)[1]
         ref_13 = ss.ttest_ind(groups["g1"], groups["g3"], equal_var=True)[1]
         ref_23 = ss.ttest_ind(groups["g2"], groups["g3"], equal_var=True)[1]

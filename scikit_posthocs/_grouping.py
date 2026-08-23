@@ -92,6 +92,17 @@ def compact_letter_display(
     same = (pv >= alpha) | (pv < 0)
     np.fill_diagonal(same, True)
 
+    alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    if maxiter > 0 and same.all():
+        return Series(["a"] * k, index=Index(names), name="letters")
+    if maxiter > 0 and np.count_nonzero(same) == k:
+        if k > len(alphabet):
+            raise ValueError(
+                "Too many letter groups (%d); only %d letters available." % (k, len(alphabet))
+            )
+        letters = ["".join(alphabet[j] if i == j else " " for j in range(k)) for i in range(k)]
+        return Series(letters, index=Index(names), name="letters")
+
     # Precompute each group's neighborhood as a frozenset.
     neighbors = [frozenset(np.nonzero(same[i])[0]) for i in range(k)]
 
@@ -126,7 +137,6 @@ def compact_letter_display(
     valid.sort(key=len, reverse=True)
     valid.sort(key=min)
 
-    alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     if len(valid) > len(alphabet):
         raise ValueError(
             "Too many letter groups (%d); only %d letters available." % (len(valid), len(alphabet))

@@ -110,13 +110,13 @@ def outliers_grubbs(
     array([ 199.31,  199.53,  200.19,  200.82,  201.92,  201.95,  202.18])
     """
     arr = np.copy(x)
-    val = np.max(np.abs(arr - np.mean(arr)))
-    ind = np.argmax(np.abs(arr - np.mean(arr)))
+    deviations = np.abs(arr - np.mean(arr))
+    ind = np.argmax(deviations)
+    val = deviations[ind]
     G = val / np.std(arr, ddof=1)
     N = len(arr)
-    result = G > (N - 1) / np.sqrt(N) * np.sqrt(
-        (t.ppf(1 - alpha / (2 * N), N - 2) ** 2) / (N - 2 + t.ppf(1 - alpha / (2 * N), N - 2) ** 2)
-    )
+    t_value = t.ppf(1 - alpha / (2 * N), N - 2)
+    result = G > (N - 1) / np.sqrt(N) * np.sqrt(t_value**2 / (N - 2 + t_value**2))
 
     if hypo:
         return result
@@ -191,11 +191,26 @@ def outliers_tietjen(
         return E
 
     e_x = tietjen(arr, k)
-    e_norm = np.zeros(10000)
+    simulations = 10000
+    e_norm = np.empty(simulations)
 
-    for i in np.arange(10000):
-        norm = np.random.normal(size=n)
-        e_norm[i] = tietjen(norm, k)
+    if 0 < k < n:
+        retained = n - k
+        batch_size = 256
+        for start in range(0, simulations, batch_size):
+            stop = min(start + batch_size, simulations)
+            norm = np.random.normal(size=(stop - start, n))
+            means = norm.mean(axis=1, keepdims=True)
+            deviations = np.abs(norm - means)
+            indices = np.argpartition(deviations, retained - 1, axis=1)[:, :retained]
+            kept = np.take_along_axis(norm, indices, axis=1)
+            numerator = np.sum((kept - kept.mean(axis=1, keepdims=True)) ** 2, axis=1)
+            denominator = np.sum((norm - means) ** 2, axis=1)
+            e_norm[start:stop] = numerator / denominator
+    else:
+        # Preserve the legacy behavior for unsupported values of k.
+        for i in np.arange(simulations):
+            e_norm[i] = tietjen(np.random.normal(size=n), k)
 
     CV = np.percentile(e_norm, alpha * 100)
     result = e_x < CV
@@ -288,12 +303,12 @@ def outliers_gesd(
               5          2.816        3.128
     """
     rs, ls = np.zeros(outliers, dtype=float), np.zeros(outliers, dtype=float)
-    ms = []
-
     data_proc = np.copy(x)
     argsort_index = np.argsort(data_proc)
     data = data_proc[argsort_index]
     n = data_proc.size
+    active = np.ones(n, dtype=bool)
+    removed = np.empty(outliers, dtype=np.intp)
 
     # Lambda values (critical values): do not depend on the outliers.
     nol = np.arange(outliers)  # the number of outliers
@@ -302,18 +317,18 @@ def outliers_gesd(
     ls = ((n - nol - 1) * t_ppr) / np.sqrt((df + t_ppr**2) * (n - nol))
 
     for i in np.arange(outliers):
-        abs_d = np.abs(data_proc - np.mean(data_proc))
+        active_indices = np.flatnonzero(active)
+        active_data = data_proc[active_indices]
+        abs_d = np.abs(active_data - np.mean(active_data))
 
         # R-value calculation
-        R = np.max(abs_d) / np.std(data_proc, ddof=1)
+        R = np.max(abs_d) / np.std(active_data, ddof=1)
         rs[i] = R
 
-        # Masked values
-        lms = ms[-1] if len(ms) > 0 else []
-        ms.append(lms + [np.where(data == data_proc[np.argmax(abs_d)])[0][0]])
-
         # Remove the observation that maximizes |xi − xmean|
-        data_proc = np.delete(data_proc, np.argmax(abs_d))
+        selected = active_indices[np.argmax(abs_d)]
+        removed[i] = np.searchsorted(data, data_proc[selected], side="left")
+        active[selected] = False
 
     if report:
         report_str = [
@@ -346,9 +361,9 @@ def outliers_gesd(
     if hypo:
         data = np.zeros(n, dtype=bool)
         if any(rs > ls):
-            data[ms[np.max(np.where(rs > ls))]] = True
+            data[removed[: np.max(np.where(rs > ls)) + 1]] = True
         return data
     else:
         if any(rs > ls):
-            return np.delete(data, ms[np.max(np.where(rs > ls))])
+            return np.delete(data, removed[: np.max(np.where(rs > ls)) + 1])
         return data

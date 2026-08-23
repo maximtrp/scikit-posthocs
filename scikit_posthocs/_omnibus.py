@@ -7,7 +7,11 @@ import numpy as np
 from numpy.typing import ArrayLike
 import scipy.stats as ss
 from pandas import DataFrame, Categorical, Series
-from scikit_posthocs._posthocs import __convert_to_df, __convert_to_block_df
+from scikit_posthocs._posthocs import (
+    __complete_block_matrix,
+    __convert_to_df,
+    __convert_to_block_df,
+)
 
 
 def test_mackwolfe(
@@ -81,51 +85,33 @@ def test_mackwolfe(
 
     k = x[_group_col].unique().size
 
-    if p and p > k:
-        warnings.warn(
-            f"Selected 'p' > number of groups: {p} > {k}",
-            UserWarning,
-            stacklevel=2,
-        )
-        return (np.nan, np.nan)
-    elif p is not None and p < 1:
-        warnings.warn(
-            f"Selected 'p' < 1: {p}",
-            UserWarning,
-            stacklevel=2,
-        )
-        return (np.nan, np.nan)
+    if p is not None and not 0 <= p < k:
+        raise ValueError(f"p must be between 0 and {k - 1}; got {p}")
 
     Rij = x[_val_col].rank()
     n = cast(Series, x.groupby(_group_col, observed=True)[_val_col].count())
+    levels = x[_group_col].unique()
+    group_indices = [np.flatnonzero(x[_group_col].to_numpy() == level) for level in levels]
 
     def _fn(Ri, Rj):
-        return np.sum(Ri.apply(lambda x: Rj[Rj > x].size))
+        ordered = np.sort(Rj)
+        return np.sum(ordered.size - np.searchsorted(ordered, Ri, side="right"))
 
-    def _ustat(Rij, g, k):
-        levels = np.unique(g)
+    def _ustat(ranks):
+        grouped_ranks = [ranks[index] for index in group_indices]
         U = np.identity(k)
 
         for i in range(k):
             for j in range(i):
-                U[i, j] = _fn(Rij[x[_group_col] == levels[i]], Rij[x[_group_col] == levels[j]])
-                U[j, i] = _fn(Rij[x[_group_col] == levels[j]], Rij[x[_group_col] == levels[i]])
+                U[i, j] = _fn(grouped_ranks[i], grouped_ranks[j])
+                U[j, i] = _fn(grouped_ranks[j], grouped_ranks[i])
 
         return U
 
     def _ap(p, U) -> float:
-        tmp1 = 0.0
-        if p > 0:
-            for i in range(p):
-                for j in range(i + 1, p + 1):
-                    tmp1 += U[i, j]
-        tmp2 = 0.0
-        if p < k:
-            for i in range(p, k):
-                for j in range(i + 1, k):
-                    tmp2 += U[j, i]
-
-        return tmp1 + tmp2
+        increasing = np.triu(U[: p + 1, : p + 1], k=1).sum()
+        decreasing = np.tril(U[p:, p:], k=-1).sum()
+        return float(increasing + decreasing)
 
     def _n1(p: int, n: Series) -> float:
         return np.sum(n[: p + 1])
@@ -153,17 +139,18 @@ def test_mackwolfe(
         ) / 72.0
         return var
 
-    if p:
+    if p is not None:
         # if (x.groupby(_val_col).count() > 1).any().any():
         #    print("Ties are present")
-        U = _ustat(Rij, x[_group_col], k)
+        U = _ustat(Rij.to_numpy())
         est = _ap(p, U)
         mean = _mean_at(p, n)
         sd = np.sqrt(_var_at(p, n))
         stat = (est - mean) / sd
         p_value = ss.norm.sf(stat).item()
     else:
-        U = _ustat(Rij, x[_group_col], k)
+        rank_values = Rij.to_numpy()
+        U = _ustat(rank_values)
         Ap = np.array([_ap(i, U) for i in range(k)]).ravel()
         mean = np.array([_mean_at(i, n) for i in range(k)]).ravel()
         var = np.array([_var_at(i, n) for i in range(k)]).ravel()
@@ -172,8 +159,8 @@ def test_mackwolfe(
 
         mt = []
         for _ in range(n_perm):
-            ix = Series(np.random.permutation(Rij))
-            uix = _ustat(ix, x[_group_col], k)
+            ix = np.random.permutation(rank_values)
+            uix = _ustat(ix)
             apix = np.array([_ap(i, uix) for i in range(k)])
             astarix = (apix - mean) / np.sqrt(var)
             mt.append(np.max(astarix))
@@ -252,15 +239,8 @@ def test_osrt(
     n = len(x.index)
     df = n - k
 
-    sigma2 = 0
-    c = -1
-
-    for i in range(k):
-        for j in range(ni.iloc[i]):
-            c += 1
-            sigma2 += (x[_val_col].iloc[c] - xi.iloc[i]) ** 2.0 / df
-
-    sigma = np.sqrt(sigma2)
+    residuals = x[_val_col] - x_grouped.transform("mean")
+    sigma = np.sqrt(np.sum(residuals**2.0) / df)
 
     def compare(i, j):
         dif = xi.loc[groups[j]] - xi.loc[groups[i]]
@@ -352,6 +332,19 @@ def test_durbin(
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.test_durbin(x)
     """
+    matrix = __complete_block_matrix(data, melted, sort)
+    if matrix is not None:
+        values, _ = matrix
+        b, t = values.shape
+        ranks = ss.rankdata(values, axis=1, method="average")
+        rank_sums = ranks.sum(axis=0)
+        A = float(np.sum(ranks**2.0))
+        C = float(b * t * (t + 1.0) ** 2.0) / 4.0
+        D = float(np.sum(rank_sums**2.0)) - b * C
+        stat = (t - 1.0) / (A - C) * D
+        df = t - 1
+        return ss.chi2.sf(stat, df).item(), stat, df
+
     x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
         data, y_col, group_col, block_col, block_id_col, melted
     )
@@ -461,11 +454,14 @@ def test_jonckheere(
     k = groups.size
     n = len(x.index)
     nij = x.groupby(_group_col, observed=True)[_val_col].count()
-    grouped_vals = [x.loc[x[_group_col] == g, _val_col].to_numpy() for g in groups]
+    grouped_vals = [
+        np.sort(x.loc[x[_group_col] == g, _val_col].dropna().to_numpy()) for g in groups
+    ]
 
     def uij(xi, xj):
-        diff = xj[:, None] - xi[None, :]
-        return np.sum(diff > 0) + 0.5 * np.sum(diff == 0)
+        left = np.searchsorted(xj, xi, side="left")
+        right = np.searchsorted(xj, xi, side="right")
+        return np.sum(xj.size - right) + 0.5 * np.sum(right - left)
 
     J = 0.0
     for i in range(k - 1):
@@ -481,7 +477,9 @@ def test_jonckheere(
     has_ties = np.any(ties > 1)
 
     if not has_ties:
-        s = np.sqrt((n**2.0 * (2.0 * n + 3.0) - np.sum(nij_arr**2.0 * (2.0 * nij_arr + 3.0))) / 72.0)
+        s = np.sqrt(
+            (n**2.0 * (2.0 * n + 3.0) - np.sum(nij_arr**2.0 * (2.0 * nij_arr + 3.0))) / 72.0
+        )
     else:
         warnings.warn(
             "Ties are present. Jonckheere z was corrected for ties.",
@@ -496,7 +494,10 @@ def test_jonckheere(
                 - np.sum(nt * (nt - 1.0) * (2.0 * nt + 5.0))
             )
             / 72.0
-            + (np.sum(nij_arr * (nij_arr - 1.0) * (nij_arr - 2.0)) * np.sum(nt * (nt - 1.0) * (nt - 2.0)))
+            + (
+                np.sum(nij_arr * (nij_arr - 1.0) * (nij_arr - 2.0))
+                * np.sum(nt * (nt - 1.0) * (nt - 2.0))
+            )
             / (36.0 * n * (n - 1.0) * (n - 2.0))
             + (np.sum(nij_arr * (nij_arr - 1.0)) * np.sum(nt * (nt - 1.0))) / (8.0 * n * (n - 1.0))
         )
@@ -600,6 +601,23 @@ def test_page(
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.test_page(x, alternative="greater")
     """
+    matrix = __complete_block_matrix(data, melted, sort)
+    if matrix is not None:
+        values, _ = matrix
+        n, k = values.shape
+        rank_sums = ss.rankdata(values, axis=1, method="average").sum(axis=0)
+        L = float(np.sum(rank_sums * np.arange(1, k + 1)))
+        eL = n * k * (k + 1.0) ** 2.0 / 4.0
+        varL = n * k**2.0 * (k + 1.0) * (k**2.0 - 1.0) / 144.0
+        stat = (L - eL - 0.5) / np.sqrt(varL)
+        if alternative == "two-sided":
+            pval = 2.0 * min(ss.norm.sf(np.abs(stat)), 0.5)
+        elif alternative == "greater":
+            pval = ss.norm.sf(stat)
+        else:
+            pval = ss.norm.cdf(stat)
+        return float(pval), float(stat)
+
     x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
         data, y_col, group_col, block_col, block_id_col, melted
     )
@@ -713,9 +731,13 @@ def test_hartley(
     df = int(ni[np.argmin(var)] - 1)
     stat = float(np.max(var) / np.min(var))
 
-    sim = ss.chi2.rvs(df, size=(n_perm, k))
-    fmax_sim = sim.max(axis=1) / sim.min(axis=1)
-    pval = float(np.mean(fmax_sim >= stat))
+    exceedances = 0
+    batch_size = 10000
+    for start in range(0, n_perm, batch_size):
+        batch = min(batch_size, n_perm - start)
+        sim = ss.chi2.rvs(df, size=(batch, k))
+        exceedances += np.count_nonzero(sim.max(axis=1) / sim.min(axis=1) >= stat)
+    pval = float(exceedances / n_perm)
 
     return pval, stat, df
 
@@ -784,7 +806,7 @@ def test_median(
 
     grand_median = x[_val_col].median()
     x_grouped = x.groupby(_group_col, observed=True)[_val_col]
-    n_gt = x_grouped.apply(lambda v: (v > grand_median).sum()).to_numpy()
+    n_gt = x[_val_col].gt(grand_median).groupby(x[_group_col], observed=True).sum().to_numpy()
     n_total = x_grouped.count().to_numpy()
     n_le = n_total - n_gt
 
