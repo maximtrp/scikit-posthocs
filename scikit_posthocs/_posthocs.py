@@ -5,7 +5,7 @@ from typing import Optional, Union, Literal
 import numpy as np
 from numpy.typing import ArrayLike
 import scipy.stats as ss
-from statsmodels.sandbox.stats.multicomp import multipletests
+from statsmodels.stats.multitest import multipletests
 from pandas import DataFrame, Series, MultiIndex
 
 
