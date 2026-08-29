@@ -73,7 +73,10 @@ def __convert_to_df(
         x = a.loc[:, [val_col, group_col]].copy()
         return x, val_col, group_col
 
-    elif isinstance(a, list) or (isinstance(a, np.ndarray) and not a.shape.count(2)):
+    elif isinstance(a, list) or (
+        isinstance(a, np.ndarray)
+        and (not a.shape.count(2) or (a.shape[0] == 2 and a.shape[1] != 2))
+    ):
         grps_len = map(len, a)
         grps = list(it.chain(*[[i + 1] * grp_len for i, grp_len in enumerate(grps_len)]))
         vals = list(it.chain(*a))
@@ -1929,6 +1932,11 @@ def posthoc_ttest(
            [ 0.31269089,  0.6327077 , -1.        ]])
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    if not np.isfinite(x[_val_col].to_numpy(dtype=float)).all():
+        raise ValueError(
+            "All observations must be finite; remove or impute missing values before calling "
+            "posthoc_ttest"
+        )
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
@@ -3397,6 +3405,9 @@ def posthoc_demsar(
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_demsar(x, control=0)
     """
+    if alternative not in {"two-sided", "greater", "less"}:
+        raise ValueError("alternative must be one of 'two-sided', 'greater', or 'less'")
+
     matrix = __complete_block_matrix(a, melted, sort)
     if matrix is not None:
         values, groups = matrix

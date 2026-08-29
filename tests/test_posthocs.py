@@ -1943,6 +1943,54 @@ class TestBugRegressions(unittest.TestCase):
         unique_vals = set(np.unique(sa).tolist())
         self.assertTrue(unique_vals.issubset({-1.0, 0.0, 1.0}))
 
+    def test_global_simes_handles_tied_pvalues(self):
+        self.assertAlmostEqual(spg.global_simes_test([0.01, 0.01]), 0.01)
+        self.assertEqual(spg.global_simes_test([1.0, 1.0, 1.0]), 1.0)
+
+    def test_global_tests_reject_invalid_pvalues_with_guidance(self):
+        invalid_inputs = ([], [np.nan], [-0.1, 0.5], [0.5, 1.1])
+        for function in (spg.global_simes_test, spg.global_f_test):
+            for values in invalid_inputs:
+                with self.subTest(function=function.__name__, values=values):
+                    with self.assertRaisesRegex(ValueError, "finite p-values between 0 and 1"):
+                        function(values)
+
+    def test_wide_two_group_ndarray_matches_list_input(self):
+        groups = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]
+        expected = sp.posthoc_dunn(groups)
+        actual = sp.posthoc_dunn(np.asarray(groups))
+        np.testing.assert_allclose(actual, expected)
+
+    def test_posthoc_ttest_rejects_nonfinite_observations_with_guidance(self):
+        with self.assertRaisesRegex(ValueError, "remove or impute missing values"):
+            sp.posthoc_ttest([[1.0, 2.0, np.nan], [3.0, 4.0, 5.0]])
+
+    def test_outliers_gesd_tracks_duplicate_observations_independently(self):
+        data = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 100.0, 100.0])
+        mask = so.outliers_gesd(data, outliers=2, hypo=True)
+        filtered = so.outliers_gesd(data, outliers=2, hypo=False)
+        self.assertEqual(mask.sum(), 2)
+        np.testing.assert_array_equal(filtered, np.arange(6.0))
+
+    def test_cd_diagram_supports_single_rank(self):
+        ranks = Series([1.0], index=["only"])
+        sig_matrix = DataFrame([[1.0]], index=ranks.index, columns=ranks.index)
+        output = splt.critical_difference_diagram(ranks, sig_matrix)
+        self.assertEqual(len(output["markers"]), 1)
+        self.assertEqual(len(output["labels"]), 1)
+
+    def test_ordered_tests_reject_invalid_alternatives_with_guidance(self):
+        data = [[1.0, 2.0, 3.0], [2.0, 3.0, 4.0], [3.0, 4.0, 5.0]]
+        calls = (
+            lambda: som.test_jonckheere(data, alternative="gretaer"),
+            lambda: som.test_page(np.asarray(data).T, alternative="gretaer"),
+            lambda: sp.posthoc_demsar(np.asarray(data).T, control=0, alternative="gretaer"),
+        )
+        for call in calls:
+            with self.subTest(call=call):
+                with self.assertRaisesRegex(ValueError, "two-sided.*greater.*less"):
+                    call()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -444,6 +444,9 @@ def test_jonckheere(
     >>> x = [[22, 23, 35], [60, 59, 54], [98, 78, 50]]
     >>> sp.test_jonckheere(x)
     """
+    if alternative not in {"two-sided", "greater", "less"}:
+        raise ValueError("alternative must be one of 'two-sided', 'greater', or 'less'")
+
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
 
     if not sort:
@@ -601,6 +604,9 @@ def test_page(
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.test_page(x, alternative="greater")
     """
+    if alternative not in {"two-sided", "greater", "less"}:
+        raise ValueError("alternative must be one of 'two-sided', 'greater', or 'less'")
+
     matrix = __complete_block_matrix(data, melted, sort)
     if matrix is not None:
         values, _ = matrix

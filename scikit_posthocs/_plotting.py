@@ -590,9 +590,10 @@ def critical_difference_diagram(
     if left_only:
         points_left = ranks
     else:
+        split = (len(ranks) + 1) // 2
         points_left, points_right = (
-            ranks.iloc[: len(ranks) // 2],
-            ranks.iloc[len(ranks) // 2 :],
+            ranks.iloc[:split],
+            ranks.iloc[split:],
         )
     # points_left, points_right = np.array_split(ranks.sort_values(), 2)
 
@@ -704,7 +705,7 @@ def critical_difference_diagram(
         },
     )
 
-    if not left_only:
+    if not points_right.empty:
         plot_items(
             points_right[::-1],
             xpos=points_right.iloc[-1] + text_h_margin,

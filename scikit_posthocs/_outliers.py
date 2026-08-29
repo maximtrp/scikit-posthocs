@@ -306,6 +306,8 @@ def outliers_gesd(
     data_proc = np.copy(x)
     argsort_index = np.argsort(data_proc)
     data = data_proc[argsort_index]
+    sorted_positions = np.empty(data_proc.size, dtype=np.intp)
+    sorted_positions[argsort_index] = np.arange(data_proc.size)
     n = data_proc.size
     active = np.ones(n, dtype=bool)
     removed = np.empty(outliers, dtype=np.intp)
@@ -327,7 +329,7 @@ def outliers_gesd(
 
         # Remove the observation that maximizes |xi − xmean|
         selected = active_indices[np.argmax(abs_d)]
-        removed[i] = np.searchsorted(data, data_proc[selected], side="left")
+        removed[i] = sorted_positions[selected]
         active[selected] = False
 
     if report:
