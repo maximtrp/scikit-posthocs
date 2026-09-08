@@ -372,7 +372,8 @@ def posthoc_dunn(
 
     Notes
     -----
-    A tie correction will be employed according to Glantz (2012).
+    A tie correction will be employed according to Glantz (2012). Rows with a
+    missing value or group label are excluded before ranking and counting.
 
     References
     ----------
@@ -388,6 +389,7 @@ def posthoc_dunn(
     """
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
     n = len(x.index)
