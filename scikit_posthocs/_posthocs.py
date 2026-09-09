@@ -71,6 +71,7 @@ def __convert_to_df(
         if not {group_col, val_col}.issubset(a.columns):
             raise ValueError("Specify correct column names using `group_col` and `val_col` args")
         x = a.loc[:, [val_col, group_col]].copy()
+        x = x.dropna(subset=[group_col])
         return x, val_col, group_col
 
     elif isinstance(a, list) or (
@@ -203,6 +204,16 @@ def __complete_block_matrix(
     if np.isnan(values).any():
         return None
     return values, groups
+
+
+def __drop_incomplete_blocks(
+    x: DataFrame, y_col: str, group_col: str, block_id_col: str
+) -> DataFrame:
+    group_count = x[group_col].dropna().nunique()
+    x = x.dropna(subset=[y_col, group_col, block_id_col])
+    blocks = x.groupby(block_id_col, observed=True)[group_col]
+    complete = blocks.size().eq(group_count) & blocks.nunique().eq(group_count)
+    return x[x[block_id_col].isin(complete[complete].index)]
 
 
 def posthoc_conover(
@@ -630,7 +641,7 @@ def posthoc_nemenyi_friedman(
         a, y_col, group_col, block_col, block_id_col, melted
     )
     x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
-    x.dropna(inplace=True)
+    x = __drop_incomplete_blocks(x, _y_col, _group_col, _block_id_col)
 
     groups = x[_group_col].unique()
     k = groups.size
@@ -799,7 +810,7 @@ def posthoc_conover_friedman(
         a, y_col, group_col, block_col, block_id_col, melted
     )
     x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
-    x.dropna(inplace=True)
+    x = __drop_incomplete_blocks(x, _y_col, _group_col, _block_id_col)
 
     groups = x[_group_col].unique()
     k = groups.size
@@ -899,6 +910,7 @@ def posthoc_npm_test(
     >>> sp.posthoc_npm_test(x)
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     if alternative == "less":
         x[_val_col] *= -1
@@ -1057,7 +1069,7 @@ def posthoc_siegel_friedman(
         a, y_col, group_col, block_col, block_id_col, melted
     )
     x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
-    x.dropna(inplace=True)
+    x = __drop_incomplete_blocks(x, _y_col, _group_col, _block_id_col)
 
     groups = x[_group_col].unique()
     k = groups.size
@@ -1191,7 +1203,7 @@ def posthoc_miller_friedman(
         a, y_col, group_col, block_col, block_id_col, melted
     )
     x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
-    x.dropna(inplace=True)
+    x = __drop_incomplete_blocks(x, _y_col, _group_col, _block_id_col)
 
     groups = x[_group_col].unique()
     k = groups.size
@@ -1612,7 +1624,7 @@ def posthoc_quade(
     )
 
     x = x.sort_values(by=[_block_col, _group_col], ascending=True) if sort else x
-    x.dropna(inplace=True)
+    x = __drop_incomplete_blocks(x, _y_col, _group_col, _block_id_col)
 
     groups = x[_group_col].unique()
     k = len(groups)
@@ -1734,6 +1746,7 @@ def posthoc_vanwaerden(
     >>> sp.posthoc_vanwaerden(x, val_col = 0, group_col = 1)
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
@@ -2212,7 +2225,14 @@ def posthoc_wilcoxon(
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> sp.posthoc_wilcoxon(x)
     """
+    if isinstance(a, DataFrame) and {val_col, group_col}.issubset(a.columns):
+        if a[[val_col, group_col]].isna().to_numpy().any():
+            raise ValueError("missing paired observations are not supported")
+    if isinstance(a, np.ndarray) and DataFrame(a).isna().to_numpy().any():
+        raise ValueError("missing paired observations are not supported")
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    if x[[_val_col, _group_col]].isna().to_numpy().any():
+        raise ValueError("missing paired observations are not supported")
     x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
@@ -2882,6 +2902,7 @@ def posthoc_lsd(
     >>> sp.posthoc_lsd(x, val_col='values', group_col='groups')
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
@@ -2974,6 +2995,7 @@ def posthoc_snk(
     >>> sp.posthoc_snk(x, val_col='values', group_col='groups')
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
@@ -3064,6 +3086,7 @@ def posthoc_duncan(
     >>> sp.posthoc_duncan(x, val_col='values', group_col='groups')
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
     groups = x[_group_col].unique()
@@ -3434,14 +3457,15 @@ def posthoc_demsar(
             result_df = DataFrame(index=groups, columns=groups, dtype=float)
             result_df.loc[control, treatments] = pvals
             result_df.loc[treatments, control] = pvals
-            np.fill_diagonal(result_df.values, 1.0)
+            for group in groups:
+                result_df.loc[group, group] = 1.0
             return result_df
 
     x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
         a, y_col, group_col, block_col, block_id_col, melted
     )
     x = x.sort_values(by=[_group_col, _block_col], ascending=True) if sort else x
-    x.dropna(inplace=True)
+    x = __drop_incomplete_blocks(x, _y_col, _group_col, _block_id_col)
 
     groups = x[_group_col].unique()
     k = groups.size

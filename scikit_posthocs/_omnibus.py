@@ -11,6 +11,7 @@ from scikit_posthocs._posthocs import (
     __complete_block_matrix,
     __convert_to_df,
     __convert_to_block_df,
+    __drop_incomplete_blocks,
 )
 
 
@@ -78,6 +79,7 @@ def test_mackwolfe(
     >>> sp.posthoc_mackwolfe(x)
     """
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
 
     if not sort:
         x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
@@ -225,6 +227,7 @@ def test_osrt(
     >>> sp.test_osrt(x, val_col='values', group_col='groups')
     """
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
 
     if not sort:
         x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
@@ -448,6 +451,7 @@ def test_jonckheere(
         raise ValueError("alternative must be one of 'two-sided', 'greater', or 'less'")
 
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
 
     if not sort:
         x[_group_col] = Categorical(x[_group_col], categories=x[_group_col].unique(), ordered=True)
@@ -634,8 +638,10 @@ def test_page(
         x[_group_col] = Categorical(x[_group_col], categories=groups, ordered=True)
         x[_block_col] = Categorical(x[_block_col], categories=blocks, ordered=True)
     x = x.sort_values(by=[_block_col, _group_col], ascending=True)
-    x.dropna(inplace=True)
+    x = __drop_incomplete_blocks(x, _y_col, _group_col, _block_id_col)
 
+    groups = x[_group_col].unique()
+    blocks = x[_block_id_col].unique()
     k = len(groups)
     n = len(blocks)
 
