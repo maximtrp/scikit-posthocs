@@ -34,4 +34,4 @@ def test_wilcoxon_group_sort_preserves_subject_pairs(sort, input_type, method, a
     actual = posthoc_wilcoxon(data, sort=sort, method=method, p_adjust=adjust, **kwargs)
     for (i, j), p_value in zip([(0, 1), (0, 2), (1, 2)], expected):
         np.testing.assert_allclose(actual.loc[labels[i], labels[j]], p_value)
-    assert actual.index.tolist() == (sorted(labels) if sort else labels)
+    np.testing.assert_array_equal(actual.index, sorted(labels) if sort else labels)
