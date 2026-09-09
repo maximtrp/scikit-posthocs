@@ -2197,7 +2197,7 @@ def posthoc_wilcoxon(
         'fdr_tsbky' : two stage fdr correction (non-negative)
 
     sort : bool, optional
-        Specifies whether to sort DataFrame by group_col and val_col or not.
+        Sort groups while preserving the input order of observations within each group.
         Default is False.
 
     Returns
@@ -2207,6 +2207,8 @@ def posthoc_wilcoxon(
 
     Notes
     -----
+    Observations are paired by their input order within each group. Callers must
+    align the pairs before passing the data. Sorting only changes group order.
     Refer to `scipy.stats.wilcoxon` reference page for further details [1]_.
 
     References
@@ -2219,7 +2221,7 @@ def posthoc_wilcoxon(
     >>> sp.posthoc_wilcoxon(x)
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-    x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
+    x = x.sort_values(by=_group_col, kind="stable") if sort else x
 
     groups = x[_group_col].unique()
     x_len = groups.size
