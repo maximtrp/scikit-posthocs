@@ -269,7 +269,8 @@ def posthoc_conover(
 
     Notes
     -----
-    A tie correction are employed according to Conover [1]_.
+    A tie correction is employed according to Conover [1]_. Rows with a missing
+    value or group label are excluded before ranking and counting.
 
     References
     ----------
@@ -283,6 +284,7 @@ def posthoc_conover(
     """
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
     n = len(x.index)
@@ -383,7 +385,8 @@ def posthoc_dunn(
 
     Notes
     -----
-    A tie correction will be employed according to Glantz (2012).
+    A tie correction will be employed according to Glantz (2012). Rows with a
+    missing value or group label are excluded before ranking and counting.
 
     References
     ----------
@@ -399,6 +402,7 @@ def posthoc_dunn(
     """
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
     n = len(x.index)
@@ -478,7 +482,8 @@ def posthoc_nemenyi(
 
     Notes
     -----
-    A tie correction will be employed according to Glantz (2012).
+    A tie correction will be employed according to Glantz (2012). Rows with a
+    missing value or group label are excluded before ranking and counting.
 
     References
     ----------
@@ -492,6 +497,7 @@ def posthoc_nemenyi(
     """
 
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
 
     n = len(x.index)
@@ -2204,7 +2210,7 @@ def posthoc_wilcoxon(
         'fdr_tsbky' : two stage fdr correction (non-negative)
 
     sort : bool, optional
-        Specifies whether to sort DataFrame by group_col and val_col or not.
+        Sort groups while preserving the input order of observations within each group.
         Default is False.
 
     Returns
@@ -2214,6 +2220,8 @@ def posthoc_wilcoxon(
 
     Notes
     -----
+    Observations are paired by their input order within each group. Callers must
+    align the pairs before passing the data. Sorting only changes group order.
     Refer to `scipy.stats.wilcoxon` reference page for further details [1]_.
 
     References
@@ -2233,7 +2241,7 @@ def posthoc_wilcoxon(
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     if x[[_val_col, _group_col]].isna().to_numpy().any():
         raise ValueError("missing paired observations are not supported")
-    x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
+    x = x.sort_values(by=_group_col, kind="stable") if sort else x
 
     groups = x[_group_col].unique()
     x_len = groups.size
