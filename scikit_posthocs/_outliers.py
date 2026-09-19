@@ -310,7 +310,10 @@ def outliers_gesd(
     sorted_positions[argsort_index] = np.arange(data_proc.size)
     n = data_proc.size
     active = np.ones(n, dtype=bool)
+    # Removals are tracked in two index spaces: positions in the sorted array,
+    # used to filter it, and positions in the input array, used for the mask.
     removed = np.empty(outliers, dtype=np.intp)
+    removed_input = np.empty(outliers, dtype=np.intp)
 
     # Lambda values (critical values): do not depend on the outliers.
     nol = np.arange(outliers)  # the number of outliers
@@ -330,6 +333,7 @@ def outliers_gesd(
         # Remove the observation that maximizes |xi − xmean|
         selected = active_indices[np.argmax(abs_d)]
         removed[i] = sorted_positions[selected]
+        removed_input[i] = selected
         active[selected] = False
 
     if report:
@@ -361,10 +365,10 @@ def outliers_gesd(
     # for which the test statistic is greater
     # than the critical value and return the result
     if hypo:
-        data = np.zeros(n, dtype=bool)
+        mask = np.zeros(n, dtype=bool)
         if any(rs > ls):
-            data[removed[: np.max(np.where(rs > ls)) + 1]] = True
-        return data
+            mask[removed_input[: np.max(np.where(rs > ls)) + 1]] = True
+        return mask
     else:
         if any(rs > ls):
             return np.delete(data, removed[: np.max(np.where(rs > ls)) + 1])
