@@ -1972,6 +1972,18 @@ class TestBugRegressions(unittest.TestCase):
         self.assertEqual(mask.sum(), 2)
         np.testing.assert_array_equal(filtered, np.arange(6.0))
 
+    def test_outliers_gesd_mask_aligns_with_input_order(self):
+        # The mask must index the input array, not its sorted copy
+        data = np.array([100.0, 0.0, 5.0, 1.0, 100.0, 4.0, 2.0, 3.0])
+        mask = so.outliers_gesd(data, outliers=2, hypo=True)
+        filtered = so.outliers_gesd(data, outliers=2, hypo=False)
+        np.testing.assert_array_equal(
+            mask, np.array([True, False, False, False, True, False, False, False])
+        )
+        np.testing.assert_array_equal(data[mask], [100.0, 100.0])
+        # Both modes must agree on which observations are outliers
+        np.testing.assert_array_equal(np.sort(data[~mask]), filtered)
+
     def test_cd_diagram_supports_single_rank(self):
         ranks = Series([1.0], index=["only"])
         sig_matrix = DataFrame([[1.0]], index=ranks.index, columns=ranks.index)
