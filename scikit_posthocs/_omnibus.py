@@ -362,8 +362,8 @@ def test_durbin(
 
     t = len(groups)
     b = len(blocks)
-    r = float(b)
-    k = float(t)
+    r = len(x) / t
+    k = len(x) / b
 
     x["y_ranks"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
     rs = x.groupby(_group_col, observed=True)["y_ranks"].sum().to_numpy()
