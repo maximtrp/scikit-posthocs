@@ -1358,8 +1358,8 @@ def posthoc_durbin(
     groups = x[_group_col].unique()
     t = len(groups)
     b = x[_block_id_col].unique().size
-    r = b
-    k = t
+    r = len(x) / t
+    k = len(x) / b
     x["y_ranked"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
     rj = x.groupby(_group_col, observed=True)["y_ranked"].sum()
     A = (x["y_ranked"] ** 2).sum()
