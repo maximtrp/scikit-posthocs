@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+import warnings
 import matplotlib as mpl
 import scikit_posthocs._posthocs as sp
 import scikit_posthocs._omnibus as som
@@ -568,6 +569,18 @@ class TestPosthocs(unittest.TestCase):
             self.df, val_col="pulse", group_col="kind", dist="tukey"
         ).values
         self.assertTrue(np.allclose(results, r_results, atol=1.0e-3))
+
+    def test_posthoc_nemenyi_tukey_warns_on_ties(self):
+        data = [[1, 1, 2], [2, 3, 3], [4, 4, 5]]
+        message = "Ties are present; Tukey p-values are not corrected for ties"
+        with self.assertWarnsRegex(UserWarning, message):
+            sp.posthoc_nemenyi(data, dist="tukey")
+
+    def test_posthoc_nemenyi_tukey_no_warning_without_ties(self):
+        data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            sp.posthoc_nemenyi(data, dist="tukey")
 
     def test_rank_posthocs_preserve_unsorted_group_alignment(self):
         data = DataFrame(

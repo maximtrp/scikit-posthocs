@@ -480,10 +480,17 @@ def posthoc_nemenyi(
     result : pandas.DataFrame
         P values.
 
+    Warns
+    -----
+    UserWarning
+        If ``dist="tukey"`` is requested for data containing ties, because
+        Tukey p values are not corrected for ties.
+
     Notes
     -----
-    A tie correction will be employed according to Glantz (2012). Rows with a
-    missing value or group label are excluded before ranking and counting.
+    A tie correction is applied when ``dist="chi"``. Tukey p values are not
+    corrected for ties. Rows with a missing value or group label are excluded
+    before ranking and counting.
 
     References
     ----------
@@ -529,6 +536,12 @@ def posthoc_nemenyi(
         vs[tri_upper] = ss.chi2.sf(diff**2.0 / (A * B * x_ties), x_len - 1)
 
     elif dist == "tukey":
+        if x_ties < 1.0:
+            warnings.warn(
+                "Ties are present; Tukey p-values are not corrected for ties.",
+                UserWarning,
+                stacklevel=2,
+            )
         q_values = diff / np.sqrt(A * B)
         vs[tri_upper] = ss.studentized_range.sf(q_values * np.sqrt(2.0), x_len, np.inf)
 
