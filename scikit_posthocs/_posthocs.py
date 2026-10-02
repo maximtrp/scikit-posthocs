@@ -1901,6 +1901,7 @@ def posthoc_ttest(
     a : array_like or pandas DataFrame object
         An array, any object exposing the array interface or a pandas
         DataFrame. Array must be two-dimensional.
+        Observations must be finite; remove or impute missing values first.
 
     val_col : str, optional
         Name of a DataFrame column that contains dependent variable values (test
@@ -1957,11 +1958,13 @@ def posthoc_ttest(
     Examples
     --------
 
-    >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
-    >>> sp.posthoc_ttest(x, p_adjust = 'holm')
-    array([[-1.        ,  0.04600899,  0.31269089],
-           [ 0.04600899, -1.        ,  0.6327077 ],
-           [ 0.31269089,  0.6327077 , -1.        ]])
+    >>> import scikit_posthocs as sp
+    >>> x = [[1, 2, 3, 5, 1], [12, 31, 54], [10, 12, 6, 74, 11]]
+    >>> sp.posthoc_ttest(x, p_adjust='holm').round(6)
+              1         2         3
+    1  1.000000  0.046009  0.312691
+    2  0.046009  1.000000  0.632708
+    3  0.312691  0.632708  1.000000
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     if not np.isfinite(x[_val_col].to_numpy(dtype=float)).all():
@@ -2016,37 +2019,48 @@ def posthoc_tukey_hsd(
     group_col: Optional[str] = None,
     sort: bool = True,
 ) -> DataFrame:
-    """Pairwise comparisons with TukeyHSD confidence intervals. This is a
-    convenience function to make statsmodels `pairwise_tukeyhsd` method more
-    applicable for further use.
+    """Pairwise comparisons with Tukey's honestly significant difference test.
 
     Parameters
     ----------
-    x : array_like or pandas Series object, 1d
-        An array, any object exposing the array interface, containing dependent
-        variable values (test or response variable). Values should have a
-        non-nominal scale. NaN values will cause an error (please handle
-        manually).
+    a : array_like or pandas DataFrame object
+        An array, any object exposing the array interface, or a pandas
+        DataFrame. Array must be two-dimensional. Groups may have different
+        lengths.
 
-    g : array_like or pandas Series object, 1d
-        An array, any object exposing the array interface, containing
-        independent variable values (grouping or predictor variable). Values
-        should have a nominal scale (categorical).
+    val_col : str, optional
+        Name of a DataFrame column that contains dependent variable values (test
+        or response variable). Values should have a non-nominal scale. Must be
+        specified if `a` is a pandas DataFrame object.
 
-    alpha : float, optional
-        Significance level for the test. Default is 0.05.
+    group_col : str, optional
+        Name of a DataFrame column that contains independent variable values
+        (grouping or predictor variable). Values should have a nominal scale
+        (categorical). Must be specified if `a` is a pandas DataFrame object.
+
+    sort : bool, optional
+        Specifies whether to sort DataFrame by group_col and val_col.
+        Default is True.
 
     Returns
     -------
     result : pandas.DataFrame
-        DataFrame with 0, 1, and -1 values, where 0 is False (not significant),
-        1 is True (significant), and -1 is for diagonal elements.
+        Pairwise p values, with group labels as rows and columns and ones on
+        the diagonal.
+
+    Notes
+    -----
+    Refer to `scipy.stats.tukey_hsd` for details of the test.
 
     Examples
     --------
-    >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
-    >>> g = [['a'] * 5, ['b'] * 5, ['c'] * 5]
-    >>> sp.posthoc_tukey_hsd(np.concatenate(x), np.concatenate(g))
+    >>> import scikit_posthocs as sp
+    >>> x = [[1, 2, 3, 4, 5], [35, 31, 75, 40, 21], [10, 6, 9, 6, 1]]
+    >>> sp.posthoc_tukey_hsd(x).round(6)
+              1         2         3
+    1  1.000000  0.000991  0.897449
+    2  0.000991  1.000000  0.002109
+    3  0.897449  0.002109  1.000000
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
