@@ -1958,6 +1958,7 @@ def posthoc_ttest(
     Examples
     --------
 
+    >>> import scikit_posthocs as sp
     >>> x = [[1, 2, 3, 5, 1], [12, 31, 54], [10, 12, 6, 74, 11]]
     >>> sp.posthoc_ttest(x, p_adjust='holm').round(6)
               1         2         3
@@ -2053,6 +2054,7 @@ def posthoc_tukey_hsd(
 
     Examples
     --------
+    >>> import scikit_posthocs as sp
     >>> x = [[1, 2, 3, 4, 5], [35, 31, 75, 40, 21], [10, 6, 9, 6, 1]]
     >>> sp.posthoc_tukey_hsd(x).round(6)
               1         2         3
