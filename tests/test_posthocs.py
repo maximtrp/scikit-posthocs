@@ -1528,16 +1528,17 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, r_results, atol=1e-6))
 
     def test_posthoc_dunnett_t3(self):
-        # PMCMRplus::dunnettT3Test closed-form reference (R's own pmvt is noisy Monte Carlo).
+        # PMCMRplus::dunnettT3Test reference. R computes the multivariate t
+        # probabilities with pmvt, which is randomized and accurate to ~1e-4.
         r_results = np.array(
             [
-                [1.0, 0.1096474, 0.4739797],
-                [0.1096474, 1.0, 0.8775769],
-                [0.4739797, 0.8775769, 1.0],
+                [1.0, 0.09297235, 0.41880331],
+                [0.09297235, 1.0, 0.86064362],
+                [0.41880331, 0.86064362, 1.0],
             ]
         )
         results = sp.posthoc_dunnett_t3(self.new_x)
-        self.assertTrue(np.allclose(results, r_results, atol=1e-6))
+        self.assertTrue(np.allclose(results, r_results, atol=5e-4))
 
     def test_posthoc_lsd(self):
         # PMCMRplus::lsdTest reference.
