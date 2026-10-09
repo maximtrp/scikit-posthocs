@@ -1556,16 +1556,37 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, r_results, atol=1e-6))
 
     def test_posthoc_dunnett_t3(self):
-        # PMCMRplus::dunnettT3Test closed-form reference (R's own pmvt is noisy Monte Carlo).
+        # PMCMRplus::dunnettT3Test reference. R computes the multivariate t
+        # probabilities with pmvt, which is randomized and accurate to ~1e-4.
         r_results = np.array(
             [
-                [1.0, 0.1096474, 0.4739797],
-                [0.1096474, 1.0, 0.8775769],
-                [0.4739797, 0.8775769, 1.0],
+                [1.0, 0.09297235, 0.41880331],
+                [0.09297235, 1.0, 0.86064362],
+                [0.41880331, 0.86064362, 1.0],
             ]
         )
         results = sp.posthoc_dunnett_t3(self.new_x)
-        self.assertTrue(np.allclose(results, r_results, atol=1e-6))
+        self.assertTrue(np.allclose(results, r_results, atol=5e-4))
+
+    def test_smm_sf_single_variate(self):
+        from scipy.stats import t as student_t
+
+        for df in (1, 2, 5, 30, 1000):
+            for t in (0, 1, 10, 100, 1000):
+                with self.subTest(df=df, t=t):
+                    expected = 2.0 * student_t.sf(t, df)
+                    actual = getattr(sp, "__smm_sf")(t, df, 1)
+                    np.testing.assert_allclose(actual, expected, rtol=1e-8, atol=0.0)
+
+    def test_posthoc_dunnett_t3_large_statistic(self):
+        x = [[0, 0.02], [1000, 1002], [2000, 2002]]
+        results = sp.posthoc_dunnett_t3(x)
+        self.assertAlmostEqual(results.iloc[0, 1], 0.00105730918387, places=12)
+
+    def test_posthoc_dunnett_t3_equal_means(self):
+        with np.errstate(divide="raise", invalid="raise"):
+            results = sp.posthoc_dunnett_t3([[0, 2], [0, 2]])
+        np.testing.assert_array_equal(results, np.ones((2, 2)))
 
     def test_posthoc_lsd(self):
         # PMCMRplus::lsdTest reference.

@@ -5,6 +5,7 @@ from typing import Optional, Union, Literal
 import numpy as np
 from numpy.typing import ArrayLike
 import scipy.stats as ss
+from scipy import integrate, special
 from statsmodels.stats.multitest import multipletests
 from pandas import DataFrame, Series, MultiIndex
 
@@ -2783,6 +2784,37 @@ def posthoc_games_howell(
     return DataFrame(vs, index=groups, columns=groups)
 
 
+def __smm_sf(t: float, df: float, m: float) -> float:
+    """Survival function of the studentized maximum modulus distribution.
+
+    Returns P(max |T_i| > t) for m variates T_i = Z_i / S, with Z_i independent
+    standard normal and df * S**2 ~ chi2(df) shared by all of them.
+    """
+    if np.isnan(t) or np.isnan(df):
+        return np.nan
+    if t == 0:
+        return 1.0
+    if np.isinf(t):
+        return 0.0
+    sqrt_df = np.sqrt(df)
+    # Keep the near-zero mass visible to quadrature when t is large.
+    scale = min(1.0, sqrt_df / t)
+    upper = min(
+        ss.chi.ppf(1.0 - 1e-15, df) / scale,
+        sqrt_df + ss.norm.isf(1e-15 / (2.0 * m)),
+    )
+
+    def integrand(u: float) -> float:
+        z = (t * scale / sqrt_df) * u
+        log_cdf = (
+            np.log(special.erf(z / np.sqrt(2.0))) if z < 1.0 else np.log1p(-2.0 * ss.norm.sf(z))
+        )
+        sf = -np.expm1(m * log_cdf)
+        return sf * ss.chi.pdf(u * scale, df) * scale
+
+    return integrate.quad(integrand, 0.0, upper, epsabs=0.0, epsrel=1e-10, limit=200)[0]
+
+
 def posthoc_dunnett_t3(
     a: Union[list, np.ndarray, DataFrame],
     val_col: Optional[str] = None,
@@ -2821,15 +2853,13 @@ def posthoc_dunnett_t3(
     Notes
     -----
     Test statistics are Welch t values, with degrees of freedom rounded to
-    the nearest integer (matching PMCMRplus; this is what numerically
-    distinguishes T3 from `posthoc_tamhane`, whose Welch df are not
-    rounded). P values are obtained with a single-step Dunn-Sidak-type
-    adjustment, `1 - (1 - p) ** m` with `m = k * (k - 1) / 2` the number of
-    pairwise comparisons, applied to the raw two-sided Welch t p value of
-    each pair. This reproduces PMCMRplus's studentized maximum modulus
-    computation (an equicorrelated multivariate t distribution with zero
-    off-diagonal correlation reduces exactly to this closed form), without
-    requiring a multivariate-t dependency.
+    the nearest integer (matching PMCMRplus). P values come from the
+    studentized maximum modulus distribution with `m = k * (k - 1) / 2`
+    variates and those degrees of freedom, i.e. a multivariate t distribution
+    with zero correlations, as in PMCMRplus. It is computed by numerical
+    integration over the shared chi-distributed denominator. Because the m
+    statistics share that denominator, the result is smaller than the
+    Dunn-Sidak value `1 - (1 - p) ** m` used by `posthoc_tamhane`.
 
     References
     ----------
@@ -2871,8 +2901,7 @@ def posthoc_dunnett_t3(
         variances[i] ** 2.0 / (counts[i] ** 2.0 * (counts[i] - 1.0))
         + variances[j] ** 2.0 / (counts[j] ** 2.0 * (counts[j] - 1.0))
     )
-    p_raw = 2.0 * ss.t.sf(np.abs(t_values), df=np.round(df))
-    vs[tri_upper] = 1.0 - (1.0 - p_raw) ** m
+    vs[tri_upper] = [__smm_sf(t, df_ij, m) for t, df_ij in zip(np.abs(t_values), np.round(df))]
 
     vs[vs > 1] = 1.0
     vs[tri_lower] = np.transpose(vs)[tri_lower]
