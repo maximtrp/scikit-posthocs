@@ -1464,6 +1464,34 @@ class TestPosthocs(unittest.TestCase):
         )
         self.assertTrue(np.allclose(results, r_results))
 
+    def test_posthoc_tamhane_four_groups(self):
+        # With k = 3 groups, k equals the number of comparisons k(k-1)/2, so the
+        # tests above can't tell them apart. PMCMRplus::tamhaneT2Test reference.
+        x = [[1, 2, 3, 5, 1], [12, 31, 54, 62, 12], [10, 12, 6, 74, 11], [4, 8, 6, 9, 7]]
+        r_results = np.array(
+            [
+                [1, 0.204744793, 0.722331360, 0.029586436],
+                [0.204744793, 1, 0.985168920, 0.299325097],
+                [0.722331360, 0.985168920, 1, 0.869613235],
+                [0.029586436, 0.299325097, 0.869613235, 1],
+            ]
+        )
+        results = sp.posthoc_tamhane(x)
+        self.assertTrue(np.allclose(results, r_results))
+
+        r_results = np.array(
+            [
+                [1, 0.091051495, 0.639431378, 0.028546564],
+                [0.091051495, 1, 0.985012591, 0.168647300],
+                [0.639431378, 0.985012591, 1, 0.830571846],
+                [0.028546564, 0.168647300, 0.830571846, 1],
+            ]
+        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            results = sp.posthoc_tamhane(x, welch=False)
+        self.assertTrue(np.allclose(results, r_results))
+
     def test_posthoc_tukey(self):
         r_results = np.array(
             [

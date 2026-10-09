@@ -2498,7 +2498,9 @@ def posthoc_tamhane(
         df = counts[i] + counts[j] - 2.0
     vs[tri_upper] = 2.0 * ss.t.sf(np.abs(t_values), df=df)
 
-    vs[tri_upper] = 1.0 - (1.0 - vs[tri_upper]) ** groups.size
+    # Dunn-Sidak adjustment over the m = k(k-1)/2 pairwise comparisons
+    m = groups.size * (groups.size - 1) / 2.0
+    vs[tri_upper] = 1.0 - (1.0 - vs[tri_upper]) ** m
     vs[tri_lower] = np.transpose(vs)[tri_lower]
     vs[vs > 1] = 1
 
