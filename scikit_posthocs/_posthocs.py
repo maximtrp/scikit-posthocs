@@ -5,7 +5,7 @@ from typing import Optional, Union, Literal
 import numpy as np
 from numpy.typing import ArrayLike
 import scipy.stats as ss
-from scipy import integrate
+from scipy import integrate, special
 from statsmodels.stats.multitest import multipletests
 from pandas import DataFrame, Series, MultiIndex
 
@@ -2790,15 +2790,27 @@ def __smm_sf(t: float, df: float, m: float) -> float:
     """
     if np.isnan(t) or np.isnan(df):
         return np.nan
+    if t == 0:
+        return 1.0
+    if np.isinf(t):
+        return 0.0
     sqrt_df = np.sqrt(df)
-    lower, upper = ss.chi.ppf([1e-15, 1.0 - 1e-15], df)
+    # Keep the near-zero mass visible to quadrature when t is large.
+    scale = min(1.0, sqrt_df / t)
+    upper = min(
+        ss.chi.ppf(1.0 - 1e-15, df) / scale,
+        sqrt_df + ss.norm.isf(1e-15 / (2.0 * m)),
+    )
 
     def integrand(u: float) -> float:
-        # 1 - P(|Z_i| <= t * S for all i) given S = u / sqrt(df), times the chi density of u
-        sf = -np.expm1(m * np.log1p(-2.0 * ss.norm.sf(t * u / sqrt_df)))
-        return sf * ss.chi.pdf(u, df)
+        z = (t * scale / sqrt_df) * u
+        log_cdf = (
+            np.log(special.erf(z / np.sqrt(2.0))) if z < 1.0 else np.log1p(-2.0 * ss.norm.sf(z))
+        )
+        sf = -np.expm1(m * log_cdf)
+        return sf * ss.chi.pdf(u * scale, df) * scale
 
-    return integrate.quad(integrand, lower, upper, limit=200)[0]
+    return integrate.quad(integrand, 0.0, upper, epsabs=0.0, epsrel=1e-10, limit=200)[0]
 
 
 def posthoc_dunnett_t3(
