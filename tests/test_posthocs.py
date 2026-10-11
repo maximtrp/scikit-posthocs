@@ -2053,6 +2053,30 @@ class TestBugRegressions(unittest.TestCase):
         self.assertEqual(len(output["markers"]), 1)
         self.assertEqual(len(output["labels"]), 1)
 
+    def test_cd_diagram_crossbars_drawn_in_rank_order(self):
+        # Issue #89: crossbar members come from a set, whose iteration order
+        # is arbitrary; drawing them unsorted made the crossbar zigzag.
+        index = list("abcdef")
+        ranks = Series([2.1, 1.2, 4.5, 3.2, 5.7, 6.5], index=index)
+        sig_matrix = DataFrame(
+            [
+                [0.08, 0.08, 0.01, 0.01, 0.01, 0.01],
+                [0.08, 0.08, 0.08, 0.08, 0.08, 0.01],
+                [0.01, 0.08, 0.08, 0.08, 0.08, 0.01],
+                [0.01, 0.08, 0.08, 0.08, 0.08, 0.01],
+                [0.01, 0.08, 0.08, 0.08, 0.08, 0.01],
+                [0.01, 0.01, 0.01, 0.01, 0.01, 0.08],
+            ],
+            index=index,
+            columns=index,
+        )
+        output = splt.critical_difference_diagram(ranks, sig_matrix)
+        self.assertEqual(len(output["crossbars"]), 2)
+        for lines in output["crossbars"]:
+            for line in lines:
+                xdata = list(line.get_xdata())
+                self.assertEqual(xdata, sorted(xdata))
+
     def test_ordered_tests_reject_invalid_alternatives_with_guidance(self):
         data = [[1.0, 2.0, 3.0], [2.0, 3.0, 4.0], [3.0, 4.0, 5.0]]
         calls = (
