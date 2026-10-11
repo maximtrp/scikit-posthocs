@@ -627,12 +627,16 @@ def critical_difference_diagram(
             ypos = -len(crossbar_levels) - 1
             crossbar_levels.append([(low, high)])
 
+        # Sort bar members by rank value: `bar` is a set whose iteration
+        # order is arbitrary, and drawing the points out of order makes the
+        # crossbar zigzag instead of a straight horizontal line (issue #89).
+        sorted_bar = sorted(bar, key=rank_values.__getitem__)
         crossbars.append(
             ax.plot(
                 # Adding a separate line between each pair enables showing a
                 # marker over each elbow with crossbar_props={'marker': 'o'}.
-                [rank_values[i] for i in bar],
-                [ypos] * len(bar),
+                [rank_values[i] for i in sorted_bar],
+                [ypos] * len(sorted_bar),
                 **crossbar_props,
             )
         )
