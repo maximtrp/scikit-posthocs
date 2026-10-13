@@ -18,7 +18,7 @@ def outliers_iqr(
     ----------
     x : Union[List, np.ndarray]
         An array, any object exposing the array interface, containing
-        p values.
+        observations to check for outliers.
 
     ret : str = 'filtered'
         Specifies object to be returned. Available options are:
@@ -45,8 +45,10 @@ def outliers_iqr(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as ph
     >>> x = np.array([4, 5, 6, 10, 12, 4, 3, 1, 2, 3, 23, 5, 3])
-    >>> outliers_iqr(x, ret = 'outliers')
+    >>> ph.outliers_iqr(x, ret = 'outliers')
     array([12, 23])
     """
     arr = np.asarray(x)
@@ -105,9 +107,11 @@ def outliers_grubbs(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as ph
     >>> x = np.array([199.31,199.53,200.19,200.82,201.92,201.95,202.18,245.57])
-    >>> ph.outliers_grubbs(x)
-    array([ 199.31,  199.53,  200.19,  200.82,  201.92,  201.95,  202.18])
+    >>> ph.outliers_grubbs(x).tolist()
+    [199.31, 199.53, 200.19, 200.82, 201.92, 201.95, 202.18]
     """
     arr = np.copy(x)
     deviations = np.abs(arr - np.mean(arr))
@@ -174,9 +178,11 @@ def outliers_tietjen(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as ph
     >>> x = np.array([-1.40, -0.44, -0.30, -0.24, -0.22, -0.13, -0.05, 0.06,
-    0.10, 0.18, 0.20, 0.39, 0.48, 0.63, 1.01])
-    >>> outliers_tietjen(x, 2)
+    ...                0.10, 0.18, 0.20, 0.39, 0.48, 0.63, 1.01])
+    >>> ph.outliers_tietjen(x, 2)
     array([-0.44, -0.3 , -0.24, -0.22, -0.13, -0.05,  0.06,  0.1 ,  0.18,
     0.2 ,  0.39,  0.48,  0.63])
     """
@@ -247,11 +253,8 @@ def outliers_gesd(
         maximum and minimum values are checked for potential outliers.
 
     hypo : bool = False
-        Specifies whether to return a bool value of a hypothesis test result.
-        Returns True when we can reject the null hypothesis. Otherwise, False.
-        Available options are:
-        1) True - return a hypothesis test result.
-        2) False - return a filtered array without an outlier (default).
+        If True, return a boolean mask identifying outliers in the original
+        input order. Otherwise, return the filtered array (default).
 
     report : bool = False
         Specifies whether to print a summary table of the test.
@@ -272,24 +275,27 @@ def outliers_gesd(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as ph
     >>> data = np.array([-0.25, 0.68, 0.94, 1.15, 1.2, 1.26, 1.26, 1.34,
-        1.38, 1.43, 1.49, 1.49, 1.55, 1.56, 1.58, 1.65, 1.69, 1.7, 1.76,
-        1.77, 1.81, 1.91, 1.94, 1.96, 1.99, 2.06, 2.09, 2.1, 2.14, 2.15,
-        2.23, 2.24, 2.26, 2.35, 2.37, 2.4, 2.47, 2.54, 2.62, 2.64, 2.9,
-        2.92, 2.92, 2.93, 3.21, 3.26, 3.3, 3.59, 3.68, 4.3, 4.64, 5.34,
-        5.42, 6.01])
-    >>> outliers_gesd(data, 5)
+    ...                  1.38, 1.43, 1.49, 1.49, 1.55, 1.56, 1.58, 1.65, 1.69, 1.7, 1.76,
+    ...                  1.77, 1.81, 1.91, 1.94, 1.96, 1.99, 2.06, 2.09, 2.1, 2.14, 2.15,
+    ...                  2.23, 2.24, 2.26, 2.35, 2.37, 2.4, 2.47, 2.54, 2.62, 2.64, 2.9,
+    ...                  2.92, 2.92, 2.93, 3.21, 3.26, 3.3, 3.59, 3.68, 4.3, 4.64, 5.34,
+    ...                  5.42, 6.01])
+    >>> ph.outliers_gesd(data, 5)
     array([-0.25,  0.68,  0.94,  1.15,  1.2 ,  1.26,  1.26,  1.34,  1.38,
             1.43,  1.49,  1.49,  1.55,  1.56,  1.58,  1.65,  1.69,  1.7 ,
             1.76,  1.77,  1.81,  1.91,  1.94,  1.96,  1.99,  2.06,  2.09,
             2.1 ,  2.14,  2.15,  2.23,  2.24,  2.26,  2.35,  2.37,  2.4 ,
             2.47,  2.54,  2.62,  2.64,  2.9 ,  2.92,  2.92,  2.93,  3.21,
             3.26,  3.3 ,  3.59,  3.68,  4.3 ,  4.64])
-    >>> outliers_gesd(data, outliers = 5, report = True)
+    >>> filtered = ph.outliers_gesd(data, outliers=5, report=True)
     H0: no outliers in the data
     Ha: up to 5 outliers in the data
     Significance level:  α = 0.05
     Reject H0 if Ri > Critical Value (λi)
+    <BLANKLINE>
     Summary Table for Two-Tailed Test
     ---------------------------------------
           Exact           Test     Critical

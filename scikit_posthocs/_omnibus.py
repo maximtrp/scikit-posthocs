@@ -75,8 +75,9 @@ def test_mackwolfe(
 
     Examples
     --------
+    >>> import scikit_posthocs as sp
     >>> x = [[22, 23, 35], [60, 59, 54], [98, 78, 50], [60, 82, 59], [22, 44, 33], [23, 21, 25]]
-    >>> sp.posthoc_mackwolfe(x)
+    >>> p_value, statistic = sp.test_mackwolfe(x, p=2)
     """
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
     x = x.dropna(subset=[_val_col, _group_col])
@@ -314,7 +315,7 @@ def test_durbin(
         Specifies if data are given as melted columns "y", "blocks", and
         "groups".
 
-    sort : bool = False
+    sort : bool = True
         If True, sort data by block and group columns.
 
     Returns
@@ -332,6 +333,8 @@ def test_durbin(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.test_durbin(x)
     """
@@ -605,6 +608,7 @@ def test_page(
     Examples
     --------
     >>> import scikit_posthocs as sp
+    >>> import numpy as np
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.test_page(x, alternative="greater")
     """

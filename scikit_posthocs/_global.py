@@ -36,6 +36,7 @@ def global_simes_test(p_vals: Union[List, ndarray]) -> float:
 
     Examples
     --------
+    >>> import scikit_posthocs as sp
     >>> arr = [0.04, 0.03, 0.98, 0.01, 0.43, 0.99, 1.0, 0.002]
     >>> sp.global_simes_test(arr)
     """
@@ -72,6 +73,7 @@ def global_f_test(
 
     Examples
     --------
+    >>> import scikit_posthocs as sp
     >>> x = [0.04, 0.03, 0.98, 0.01, 0.43, 0.99, 1.0, 0.002]
     >>> sp.global_f_test(x)
     """

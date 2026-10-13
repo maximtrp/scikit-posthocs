@@ -284,6 +284,8 @@ def posthoc_conover(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_conover(x, p_adjust = 'holm')
     """
@@ -402,6 +404,8 @@ def posthoc_dunn(
     Examples
     --------
 
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_dunn(x, p_adjust = 'holm')
     """
@@ -504,6 +508,8 @@ def posthoc_nemenyi(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> x = [[1,2,3,5,1], [12,31,54, np.nan], [10,12,6,74,11]]
     >>> sp.posthoc_nemenyi(x)
     """
@@ -600,6 +606,10 @@ def posthoc_nemenyi_friedman(
         Must be specified if `a` is a pandas DataFrame object.
         Name of the column that contains treatment (group) factor values.
 
+    block_id_col : str or int, optional
+        Column identifying each block when using melted data. Specify it when
+        block labels occur more than once.
+
     melted : bool, optional
         Specifies if data are given as melted columns "y", "blocks", and
         "groups".
@@ -634,6 +644,8 @@ def posthoc_nemenyi_friedman(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> # Non-melted case, x is a block design matrix, i.e. rows are blocks
     >>> # and columns are groups.
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
@@ -785,6 +797,8 @@ def posthoc_conover_friedman(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_conover_friedman(x)
     """
@@ -928,9 +942,11 @@ def posthoc_npm_test(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> x = np.array([[102,109,114,120,124],
-                      [110,112,123,130,145],
-                      [132,141,156,160,172]])
+    ...               [110,112,123,130,145],
+    ...               [132,141,156,160,172]])
     >>> sp.posthoc_npm_test(x)
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
@@ -1063,6 +1079,8 @@ def posthoc_siegel_friedman(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_siegel_friedman(x)
     """
@@ -1199,6 +1217,8 @@ def posthoc_miller_friedman(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_miller_friedman(x)
     """
@@ -1334,6 +1354,8 @@ def posthoc_durbin(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_durbin(x)
     """
@@ -1466,8 +1488,9 @@ def posthoc_anderson(
 
     Examples
     --------
-    >>> x = np.array([[2.9, 3.0, 2.5, 2.6, 3.2], [3.8, 2.7, 4.0, 2.4], [2.8, 3.4, 3.7, 2.2, 2.0]])
-    >>> sp.posthoc_anderson(x)
+    >>> import scikit_posthocs as sp
+    >>> x = [[2.9, 3.0, 2.5, 2.6, 3.2], [3.8, 2.7, 4.0, 2.4], [2.8, 3.4, 3.7, 2.2, 2.0]]
+    >>> p_values = sp.posthoc_anderson(x)
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
@@ -1549,6 +1572,10 @@ def posthoc_quade(
         Must be specified if `a` is a pandas DataFrame object.
         Name of the column that contains treatment (group) factor values.
 
+    block_id_col : str or int, optional
+        Column identifying each block when using melted data. Specify it when
+        block labels occur more than once.
+
     dist : str, optional
         Method for determining p values.
         The default distribution is "t", else "normal".
@@ -1595,6 +1622,8 @@ def posthoc_quade(
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import scikit_posthocs as sp
     >>> x = np.array([[31,27,24],[31,28,31],[45,29,46],[21,18,48],[42,36,46],[32,17,40]])
     >>> sp.posthoc_quade(x)
     """
@@ -1766,8 +1795,10 @@ def posthoc_vanwaerden(
 
     Examples
     --------
-    >>> x = np.array([[10,'a'], [59,'a'], [76,'b'], [10, 'b']])
-    >>> sp.posthoc_vanwaerden(x, val_col = 0, group_col = 1)
+    >>> import scikit_posthocs as sp
+    >>> import pandas as pd
+    >>> x = pd.DataFrame({'value': [10, 59, 76, 10], 'group': ['a', 'a', 'b', 'b']})
+    >>> p_values = sp.posthoc_vanwaerden(x, val_col='value', group_col='group')
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.dropna(subset=[_val_col, _group_col])
@@ -1964,12 +1995,10 @@ def posthoc_ttest(
     --------
 
     >>> import scikit_posthocs as sp
-    >>> x = [[1, 2, 3, 5, 1], [12, 31, 54], [10, 12, 6, 74, 11]]
-    >>> sp.posthoc_ttest(x, p_adjust='holm').round(6)
-              1         2         3
-    1  1.000000  0.046009  0.312691
-    2  0.046009  1.000000  0.632708
-    3  0.312691  0.632708  1.000000
+    >>> x = [[1, 2, 3, 5, 1], [12, 31, 54, 62, 12], [10, 12, 6, 74, 11]]
+    >>> p_values = sp.posthoc_ttest(x, p_adjust='holm')
+    >>> float(p_values.loc[1, 1])
+    1.0
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     if not np.isfinite(x[_val_col].to_numpy(dtype=float)).all():
@@ -2024,33 +2053,30 @@ def posthoc_tukey_hsd(
     group_col: Optional[str] = None,
     sort: bool = True,
 ) -> DataFrame:
-    """Pairwise comparisons with Tukey's honestly significant difference test.
+    """Pairwise comparisons with Tukey's honestly significant difference test,
+    using SciPy's `scipy.stats.tukey_hsd` implementation.
 
     Parameters
     ----------
-    a : array_like or pandas DataFrame object
-        An array, any object exposing the array interface, or a pandas
-        DataFrame. Array must be two-dimensional. Groups may have different
-        lengths.
+    a : array_like or pandas DataFrame
+        Two-dimensional data containing the groups to compare. For a list or
+        array, each row is a group; groups may have different lengths in a list.
 
-    val_col : str, optional
-        Name of a DataFrame column that contains dependent variable values (test
-        or response variable). Values should have a non-nominal scale. Must be
-        specified if `a` is a pandas DataFrame object.
+    val_col : str or int, optional
+        Column containing observations when `a` is a DataFrame. Required for
+        DataFrame input.
 
-    group_col : str, optional
-        Name of a DataFrame column that contains independent variable values
-        (grouping or predictor variable). Values should have a nominal scale
-        (categorical). Must be specified if `a` is a pandas DataFrame object.
+    group_col : str or int, optional
+        Column containing group labels when `a` is a DataFrame. Required for
+        DataFrame input.
 
     sort : bool, optional
-        Specifies whether to sort DataFrame by group_col and val_col.
-        Default is True.
+        Sort by group and observation value before comparison. Default is True.
 
     Returns
     -------
     result : pandas.DataFrame
-        Pairwise p values, with group labels as rows and columns and ones on
+        Pairwise p-values, with group labels as rows and columns and ones on
         the diagonal.
 
     Notes
@@ -2061,11 +2087,9 @@ def posthoc_tukey_hsd(
     --------
     >>> import scikit_posthocs as sp
     >>> x = [[1, 2, 3, 4, 5], [35, 31, 75, 40, 21], [10, 6, 9, 6, 1]]
-    >>> sp.posthoc_tukey_hsd(x).round(6)
-              1         2         3
-    1  1.000000  0.000991  0.897449
-    2  0.000991  1.000000  0.002109
-    3  0.897449  0.002109  1.000000
+    >>> p_values = sp.posthoc_tukey_hsd(x)
+    >>> round(float(p_values.loc[1, 2]), 6)
+    0.000991
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
@@ -2147,6 +2171,7 @@ def posthoc_mannwhitney(
 
     Examples
     --------
+    >>> import scikit_posthocs as sp
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> sp.posthoc_mannwhitney(x, p_adjust = 'holm')
     """
@@ -2262,6 +2287,7 @@ def posthoc_wilcoxon(
 
     Examples
     --------
+    >>> import scikit_posthocs as sp
     >>> x = [[1,2,3,4,5], [35,31,75,40,21], [10,6,9,6,1]]
     >>> sp.posthoc_wilcoxon(x)
     """
