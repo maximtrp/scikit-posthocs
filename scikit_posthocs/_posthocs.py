@@ -130,12 +130,16 @@ def __convert_to_block_df(
 
     if isinstance(a, DataFrame) and not melted:
         x = a.copy(deep=True)
-        x.columns.name = new_group_col
-        x.index.name = new_block_col
-        x[new_block_id_col] = np.arange(x.shape[0])
+        # Use positional labels while melting so treatment names cannot collide
+        # with the internal columns or be overwritten by block identifiers.
+        x.columns = np.arange(x.shape[1])
+        x.index = np.arange(x.shape[0])
+        x.index.name = new_block_id_col
         x = x.reset_index().melt(
-            id_vars=[new_block_col, new_block_id_col], var_name=new_group_col, value_name=new_y_col
+            id_vars=new_block_id_col, var_name=new_group_col, value_name=new_y_col
         )
+        x[new_block_col] = a.index.take(x[new_block_id_col]).to_numpy()
+        x[new_group_col] = a.columns.take(x[new_group_col]).to_numpy()
 
     elif isinstance(a, DataFrame) and melted:
         if a[block_col].duplicated().sum() > 0 and not block_id_col:
