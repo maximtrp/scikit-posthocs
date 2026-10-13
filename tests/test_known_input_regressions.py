@@ -4,13 +4,16 @@ Run with --runxfail to reproduce failures. Remove a mark when its production
 fix lands; an unexpected pass otherwise fails CI instead of silently going stale.
 """
 
+import inspect
+
 import numpy as np
 import pandas as pd
 import pytest
 from scipy import stats
+from statsmodels.stats.multitest import multipletests
 
 import scikit_posthocs as sp
-from tests._input_cases import LABELS, independent_samples, long_data
+from tests._input_cases import LABELS, assert_matrix, independent_samples, long_data
 
 
 @pytest.mark.xfail(
@@ -53,6 +56,54 @@ def test_temporary_score_column_does_not_overwrite_group_labels(function, group_
     actual = function(renamed, val_col="value", group_col=group_col, sort=sort)
 
     pd.testing.assert_frame_equal(actual, expected)
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=IndexError,
+    reason="Many-to-one helpers interpret an integer grouping-column name as an index level number",
+)
+@pytest.mark.parametrize("function", [sp.posthoc_dunnett, sp.posthoc_steel])
+@pytest.mark.parametrize("sort", [False, True])
+@pytest.mark.parametrize("to_matrix", [False, True])
+def test_many_to_one_integer_column_names_match_external_reference(
+    function, sort, to_matrix, monkeypatch
+):
+    samples = independent_samples()
+    data = long_data(samples).rename(columns={"value": 11, "group": 17})
+    original_data = data.copy(deep=True)
+    kwargs = {}
+    if function is sp.posthoc_dunnett:
+        original_dunnett = stats.dunnett
+        seed_key = (
+            "rng" if "rng" in inspect.signature(original_dunnett).parameters else "random_state"
+        )
+
+        def seeded_dunnett(*args, **kwargs):
+            return original_dunnett(*args, **{**kwargs, seed_key: np.random.default_rng(731)})
+
+        monkeypatch.setattr(stats, "dunnett", seeded_dunnett)
+        pvalues = seeded_dunnett(*samples[1:], control=samples[0]).pvalue
+    else:
+        kwargs["p_adjust"] = "holm"
+        raw_pvalues = [stats.mannwhitneyu(sample, samples[0]).pvalue for sample in samples[1:]]
+        pvalues = multipletests(raw_pvalues, method="holm")[1]
+
+    actual = function(
+        data, val_col=11, group_col=17, control="z", sort=sort, to_matrix=to_matrix, **kwargs
+    )
+
+    if to_matrix:
+        expected = pd.DataFrame(np.eye(3), index=LABELS, columns=LABELS)
+        expected.loc["a", "m"] = expected.loc["m", "a"] = np.nan
+        expected.loc["z", ["a", "m"]] = pvalues
+        expected.loc[["a", "m"], "z"] = pvalues
+        assert_matrix(actual, expected, sorted(LABELS) if sort else LABELS, many_to_one=True)
+    else:
+        assert actual.shape == (2,)
+        np.testing.assert_array_equal(actual.index.tolist(), [("z", "a"), ("z", "m")])
+        np.testing.assert_allclose(actual, pvalues, rtol=1e-10, atol=1e-12)
+    pd.testing.assert_frame_equal(data, original_data)
 
 
 @pytest.mark.xfail(
