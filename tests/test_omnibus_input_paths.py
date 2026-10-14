@@ -121,3 +121,30 @@ def test_omnibus_median_matches_scipy_contingency_table(correction, sort):
     )
 
     np.testing.assert_allclose(actual, [expected.pvalue, expected.statistic, len(samples) - 1])
+
+
+def test_mackwolfe_permutation_ties_have_unit_pvalue():
+    pvalue, _ = sp.test_mackwolfe([[1, 1], [1, 1], [1, 1]], n_perm=19)
+    assert pvalue == 1.0
+
+
+def test_mackwolfe_permutation_tail_counts_equal_statistics(monkeypatch):
+    # For two groups of two, the umbrella statistic is the maximum of the
+    # standardized increasing and decreasing pair counts. The first shuffle
+    # ties the observation, the second is more extreme, and the third is less.
+    draws = iter([[1, 3, 2, 4], [1, 2, 3, 4], [1, 4, 2, 3]])
+    monkeypatch.setattr(np.random, "permutation", lambda values: np.array(next(draws)))
+    pvalue, _ = sp.test_mackwolfe([[1, 3], [2, 4]], n_perm=3)
+    assert pvalue == 3 / 4
+
+
+def test_mackwolfe_permutation_pvalue_includes_observed_order(monkeypatch):
+    monkeypatch.setattr(np.random, "permutation", lambda values: np.array([1, 4, 2, 3]))
+    pvalue, _ = sp.test_mackwolfe([[1, 2], [3, 4]], n_perm=9)
+    assert pvalue == 1 / 10
+
+
+@pytest.mark.parametrize("n_perm", [0, -1])
+def test_mackwolfe_unknown_peak_requires_positive_permutations(n_perm):
+    with pytest.raises(ValueError, match="n_perm must be positive"):
+        sp.test_mackwolfe([[1, 2], [3, 4]], n_perm=n_perm)

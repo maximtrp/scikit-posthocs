@@ -56,7 +56,9 @@ def test_mackwolfe(
         Defaults to None.
 
     n_perm: int = 100
-        Permutations number.
+        Positive number of random permutations. The p value counts permuted
+        statistics at least as large as observed and includes the observed
+        ordering in both the numerator and denominator.
 
     sort : bool = False
         If ``True``, sort data by block and group columns.
@@ -152,6 +154,8 @@ def test_mackwolfe(
         stat = (est - mean) / sd
         p_value = ss.norm.sf(stat).item()
     else:
+        if n_perm < 1:
+            raise ValueError("n_perm must be positive")
         rank_values = Rij.to_numpy()
         U = _ustat(rank_values)
         Ap = np.array([_ap(i, U) for i in range(k)]).ravel()
@@ -169,7 +173,7 @@ def test_mackwolfe(
             mt.append(np.max(astarix))
 
         mt = np.array(mt)
-        p_value = mt[mt > stat].size / n_perm
+        p_value = (np.count_nonzero(mt >= stat) + 1) / (n_perm + 1)
 
     return p_value, stat
 
