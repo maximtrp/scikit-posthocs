@@ -58,7 +58,8 @@ def test_mackwolfe(
     n_perm: int = 100
         Positive number of random permutations. The p value counts permuted
         statistics at least as large as observed and includes the observed
-        ordering in both the numerator and denominator.
+        ordering in both the numerator and denominator. Used only when
+        ``p`` is None.
 
     sort : bool = False
         If ``True``, sort data by block and group columns.
@@ -67,6 +68,19 @@ def test_mackwolfe(
     -------
     tuple[float, float]
         P value and statistic.
+
+    Raises
+    ------
+    ValueError
+        If fewer than two groups contain nonmissing observations, the known
+        peak is outside the group range, or ``n_perm`` is nonpositive when
+        the peak is unknown.
+
+    Notes
+    -----
+    For an unknown peak, permuted statistics within a relative tolerance of
+    100 times the floating-point epsilon of the observed statistic are counted
+    as equal to it. This avoids dropping theoretical ties due to rounding.
 
     References
     ----------
@@ -89,6 +103,11 @@ def test_mackwolfe(
     x.sort_values(by=[_group_col], ascending=True, inplace=True)
 
     k = x[_group_col].unique().size
+
+    if k < 2:
+        raise ValueError(
+            "Mack-Wolfe test requires at least two groups with nonmissing observations"
+        )
 
     if p is not None and not 0 <= p < k:
         raise ValueError(f"p must be between 0 and {k - 1}; got {p}")
@@ -173,7 +192,10 @@ def test_mackwolfe(
             mt.append(np.max(astarix))
 
         mt = np.array(mt)
-        p_value = (np.count_nonzero(mt >= stat) + 1) / (n_perm + 1)
+        # Different maximizing peaks can round theoretically equal statistics
+        # differently. Match SciPy's permutation-test tolerance for such ties.
+        tolerance = 100 * np.finfo(float).eps * abs(stat)
+        p_value = (np.count_nonzero(mt >= stat - tolerance) + 1) / (n_perm + 1)
 
     return p_value, stat
 
