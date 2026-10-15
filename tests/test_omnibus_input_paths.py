@@ -125,7 +125,7 @@ def test_omnibus_median_matches_scipy_contingency_table(correction, sort):
 
 def test_mackwolfe_permutation_ties_have_unit_pvalue():
     pvalue, _ = sp.test_mackwolfe([[1, 1], [1, 1], [1, 1]], n_perm=19)
-    assert pvalue == 1.0
+    np.testing.assert_equal(pvalue, 1.0)
 
 
 def test_mackwolfe_permutation_tail_counts_equal_statistics(monkeypatch):
@@ -135,13 +135,13 @@ def test_mackwolfe_permutation_tail_counts_equal_statistics(monkeypatch):
     draws = iter([[1, 3, 2, 4], [1, 2, 3, 4], [1, 4, 2, 3]])
     monkeypatch.setattr(np.random, "permutation", lambda values: np.array(next(draws)))
     pvalue, _ = sp.test_mackwolfe([[1, 3], [2, 4]], n_perm=3)
-    assert pvalue == 3 / 4
+    np.testing.assert_equal(pvalue, 3 / 4)
 
 
 def test_mackwolfe_permutation_pvalue_includes_observed_order(monkeypatch):
     monkeypatch.setattr(np.random, "permutation", lambda values: np.array([1, 4, 2, 3]))
     pvalue, _ = sp.test_mackwolfe([[1, 2], [3, 4]], n_perm=9)
-    assert pvalue == 1 / 10
+    np.testing.assert_equal(pvalue, 1 / 10)
 
 
 def test_mackwolfe_permutation_tail_counts_numerically_close_statistics(monkeypatch):
@@ -151,14 +151,14 @@ def test_mackwolfe_permutation_tail_counts_numerically_close_statistics(monkeypa
     # middle peak. Both equal sqrt(1/2), but different variances round them apart.
     observed_statistic = 6 / np.sqrt(72)
     permuted_statistic = 5 / np.sqrt(50)
-    assert permuted_statistic < observed_statistic
-    assert np.isclose(permuted_statistic, observed_statistic, rtol=1e-15, atol=0)
+    np.testing.assert_array_less(permuted_statistic, observed_statistic)
+    np.testing.assert_allclose(permuted_statistic, observed_statistic, rtol=1e-15, atol=0)
     monkeypatch.setattr(np.random, "permutation", lambda values: draw.copy())
 
     pvalue, statistic = sp.test_mackwolfe(samples, n_perm=9)
 
-    assert statistic == observed_statistic
-    assert pvalue == 1.0
+    np.testing.assert_equal(statistic, observed_statistic)
+    np.testing.assert_equal(pvalue, 1.0)
 
 
 @pytest.mark.parametrize("p", [None, 0])
