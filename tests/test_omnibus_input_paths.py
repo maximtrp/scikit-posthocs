@@ -121,3 +121,84 @@ def test_omnibus_median_matches_scipy_contingency_table(correction, sort):
     )
 
     np.testing.assert_allclose(actual, [expected.pvalue, expected.statistic, len(samples) - 1])
+
+
+def test_mackwolfe_permutation_ties_have_unit_pvalue():
+    pvalue, _ = sp.test_mackwolfe([[1, 1], [1, 1], [1, 1]], n_perm=19)
+    np.testing.assert_equal(pvalue, 1.0)
+
+
+def test_mackwolfe_permutation_tail_counts_equal_statistics(monkeypatch):
+    # For two groups of two, the umbrella statistic is the maximum of the
+    # standardized increasing and decreasing pair counts. The first shuffle
+    # ties the observation, the second is more extreme, and the third is less.
+    draws = iter([[1, 3, 2, 4], [1, 2, 3, 4], [1, 4, 2, 3]])
+    monkeypatch.setattr(np.random, "permutation", lambda values: np.array(next(draws)))
+    pvalue, _ = sp.test_mackwolfe([[1, 3], [2, 4]], n_perm=3)
+    np.testing.assert_equal(pvalue, 3 / 4)
+
+
+def test_mackwolfe_permutation_pvalue_includes_observed_order(monkeypatch):
+    monkeypatch.setattr(np.random, "permutation", lambda values: np.array([1, 4, 2, 3]))
+    pvalue, _ = sp.test_mackwolfe([[1, 2], [3, 4]], n_perm=9)
+    np.testing.assert_equal(pvalue, 1 / 10)
+
+
+def test_mackwolfe_permutation_tail_counts_numerically_close_statistics(monkeypatch):
+    samples = [[1, 5, 8, 12], [10, 9, 3, 7], [6, 11, 4, 2, 14, 13]]
+    draw = np.array([5, 11, 3, 9, 10, 8, 13, 4, 7, 14, 6, 12, 2, 1])
+    # The observed maximum is at an endpoint; the shuffled maximum is at the
+    # middle peak. Both equal sqrt(1/2), but different variances round them apart.
+    observed_statistic = 6 / np.sqrt(72)
+    permuted_statistic = 5 / np.sqrt(50)
+    np.testing.assert_array_less(permuted_statistic, observed_statistic)
+    np.testing.assert_allclose(permuted_statistic, observed_statistic, rtol=1e-15, atol=0)
+    monkeypatch.setattr(np.random, "permutation", lambda values: draw.copy())
+
+    pvalue, statistic = sp.test_mackwolfe(samples, n_perm=9)
+
+    np.testing.assert_equal(statistic, observed_statistic)
+    np.testing.assert_equal(pvalue, 1.0)
+
+
+@pytest.mark.parametrize("p", [None, 0])
+@pytest.mark.parametrize("input_type", ["list", "long"])
+@pytest.mark.parametrize(
+    "samples",
+    [[[1, 2, 3]], [[1, 2], [np.nan, np.nan]], [[np.nan], [np.nan]]],
+    ids=["single-group", "one-complete-group", "all-missing"],
+)
+def test_mackwolfe_requires_two_nonmissing_groups(samples, input_type, p):
+    data = samples
+    kwargs = {}
+    if input_type == "long":
+        data = pd.DataFrame(
+            [(value, group) for group, sample in enumerate(samples) for value in sample],
+            columns=["value", "group"],
+        )
+        kwargs = {"val_col": "value", "group_col": "group"}
+
+    with pytest.raises(ValueError, match="at least two groups with nonmissing observations"):
+        sp.test_mackwolfe(data, p=p, n_perm=9, **kwargs)
+
+
+@pytest.mark.parametrize("peak", [0, 2])
+@pytest.mark.parametrize("n_perm", [0, -1])
+def test_mackwolfe_known_peak_ignores_permutation_count(monkeypatch, peak, n_perm):
+    samples = [np.arange(5) * 3.0, np.arange(7) * 3.0 + 1, np.arange(9) * 3.0 + 2]
+    ordered_samples = samples[::-1] if peak == 0 else samples
+    expected = jonckheere_reference(ordered_samples, "greater", False)
+
+    def unexpected_permutation(values):
+        pytest.fail("The known-peak approximation must not draw permutations")
+
+    monkeypatch.setattr(np.random, "permutation", unexpected_permutation)
+    actual = sp.test_mackwolfe(samples, p=peak, n_perm=n_perm)
+
+    np.testing.assert_allclose(actual, expected)
+
+
+@pytest.mark.parametrize("n_perm", [0, -1])
+def test_mackwolfe_unknown_peak_requires_positive_permutations(n_perm):
+    with pytest.raises(ValueError, match="n_perm must be positive"):
+        sp.test_mackwolfe([[1, 2], [3, 4]], n_perm=n_perm)

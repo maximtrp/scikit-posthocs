@@ -134,7 +134,7 @@ def test_each_block_posthoc_exercises_fast_and_fallback_paths(
     sorted_result = function(wide, sort=True, **input_kwargs)
     nullable = function(wide.astype("Float64"), **input_kwargs)
 
-    assert selected == [True, False, False]
+    np.testing.assert_equal(selected, [True, False, False])
     pd.testing.assert_frame_equal(dense, sorted_result.loc[LABELS, LABELS])
     pd.testing.assert_frame_equal(dense, nullable)
 

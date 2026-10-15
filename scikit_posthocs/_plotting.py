@@ -654,7 +654,8 @@ def critical_difference_diagram(
                     **elbow_props,
                 )
             elif hue is not None:
-                assert hue_order is not None  # guaranteed by validation above
+                if hue_order is None:
+                    raise RuntimeError("hue_order was not initialized for hue-based coloring")
                 group = hue[label]
                 color = (
                     color_palette[group]

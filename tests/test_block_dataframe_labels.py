@@ -37,7 +37,7 @@ def test_wide_block_dataframe_preserves_treatment_labels(function, kwargs, colli
     actual = function(data, sort=sort, **labeled_kwargs)
 
     labels = data.columns.sort_values() if sort else data.columns
-    assert actual.shape == expected.shape
+    np.testing.assert_equal(actual.shape, expected.shape)
     np.testing.assert_array_equal(actual.index, labels)
     np.testing.assert_array_equal(actual.columns, labels)
     np.testing.assert_allclose(actual.loc[data.columns, data.columns], expected, equal_nan=True)
@@ -85,7 +85,7 @@ def test_nemenyi_axis_labels_and_missing_block_match_rank_reference(sort):
     actual = sp.posthoc_nemenyi_friedman(data, sort=sort)
 
     labels = data.columns.sort_values() if sort else data.columns
-    assert actual.shape == expected.shape
+    np.testing.assert_equal(actual.shape, expected.shape)
     np.testing.assert_array_equal(actual.index, labels)
     np.testing.assert_array_equal(actual.columns, labels)
     np.testing.assert_allclose(actual.loc[data.columns, data.columns], expected)

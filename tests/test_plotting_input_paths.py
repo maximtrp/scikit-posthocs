@@ -35,11 +35,11 @@ def test_sign_plot_preserves_values_and_encodes_heatmap_categories(flat, labels,
             center=100,
         )
         returned_ax = result if flat else result[0]
-        assert returned_ax is ax
+        np.testing.assert_equal(returned_ax is ax, True)
         encoded = np.asarray(ax.collections[0].get_array()).reshape(3, 3)
         np.testing.assert_array_equal(encoded, expected)
         if not flat:
-            assert result[1].ax.figure is figure
+            np.testing.assert_equal(result[1].ax.figure is figure, True)
         if isinstance(data, pd.DataFrame):
             pd.testing.assert_frame_equal(data, original)
         else:
@@ -91,8 +91,10 @@ def test_cd_diagram_cliques_colors_and_coordinates_follow_labels(left_only, pale
             **kwargs,
         )
 
-        assert len(artists["markers"]) == len(artists["elbows"]) == len(artists["labels"]) == 4
-        assert len(artists["crossbars"]) == 2
+        np.testing.assert_equal(
+            [len(artists[key]) for key in ["markers", "elbows", "labels"]], [4, 4, 4]
+        )
+        np.testing.assert_equal(len(artists["crossbars"]), 2)
         for marker, label in zip(artists["markers"], artists["labels"]):
             name = label.get_text()
             np.testing.assert_allclose(marker.get_offsets(), [[ranks[name], 0]])
@@ -100,14 +102,16 @@ def test_cd_diagram_cliques_colors_and_coordinates_follow_labels(left_only, pale
         intervals = sorted(
             (min(line[0].get_xdata()), max(line[0].get_xdata())) for line in artists["crossbars"]
         )
-        assert intervals == [(1.0, 2.5), (3.0, 4.0)]
+        np.testing.assert_equal(intervals, [(1.0, 2.5), (3.0, 4.0)])
         # Disjoint nonsignificant cliques should share a level, without overlapping.
         for line in artists["crossbars"]:
             np.testing.assert_array_equal(line[0].get_ydata(), [-1, -1])
-        assert any(text.get_text() == "CD = 0.5" for text in ax.texts) == (cd is not None)
+        np.testing.assert_equal(
+            any(text.get_text() == "CD = 0.5" for text in ax.texts), cd is not None
+        )
         pd.testing.assert_series_equal(ranks, original_ranks)
         pd.testing.assert_frame_equal(matrix, original_matrix)
-        assert kwargs == original_kwargs
+        np.testing.assert_equal(kwargs, original_kwargs)
     finally:
         plt.close(figure)
 

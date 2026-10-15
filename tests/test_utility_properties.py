@@ -33,7 +33,7 @@ def test_grubbs_matches_scalar_reference_and_does_not_mutate_input(
     actual = sp.outliers_grubbs(data, alpha=alpha)
 
     np.testing.assert_array_equal(actual, expected)
-    assert sp.outliers_grubbs(data, alpha=alpha, hypo=True) == reject
+    np.testing.assert_equal(sp.outliers_grubbs(data, alpha=alpha, hypo=True), reject)
     np.testing.assert_array_equal(data, original)
 
 
@@ -115,8 +115,8 @@ def test_tietjen_seeded_return_modes_and_affine_transform_agree(k, seed, has_out
     finally:
         np.random.set_state(state)
 
-    assert reject == has_outlier
-    assert len(filtered) == len(values) - (k if reject else 0)
+    np.testing.assert_equal(reject, has_outlier)
+    np.testing.assert_equal(len(filtered), len(values) - (k if reject else 0))
     np.testing.assert_allclose(transformed, 2 * filtered + 3)
     np.testing.assert_array_equal(values, original)
 
@@ -149,7 +149,7 @@ def test_compact_letters_encode_exactly_the_nonsignificant_pairs(size, seed):
 
     actual = sp.compact_letter_display(values)
 
-    assert actual.index.tolist() == labels
+    np.testing.assert_array_equal(actual.index.tolist(), labels)
     letters = [set(text.replace(" ", "")) for text in actual]
     represented = np.array([[bool(first & second) for second in letters] for first in letters])
     np.testing.assert_array_equal(represented, same)
@@ -168,7 +168,7 @@ def test_compact_letters_reports_alphabet_exhaustion(maxiter):
 def test_compact_letters_reports_insufficient_iterations():
     with pytest.warns(RuntimeWarning, match="did not converge"):
         result = sp.compact_letter_display([[1, 0.5, 0], [0.5, 1, 0.5], [0, 0.5, 1]], maxiter=0)
-    assert len(result) == 3
+    np.testing.assert_equal(len(result), 3)
 
 
 def test_compact_letters_nonconvergence_falls_back_without_empty_groups():
@@ -177,8 +177,8 @@ def test_compact_letters_nonconvergence_falls_back_without_empty_groups():
         values[i, (i + 1) % 5] = values[(i + 1) % 5, i] = 0.5
     with pytest.warns(RuntimeWarning, match="did not converge"):
         result = sp.compact_letter_display(values, maxiter=0)
-    assert len(result) == 5
-    assert all(text.strip() for text in result)
+    np.testing.assert_equal(len(result), 5)
+    np.testing.assert_equal(all(text.strip() for text in result), True)
 
 
 @pytest.mark.parametrize("lower", [False, True])
@@ -198,6 +198,6 @@ def test_sign_table_retains_axes_and_does_not_mutate_pvalues(lower, upper):
         pd.testing.assert_index_equal(actual.index, values.index)
         pd.testing.assert_index_equal(actual.columns, values.columns)
         np.testing.assert_array_equal(np.diag(actual), ["-"] * 3)
-        assert actual.iloc[0, 1] == ("***" if upper else "")
-        assert actual.iloc[1, 0] == ("***" if lower else "")
+        np.testing.assert_equal(actual.iloc[0, 1], "***" if upper else "")
+        np.testing.assert_equal(actual.iloc[1, 0], "***" if lower else "")
     pd.testing.assert_frame_equal(values, original)

@@ -66,7 +66,8 @@ def test_melted_repeated_subject_labels_require_distinct_block_ids():
     ],
 )
 def test_optimized_block_gate_rejects_inputs_requiring_conversion(data, melted, sort):
-    assert posthocs.__complete_block_matrix(data, melted=melted, sort=sort) is None
+    result = posthocs.__complete_block_matrix(data, melted=melted, sort=sort)
+    np.testing.assert_equal(result is None, True)
 
 
 def test_block_converter_uses_row_ids_without_losing_measurement_dtype():
@@ -81,8 +82,8 @@ def test_block_converter_uses_row_ids_without_losing_measurement_dtype():
 
     actual, value_col, group_col, block_col, block_id_col = sp.__convert_to_block_df(data)
 
-    assert actual[value_col].dtype == pd.Float64Dtype()
-    assert len(actual) == data.size
+    np.testing.assert_equal(actual[value_col].dtype, pd.Float64Dtype())
+    np.testing.assert_equal(len(actual), data.size)
     np.testing.assert_array_equal(actual[group_col], ["y"] * 3 + ["block_ids"] * 3)
     np.testing.assert_array_equal(actual[block_id_col], [0, 1, 2, 0, 1, 2])
     np.testing.assert_array_equal(actual[block_col], data.index.tolist() * 2)
