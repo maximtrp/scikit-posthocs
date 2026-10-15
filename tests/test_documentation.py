@@ -29,7 +29,8 @@ def test_documented_examples(function):
     result = doctest.DocTestRunner(optionflags=doctest.NORMALIZE_WHITESPACE).run(
         doc, out=report.write
     )
-    assert result.failed == 0, report.getvalue()
+    if result.failed != 0:
+        pytest.fail(report.getvalue())
 
 
 def test_public_documented_parameters_match_signatures():
@@ -44,15 +45,15 @@ def test_public_documented_parameters_match_signatures():
         documented.update(set(re.findall(r"^(\w+)\s*$", section, re.MULTILINE)) & {"kwargs"})
         parameters = inspect.signature(function).parameters
         actual = set(parameters)
-        assert documented == actual, (
-            f"{name}: missing {actual - documented}, extra {documented - actual}"
-        )
+        if documented != actual:
+            pytest.fail(f"{name}: missing {actual - documented}, extra {documented - actual}")
         for parameter, default in re.findall(
             r"^(\w+)\s*:[^\n]*?\s=\s*(True|False|None|\d+(?:\.\d+)?)\s*$",
             section,
             re.MULTILINE,
         ):
-            assert str(parameters[parameter].default) == default, f"{name}: {parameter} default"
+            if str(parameters[parameter].default) != default:
+                pytest.fail(f"{name}: {parameter} default")
 
 
 def test_public_examples_have_valid_syntax_and_imports():
@@ -71,8 +72,9 @@ def test_public_examples_have_valid_syntax_and_imports():
                     isinstance(node, ast.Attribute)
                     and isinstance(node.value, ast.Name)
                     and node.value.id in {"np", "pd", "sp", "ph"}
+                    and node.value.id not in imports
                 ):
-                    assert node.value.id in imports, f"{name}: missing import for {node.value.id}"
+                    pytest.fail(f"{name}: missing import for {node.value.id}")
             imports.update(
                 alias.asname or alias.name.split(".")[0]
                 for node in tree.body

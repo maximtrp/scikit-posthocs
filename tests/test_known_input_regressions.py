@@ -100,7 +100,7 @@ def test_many_to_one_integer_column_names_match_external_reference(
         expected.loc[["a", "m"], "z"] = pvalues
         assert_matrix(actual, expected, sorted(LABELS) if sort else LABELS, many_to_one=True)
     else:
-        assert actual.shape == (2,)
+        np.testing.assert_equal(actual.shape, (2,))
         np.testing.assert_array_equal(actual.index.tolist(), [("z", "a"), ("z", "m")])
         np.testing.assert_allclose(actual, pvalues, rtol=1e-10, atol=1e-12)
     pd.testing.assert_frame_equal(data, original_data)

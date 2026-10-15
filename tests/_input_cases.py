@@ -72,15 +72,16 @@ def long_data(samples, labels=LABELS, dtype="float64"):
 
 def assert_matrix(actual, expected, labels, many_to_one=False):
     """Check structure before alignment, so reindexing cannot conceal lost groups."""
-    assert actual.shape == expected.shape == (len(labels), len(labels))
+    np.testing.assert_equal(actual.shape, expected.shape)
+    np.testing.assert_equal(expected.shape, (len(labels), len(labels)))
     np.testing.assert_array_equal(actual.index, labels)
     np.testing.assert_array_equal(actual.columns, labels)
     np.testing.assert_array_equal(np.diag(actual), np.ones(len(labels)))
     np.testing.assert_allclose(actual, actual.T, rtol=1e-11, atol=1e-12, equal_nan=True)
     finite = actual.to_numpy()[np.isfinite(actual.to_numpy())]
-    assert ((finite >= 0) & (finite <= 1)).all()
+    np.testing.assert_equal(((finite >= 0) & (finite <= 1)).all(), True)
     if not many_to_one:
-        assert np.isfinite(actual.to_numpy()).all()
+        np.testing.assert_equal(np.isfinite(actual.to_numpy()).all(), True)
     np.testing.assert_allclose(
         actual, expected.loc[labels, labels], rtol=1e-10, atol=1e-12, equal_nan=True
     )
