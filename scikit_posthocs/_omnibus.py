@@ -13,6 +13,7 @@ from scikit_posthocs._posthocs import (
     __convert_to_block_df,
     __drop_incomplete_blocks,
     __durbin_design_counts,
+    __validate_n_permutations,
 )
 
 
@@ -57,7 +58,7 @@ def test_mackwolfe(
         Defaults to None.
 
     n_perm: int = 100
-        Positive number of random permutations. The p value counts permuted
+        Positive integer number of random permutations. The p value counts permuted
         statistics at least as large as observed and includes the observed
         ordering in both the numerator and denominator. Used only when
         ``p`` is None.
@@ -74,7 +75,7 @@ def test_mackwolfe(
     ------
     ValueError
         If fewer than two groups contain nonmissing observations, the known
-        peak is outside the group range, or ``n_perm`` is nonpositive when
+        peak is outside the group range, or ``n_perm`` is not a positive integer when
         the peak is unknown.
 
     Notes
@@ -174,8 +175,7 @@ def test_mackwolfe(
         stat = (est - mean) / sd
         p_value = ss.norm.sf(stat).item()
     else:
-        if n_perm < 1:
-            raise ValueError("n_perm must be positive")
+        n_perm = __validate_n_permutations(n_perm, "n_perm")
         rank_values = Rij.to_numpy()
         U = _ustat(rank_values)
         Ap = np.array([_ap(i, U) for i in range(k)]).ravel()
@@ -722,8 +722,8 @@ def test_hartley(
         pandas DataFrame object.
 
     n_perm : int = 100000
-        Number of Monte Carlo samples used to approximate the null
-        distribution of the maximum F-ratio statistic.
+        Positive integer number of Monte Carlo samples used to approximate
+        the null distribution of the maximum F-ratio statistic.
 
     sort : bool = False
         If True, sort data by group_col.
@@ -753,6 +753,7 @@ def test_hartley(
     >>> x = [[1,2,3,5,1], [12,31,54,62,12], [10,12,6,74,11]]
     >>> sp.test_hartley(x)
     """
+    n_perm = __validate_n_permutations(n_perm, "n_perm")
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
