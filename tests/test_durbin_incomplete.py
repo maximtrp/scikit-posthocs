@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 
 from scikit_posthocs import posthoc_durbin
 from scikit_posthocs import test_durbin as durbin
+from tests._input_cases import block_input
 
 
 @pytest.fixture
@@ -76,3 +77,87 @@ def test_durbin_nist_incomplete_example():
     )
     # NIST reports T1=12; this API uses its original chi-square approximation.
     assert_allclose(durbin(data)[1:], [12, 6])
+
+
+@pytest.mark.parametrize("function", [durbin, posthoc_durbin])
+@pytest.mark.parametrize("sort", [False, True])
+@pytest.mark.parametrize("input_type", ["array", "wide", "nullable", "melted"])
+@pytest.mark.parametrize("padding", ["blocks", "treatment", "both"])
+def test_durbin_ignores_wholly_missing_blocks_and_treatments(
+    balanced_pairs, function, sort, input_type, padding
+):
+    balanced_pairs[1, :2] = [1, 2]
+    values = balanced_pairs
+    if padding in {"blocks", "both"}:
+        values = np.vstack([values, np.full((2, 3), np.nan)])
+    if padding in {"treatment", "both"}:
+        values = np.column_stack([values, np.full(len(values), np.nan)])
+    data, kwargs = block_input(values, input_type)
+    original = data.copy() if isinstance(data, np.ndarray) else data.copy(deep=True)
+
+    actual = function(data, sort=sort, **kwargs)
+
+    if function is durbin:
+        assert_allclose(actual, [np.exp(-2 / 3), 4 / 3, 2])
+    else:
+        assert_allclose(
+            actual,
+            [
+                [1, 0.4069401997057837, 0.667492180832647],
+                [0.4069401997057837, 1, 0.667492180832647],
+                [0.667492180832647, 0.667492180832647, 1],
+            ],
+        )
+        np.testing.assert_array_equal(actual.index, [0, 1, 2])
+    if isinstance(data, np.ndarray):
+        np.testing.assert_array_equal(data, original)
+    else:
+        pd.testing.assert_frame_equal(data, original)
+
+
+@pytest.mark.parametrize("function", [durbin, posthoc_durbin])
+@pytest.mark.parametrize("sort", [False, True])
+@pytest.mark.parametrize("input_type", ["array", "wide", "nullable", "melted"])
+@pytest.mark.parametrize(
+    "values",
+    [np.full((3, 3), np.nan), np.empty((0, 3)), np.empty((3, 0)), np.arange(3).reshape(-1, 1)],
+    ids=["all-missing", "no-blocks", "no-treatments", "one-treatment"],
+)
+def test_durbin_rejects_empty_or_single_treatment_designs(function, sort, input_type, values):
+    data, kwargs = block_input(values, input_type)
+
+    with np.errstate(all="raise"), pytest.raises(ValueError, match="block|two treatments"):
+        function(data, sort=sort, **kwargs)
+
+
+@pytest.mark.parametrize("function", [durbin, posthoc_durbin])
+@pytest.mark.parametrize("sort", [False, True])
+@pytest.mark.parametrize("input_type", ["array", "wide", "nullable", "melted"])
+@pytest.mark.parametrize(
+    "values",
+    [
+        [[1, 2, 3], [2, 1, np.nan], [1, np.nan, 2], [np.nan, 2, 1]],
+        [[1, 2, np.nan], [2, 1, np.nan], [1, np.nan, 2]],
+        [
+            [1, 2, np.nan, np.nan],
+            [np.nan, 1, 2, np.nan],
+            [np.nan, np.nan, 1, 2],
+            [2, np.nan, np.nan, 1],
+        ],
+    ],
+    ids=["unequal-block-sizes", "unequal-replication", "unequal-pair-concurrence"],
+)
+def test_durbin_rejects_unbalanced_designs(function, sort, input_type, values):
+    data, kwargs = block_input(np.asarray(values), input_type)
+
+    with pytest.raises(ValueError, match="balanced incomplete block design"):
+        function(data, sort=sort, **kwargs)
+
+
+@pytest.mark.parametrize("function", [durbin, posthoc_durbin])
+def test_durbin_rejects_duplicate_block_treatment_observations(balanced_pairs, function):
+    data, kwargs = block_input(balanced_pairs, "melted")
+    data = pd.concat([data, data.iloc[[0]]], ignore_index=True)
+
+    with pytest.raises(ValueError, match="balanced incomplete block design"):
+        function(data, **kwargs)
