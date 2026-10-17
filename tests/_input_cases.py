@@ -70,6 +70,24 @@ def long_data(samples, labels=LABELS, dtype="float64"):
     return data
 
 
+def block_input(values, input_type):
+    """Build block input forms independently of the package converters."""
+    if input_type == "array":
+        return values, {}
+    wide = pd.DataFrame(values, dtype="Float64" if input_type == "nullable" else "float64")
+    if input_type != "melted":
+        return wide, {}
+    wide.index.name = "subject"
+    long = wide.reset_index().melt(id_vars="subject", var_name="treatment", value_name="value")
+    return long, {
+        "y_col": "value",
+        "group_col": "treatment",
+        "block_col": "subject",
+        "block_id_col": "subject",
+        "melted": True,
+    }
+
+
 def assert_matrix(actual, expected, labels, many_to_one=False):
     """Check structure before alignment, so reindexing cannot conceal lost groups."""
     np.testing.assert_equal(actual.shape, expected.shape)

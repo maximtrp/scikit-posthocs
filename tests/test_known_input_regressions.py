@@ -122,11 +122,6 @@ def test_zero_dataframe_column_label_matches_positive_integer_label(columns):
     pd.testing.assert_frame_equal(actual, expected)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ZeroDivisionError,
-    reason="Durbin's unsorted fallback casts block labels using row-ID categories and drops rows",
-)
 def test_durbin_nullable_nonpositional_blocks_match_rank_reference():
     values = np.array(
         [[31, 27, 24], [31, 28, 31], [45, 29, 46], [21, 18, 48], [42, 36, 46], [32, 17, 40]]

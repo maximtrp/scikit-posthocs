@@ -12,6 +12,7 @@ from scikit_posthocs._posthocs import (
     __convert_to_df,
     __convert_to_block_df,
     __drop_incomplete_blocks,
+    __durbin_design_counts,
 )
 
 
@@ -349,6 +350,13 @@ def test_durbin(
     tuple[float, float, int]
         P value, statistic, and number of degrees of freedom.
 
+    Notes
+    -----
+    Rows with missing measurements, treatment labels, or block identifiers are
+    excluded. Counts use the remaining observations, so wholly missing blocks
+    and treatments are ignored. The retained design must have equal block
+    sizes, equal treatment replication, and equal pairwise concurrence.
+
     References
     ----------
     .. [1] N. A. Heckert, J. J. Filliben. (2003) NIST Handbook 148: Dataplot Reference
@@ -381,18 +389,8 @@ def test_durbin(
         data, y_col, group_col, block_col, block_id_col, melted
     )
 
-    groups = x[_group_col].unique()
-    blocks = x[_block_id_col].unique()
-    if not sort:
-        x[_group_col] = Categorical(x[_group_col], categories=groups, ordered=True)
-        x[_block_col] = Categorical(x[_block_col], categories=blocks, ordered=True)
-    x.sort_values(by=[_block_col, _group_col], ascending=True, inplace=True)
-    x.dropna(inplace=True)
-
-    t = len(groups)
-    b = len(blocks)
-    r = len(x) / t
-    k = len(x) / b
+    x = x.dropna(subset=[_y_col, _group_col, _block_id_col])
+    t, b, r, k = __durbin_design_counts(x, _group_col, _block_id_col)
 
     x["y_ranks"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
     rs = x.groupby(_group_col, observed=True)["y_ranks"].sum().to_numpy()
@@ -624,6 +622,8 @@ def test_page(
     -----
     P values are computed from the standard normal distribution, with a
     continuity correction always applied (following Sachs 1997).
+    Incomplete blocks are excluded in their entirety. At least one complete
+    block and two treatments must remain; otherwise a ValueError is raised.
 
     References
     ----------
@@ -662,13 +662,11 @@ def test_page(
         data, y_col, group_col, block_col, block_id_col, melted
     )
 
-    groups = x[_group_col].unique()
-    blocks = x[_block_id_col].unique()
+    groups = x[_group_col].dropna().unique()
+    x = __drop_incomplete_blocks(x, _y_col, _group_col, _block_id_col)
     if not sort:
         x[_group_col] = Categorical(x[_group_col], categories=groups, ordered=True)
-        x[_block_col] = Categorical(x[_block_col], categories=blocks, ordered=True)
-    x = x.sort_values(by=[_block_col, _group_col], ascending=True)
-    x = __drop_incomplete_blocks(x, _y_col, _group_col, _block_id_col)
+    x = x.sort_values(by=[_block_id_col, _group_col], ascending=True)
 
     groups = x[_group_col].unique()
     blocks = x[_block_id_col].unique()

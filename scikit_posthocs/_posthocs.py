@@ -208,7 +208,16 @@ def __complete_block_matrix(
         return None
     if np.isnan(values).any():
         return None
+    __validate_block_shape(*values.shape)
     return values, groups
+
+
+def __validate_block_shape(n_blocks: int, n_groups: int) -> None:
+    """Reject block designs with no observations to compare."""
+    if n_blocks < 1:
+        raise ValueError("At least one complete block is required")
+    if n_groups < 2:
+        raise ValueError("At least two treatments are required")
 
 
 def __drop_incomplete_blocks(
@@ -218,7 +227,40 @@ def __drop_incomplete_blocks(
     x = x.dropna(subset=[y_col, group_col, block_id_col])
     blocks = x.groupby(block_id_col, observed=True)[group_col]
     complete = blocks.size().eq(group_count) & blocks.nunique().eq(group_count)
-    return x[x[block_id_col].isin(complete[complete].index)]
+    x = x[x[block_id_col].isin(complete[complete].index)]
+    __validate_block_shape(x[block_id_col].nunique(), x[group_col].nunique())
+    return x
+
+
+def __durbin_design_counts(
+    x: DataFrame, group_col: str, block_id_col: str
+) -> tuple[int, int, int, int]:
+    """Count observed treatments/blocks and validate the balanced design."""
+    block_sizes = x.groupby(block_id_col, observed=True).size()
+    replications = x.groupby(group_col, observed=True).size()
+    b, t = len(block_sizes), len(replications)
+    __validate_block_shape(b, t)
+    message = "Durbin's test requires a balanced incomplete block design"
+    if (
+        x.duplicated([block_id_col, group_col]).any()
+        or block_sizes.nunique() != 1
+        or replications.nunique() != 1
+    ):
+        raise ValueError(message)
+    k, r = int(block_sizes.iloc[0]), int(replications.iloc[0])
+    if k < 2:
+        raise ValueError(message)
+    if k < t:
+        incidence = (
+            x.groupby([block_id_col, group_col], observed=True)
+            .size()
+            .unstack(fill_value=0)
+            .to_numpy(dtype=np.int64)
+        )
+        concurrence = (incidence.T @ incidence)[np.triu_indices(t, 1)]
+        if not np.all(concurrence == concurrence[0]):
+            raise ValueError(message)
+    return t, b, r, k
 
 
 def posthoc_conover(
@@ -1345,6 +1387,13 @@ def posthoc_durbin(
     result : pandas.DataFrame
         P values.
 
+    Notes
+    -----
+    Rows with missing measurements, treatment labels, or block identifiers are
+    excluded. Counts use the remaining observations, so wholly missing blocks
+    and treatments are ignored. The retained design must have equal block
+    sizes, equal treatment replication, and equal pairwise concurrence.
+
     References
     ----------
     .. [1] W. J. Conover and R. L. Iman (1979), On multiple-comparisons procedures,
@@ -1393,13 +1442,10 @@ def posthoc_durbin(
         return pval
 
     x = x.sort_values(by=[_block_col, _group_col], ascending=True) if sort else x
-    x.dropna(inplace=True)
+    x = x.dropna(subset=[_y_col, _group_col, _block_id_col])
 
     groups = x[_group_col].unique()
-    t = len(groups)
-    b = x[_block_id_col].unique().size
-    r = len(x) / t
-    k = len(x) / b
+    t, b, r, k = __durbin_design_counts(x, _group_col, _block_id_col)
     x["y_ranked"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
     rj = x.groupby(_group_col, observed=True)["y_ranked"].sum()
     A = (x["y_ranked"] ** 2).sum()
