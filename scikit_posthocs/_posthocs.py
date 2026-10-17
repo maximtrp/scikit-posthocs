@@ -1955,7 +1955,7 @@ def posthoc_dunnett(
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     x = x.set_index(_group_col)[_val_col]
-    x_embedded = x.groupby(_group_col, observed=True).agg(lambda y: y.dropna().tolist())
+    x_embedded = x.groupby(level=0, observed=True).agg(lambda y: y.dropna().tolist())
     control_data = x_embedded.loc[control]
     treatment_data = x_embedded.drop(control)
 
@@ -3459,7 +3459,7 @@ def posthoc_steel(
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     x = x.set_index(_group_col)[_val_col]
-    x_embedded = x.groupby(_group_col, observed=True).agg(lambda y: y.dropna().tolist())
+    x_embedded = x.groupby(level=0, observed=True).agg(lambda y: y.dropna().tolist())
     control_data = x_embedded.loc[control]
     treatment_data = x_embedded.drop(control)
 

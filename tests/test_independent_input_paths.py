@@ -73,7 +73,7 @@ def test_independent_input_forms_match_labeled_list(function, kwargs, sort, inpu
 @pytest.mark.parametrize(("function", "kwargs"), INDEPENDENT_POSTHOCS)
 @pytest.mark.parametrize("sort", [False, True])
 @pytest.mark.parametrize("columns", [("y", "groups"), ("ranks", "group"), (11, 17)])
-def test_independent_column_names_are_not_reserved(function, kwargs, sort, columns, request):
+def test_independent_column_names_are_not_reserved(function, kwargs, sort, columns):
     data = long_data(independent_samples())
     call_kwargs = {**kwargs, "val_col": "value", "group_col": "group"}
     if "control" in kwargs:
@@ -81,15 +81,6 @@ def test_independent_column_names_are_not_reserved(function, kwargs, sort, colum
     expected = function(data, sort=sort, **call_kwargs)
     renamed = data.rename(columns={"value": columns[0], "group": columns[1]})
     original = renamed.copy(deep=True)
-    if columns == (11, 17) and function in (sp.posthoc_steel, sp.posthoc_dunnett):
-        request.node.add_marker(
-            pytest.mark.xfail(
-                strict=True,
-                raises=IndexError,
-                reason="Many-to-one helpers interpret an integer index name as a level number",
-            )
-        )
-
     actual = function(
         renamed, sort=sort, **{**call_kwargs, "val_col": columns[0], "group_col": columns[1]}
     )

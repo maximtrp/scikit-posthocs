@@ -58,11 +58,6 @@ def test_temporary_score_column_does_not_overwrite_group_labels(function, group_
     pd.testing.assert_frame_equal(actual, expected)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=IndexError,
-    reason="Many-to-one helpers interpret an integer grouping-column name as an index level number",
-)
 @pytest.mark.parametrize("function", [sp.posthoc_dunnett, sp.posthoc_steel])
 @pytest.mark.parametrize("sort", [False, True])
 @pytest.mark.parametrize("to_matrix", [False, True])
