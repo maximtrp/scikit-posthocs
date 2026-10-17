@@ -78,9 +78,9 @@ def __convert_to_df(
     Inferrence algorithm for determining `val_id` and `group_id` args is rather
     simple, so it is better to specify them explicitly to prevent errors.
     """
-    if not group_col:
+    if group_col is None:
         group_col = "groups"
-    if not val_col:
+    if val_col is None:
         val_col = "vals"
 
     if isinstance(a, DataFrame):
