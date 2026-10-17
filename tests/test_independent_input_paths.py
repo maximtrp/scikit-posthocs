@@ -31,7 +31,7 @@ def deterministic_dunnett(monkeypatch):
 @pytest.mark.parametrize(("function", "kwargs"), INDEPENDENT_POSTHOCS)
 @pytest.mark.parametrize("sort", [False, True])
 @pytest.mark.parametrize("input_type", ["array", "long", "nullable", "repeated_index"])
-def test_independent_input_forms_match_labeled_list(function, kwargs, sort, input_type, request):
+def test_independent_input_forms_match_labeled_list(function, kwargs, sort, input_type):
     samples = independent_samples()
     expected = function(samples, **kwargs)
     expected.index = LABELS
@@ -53,14 +53,6 @@ def test_independent_input_forms_match_labeled_list(function, kwargs, sort, inpu
             call_kwargs["control"] = LABELS[kwargs["control"] - 1]
         labels = sorted(LABELS) if sort else LABELS
 
-    if input_type == "repeated_index" and function is sp.posthoc_tukey_hsd:
-        request.node.add_marker(
-            pytest.mark.xfail(
-                strict=True,
-                raises=AssertionError,
-                reason="Tukey HSD selects group rows by non-unique index labels, mixing samples",
-            )
-        )
     actual = function(data, sort=sort, **call_kwargs)
 
     assert_matrix(actual, expected, labels, many_to_one="control" in kwargs)
