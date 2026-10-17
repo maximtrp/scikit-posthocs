@@ -2531,7 +2531,8 @@ def posthoc_tamhane(
 
     # Dunn-Sidak adjustment over the m = k(k-1)/2 pairwise comparisons
     m = groups.size * (groups.size - 1) / 2.0
-    vs[tri_upper] = 1.0 - (1.0 - vs[tri_upper]) ** m
+    with np.errstate(divide="ignore"):
+        vs[tri_upper] = -np.expm1(m * np.log1p(-vs[tri_upper]))
     vs[tri_lower] = np.transpose(vs)[tri_lower]
     vs[vs > 1] = 1
 
@@ -3211,7 +3212,8 @@ def posthoc_duncan(
     t_values = (means[i] - means[j]) / np.sqrt(s2in / r)
     nmeans = 1 + np.abs(rank_pos[i] - rank_pos[j])
     p_values = ss.studentized_range.sf(np.abs(t_values), nmeans, df)
-    vs[tri_upper] = 1.0 - (1.0 - p_values) ** (1.0 / (nmeans - 1))
+    with np.errstate(divide="ignore"):
+        vs[tri_upper] = -np.expm1(np.log1p(-p_values) / (nmeans - 1))
 
     vs[vs > 1] = 1.0
     vs[tri_lower] = np.transpose(vs)[tri_lower]
