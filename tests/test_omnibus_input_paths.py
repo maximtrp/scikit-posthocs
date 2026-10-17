@@ -200,5 +200,5 @@ def test_mackwolfe_known_peak_ignores_permutation_count(monkeypatch, peak, n_per
 
 @pytest.mark.parametrize("n_perm", [0, -1])
 def test_mackwolfe_unknown_peak_requires_positive_permutations(n_perm):
-    with pytest.raises(ValueError, match="n_perm must be positive"):
+    with pytest.raises(ValueError, match="n_perm must be a positive integer"):
         sp.test_mackwolfe([[1, 2], [3, 4]], n_perm=n_perm)

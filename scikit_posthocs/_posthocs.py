@@ -1,6 +1,7 @@
 import inspect
 import itertools as it
 import warnings
+import operator
 from typing import Optional, Union, Literal
 import numpy as np
 from numpy.typing import ArrayLike
@@ -8,6 +9,20 @@ import scipy.stats as ss
 from scipy import integrate, special
 from statsmodels.stats.multitest import multipletests
 from pandas import DataFrame, Series, MultiIndex
+
+
+def __validate_n_permutations(value: int, name: str) -> int:
+    """Normalize integer counts without silently accepting booleans or floats."""
+    message = f"{name} must be a positive integer"
+    if isinstance(value, (bool, np.bool_)):
+        raise ValueError(message)  # noqa: TRY004 -- consistent error for all invalid counts
+    try:
+        count = operator.index(value)
+    except TypeError:
+        raise ValueError(message) from None
+    if count < 1:
+        raise ValueError(message)
+    return count
 
 
 def __convert_to_df(
@@ -965,7 +980,7 @@ def posthoc_npm_test(
         Can be either "greater" (by default) or "less".
 
     nperm : int, optional
-        Number of permutations to perform for calculating p values.
+        Positive integer number of permutations for calculating p values.
 
     Returns
     -------
@@ -991,6 +1006,7 @@ def posthoc_npm_test(
     ...               [132,141,156,160,172]])
     >>> sp.posthoc_npm_test(x)
     """
+    nperm = __validate_n_permutations(nperm, "nperm")
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
