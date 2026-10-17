@@ -1997,8 +1997,8 @@ def posthoc_ttest(
     >>> import scikit_posthocs as sp
     >>> x = [[1, 2, 3, 5, 1], [12, 31, 54, 62, 12], [10, 12, 6, 74, 11]]
     >>> p_values = sp.posthoc_ttest(x, p_adjust='holm')
-    >>> float(p_values.loc[1, 1])
-    1.0
+    >>> round(float(p_values.loc[1, 2]), 6)
+    0.047356
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     if not np.isfinite(x[_val_col].to_numpy(dtype=float)).all():
@@ -2827,6 +2827,8 @@ def __smm_sf(t: float, df: float, m: float) -> float:
         return 1.0
     if np.isinf(t):
         return 0.0
+    if m == 1:
+        return 2.0 * ss.t.sf(t, df)
     sqrt_df = np.sqrt(df)
     # Keep the near-zero mass visible to quadrature when t is large.
     scale = min(1.0, sqrt_df / t)
