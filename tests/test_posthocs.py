@@ -2,6 +2,9 @@ import os
 import sys
 import unittest
 import warnings
+import inspect
+from itertools import permutations
+from unittest.mock import patch
 import matplotlib as mpl
 import scikit_posthocs._posthocs as sp
 import scikit_posthocs._omnibus as som
@@ -9,11 +12,11 @@ import scikit_posthocs._outliers as so
 import scikit_posthocs._plotting as splt
 import scikit_posthocs._global as spg
 import scikit_posthocs._grouping as spg2
-import seaborn as sb
 import numpy as np
 import pandas as pd
 import matplotlib.axes as ma
 from pandas import DataFrame, Series
+from tests._datasets import exercise
 
 if os.environ.get("DISPLAY", "") == "":
     print("No display found. Using non-interactive Agg backend")
@@ -22,6 +25,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 class TestPosthocs(unittest.TestCase):
+    def setUp(self):
+        self.addCleanup(np.random.set_state, np.random.get_state())
+
     # Global tests
     def test_global_simes_test(self):
         a = np.array([0.9, 0.1, 0.01, 0.99, 1.0, 0.02, 0.04])
@@ -413,7 +419,7 @@ class TestPosthocs(unittest.TestCase):
         )
 
     # Statistical tests
-    df = sb.load_dataset("exercise")
+    df = exercise()
     df[df.columns[df.dtypes == "category"]] = df[df.columns[df.dtypes == "category"]].astype(object)
     df_bn = np.array([[4, 3, 4, 4, 5, 6, 3], [1, 2, 3, 5, 6, 7, 7], [1, 2, 6, 4, 1, 5, 1]])
 
@@ -505,6 +511,8 @@ class TestPosthocs(unittest.TestCase):
 
     # Post hoc tests
     def test_posthoc_anderson(self):
+        from scipy import stats
+
         r_results = np.array(
             [
                 [1, 1.35079e-02, 8.64418e-09],
@@ -513,7 +521,20 @@ class TestPosthocs(unittest.TestCase):
             ]
         )
 
-        results = sp.posthoc_anderson(self.df, val_col="pulse", group_col="kind", p_adjust="holm")
+        original_method = stats.PermutationMethod
+        seed_key = (
+            "rng" if "rng" in inspect.signature(original_method).parameters else "random_state"
+        )
+
+        def seeded_method():
+            return original_method(**{seed_key: np.random.default_rng(1)})
+
+        # The wrapper estimates p-values by permutation, unlike the R reference;
+        # fix the draws rather than relying on RNG state left by earlier tests.
+        with patch.object(stats, "PermutationMethod", seeded_method):
+            results = sp.posthoc_anderson(
+                self.df, val_col="pulse", group_col="kind", p_adjust="holm"
+            )
         self.assertTrue(np.allclose(results.values, r_results, atol=3.0e-3))
 
     def test_posthoc_conover(self):
@@ -1253,27 +1274,12 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, p_results))
 
     def test_posthoc_npm_test(self):
-        data = np.array(
-            [
-                [2.4, 3, 3, 2.2, 2.2, 2.2, 2.2, 2.8, 2, 3],
-                [2.8, 2.2, 3.8, 9.4, 8.4, 3, 3.2, 4.4, 3.2, 7.4],
-                [9.8, 3.2, 5.8, 7.8, 2.6, 2.2, 6.2, 9.4, 7.8, 3.4],
-                [7, 9.8, 9.4, 8.8, 8.8, 3.4, 9, 8.4, 2.4, 7.8],
-            ]
-        )
-
-        results = sp.posthoc_npm_test(data)
-
-        p_results = np.array(
-            [
-                [1.0, 0.0077, 0.0020, 2e-16],
-                [0.0077, 1.0, 0.2884, 0.0854],
-                [0.0020, 0.2884, 1.0, 0.1385],
-                [2e-16, 0.0854, 0.1385, 1.0],
-            ]
-        )
-
-        self.assertTrue(np.allclose(results, p_results, rtol=4))
+        # Only one of the six equally likely allocations places both largest
+        # observations in the second group. Enumerate all 4! orderings exactly.
+        draws = iter(permutations([1, 2, 3, 4]))
+        with patch.object(np.random, "permutation", lambda _: np.array(next(draws))):
+            results = sp.posthoc_npm_test([[1, 2], [3, 4]], nperm=24)
+        np.testing.assert_array_equal(results, [[1, 1 / 6], [1 / 6, 1]])
 
     def test_posthoc_vanwaerden(self):
         r_results = np.array(
@@ -1297,7 +1303,7 @@ class TestPosthocs(unittest.TestCase):
         )
 
         results = sp.posthoc_dscf(self.df, val_col="pulse", group_col="kind")
-        self.assertTrue(np.allclose(results, r_results, atol=0.001))
+        np.testing.assert_allclose(results, r_results, rtol=1e-5, atol=0)
 
     def test_posthoc_dscf_matches_pairwise_pandas_reference(self):
         import scipy.stats as ss
@@ -1505,36 +1511,26 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, r_results, atol=1.0e-3))
 
     def test_posthoc_dunnett(self):
+        from scipy import stats
+
         r_results = [8.125844e-11, 2.427434e-01]
+        original = stats.dunnett
+        seed_key = "rng" if "rng" in inspect.signature(original).parameters else "random_state"
 
-        # scipy's p-values are randomized QMC estimates, so repeat and check most pass.
-        is_close = []
-        for i in range(100):
-            results = sp.posthoc_dunnett(
-                self.df.sort_index(),
-                val_col="pulse",
-                group_col="kind",
-                control="rest",
-                to_matrix=False,
-            )
-            is_close.append(np.allclose(results, r_results, atol=1e-4))
+        def seeded_dunnett(*args, **kwargs):
+            return original(*args, **{**kwargs, seed_key: np.random.default_rng(731)})
 
-        is_close_mt = []
-        for i in range(100):
-            df_results = sp.posthoc_dunnett(
-                self.df.sort_index(),
-                val_col="pulse",
-                group_col="kind",
-                control="rest",
-                to_matrix=True,
-            )
-            results = [
-                df_results.loc["rest", "running"],
-                df_results.loc["rest", "walking"],
-            ]
-            is_close_mt.append(np.allclose(results, r_results, atol=1e-4))
-        self.assertTrue(sum(is_close) > 95)
-        self.assertTrue(sum(is_close_mt) > 95)
+        with patch.object(stats, "dunnett", seeded_dunnett):
+            kwargs = {"val_col": "pulse", "group_col": "kind", "control": "rest"}
+            series = sp.posthoc_dunnett(self.df.sort_index(), to_matrix=False, **kwargs)
+            matrix = sp.posthoc_dunnett(self.df.sort_index(), to_matrix=True, **kwargs)
+        self.assertEqual(series.index.tolist(), [("rest", "running"), ("rest", "walking")])
+        # QMC integration cannot resolve this tiny tail to relative precision.
+        self.assertAlmostEqual(series.iloc[0], r_results[0], delta=1e-8)
+        self.assertAlmostEqual(series.iloc[1], r_results[1], delta=1e-4)
+        np.testing.assert_array_equal(
+            [matrix.loc["rest", "running"], matrix.loc["rest", "walking"]], series
+        )
 
     # Sachs-style 3-group example; reference p-values below come from PMCMRplus R.
     new_x = [[1, 2, 3, 5, 1], [12, 31, 54, 62, 12], [10, 12, 6, 74, 11]]
@@ -1625,6 +1621,8 @@ class TestPosthocs(unittest.TestCase):
         self.assertTrue(np.allclose(results, r_results, atol=1e-6))
 
     def test_posthoc_median(self):
+        from statsmodels.stats.multitest import multipletests
+
         # PMCMRplus::medianAllPairsTest(p.adjust.method="none") reference.
         r_results = np.array(
             [
@@ -1639,7 +1637,11 @@ class TestPosthocs(unittest.TestCase):
         # only off-diagonal entries should be adjusted
         adjusted = sp.posthoc_median(self.new_x, p_adjust="holm")
         self.assertTrue(np.allclose(np.diag(adjusted), 1.0))
-        self.assertTrue(np.all(adjusted.to_numpy() >= results.to_numpy() - 1e-12))
+        triangle = np.triu_indices(3, 1)
+        expected_adjusted = multipletests(r_results[triangle], method="holm")[1]
+        np.testing.assert_allclose(
+            adjusted.to_numpy()[triangle], expected_adjusted, rtol=1e-6, atol=0
+        )
 
     def test_posthoc_steel(self):
         from scipy.stats import mannwhitneyu
@@ -1813,6 +1815,9 @@ class TestCompactLetterDisplay(unittest.TestCase):
 class TestBugRegressions(unittest.TestCase):
     """Regression tests guarding previously-fixed bugs and edge cases."""
 
+    def setUp(self):
+        self.addCleanup(np.random.set_state, np.random.get_state())
+
     df_bn = np.array([[4, 3, 4, 4, 5, 6, 3], [1, 2, 3, 5, 6, 7, 7], [1, 2, 6, 4, 1, 5, 1]])
 
     # --- _global.global_f_test return type ---
@@ -1898,7 +1903,7 @@ class TestBugRegressions(unittest.TestCase):
 
     def test_pairwise_matrices_symmetric_and_unit_diagonal(self):
         """Pairwise post-hoc tests must return a symmetric matrix with unit diagonal."""
-        df = sb.load_dataset("exercise")
+        df = exercise()
         df[df.columns[df.dtypes == "category"]] = df[df.columns[df.dtypes == "category"]].astype(
             object
         )
@@ -1936,7 +1941,7 @@ class TestBugRegressions(unittest.TestCase):
 
     def test_pairwise_matrices_pvalues_in_range(self):
         """p-values must always lie in [0, 1]."""
-        df = sb.load_dataset("exercise")
+        df = exercise()
         df[df.columns[df.dtypes == "category"]] = df[df.columns[df.dtypes == "category"]].astype(
             object
         )

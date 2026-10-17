@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from scipy import stats
+from statsmodels.stats.multitest import multipletests
 
 import scikit_posthocs as sp
 from tests._input_cases import LABELS, assert_matrix, long_data
@@ -17,6 +18,9 @@ REFERENCES = [
     (sp.posthoc_games_howell, {}, "games_howell"),
     (sp.posthoc_tamhane, {}, "tamhane"),
     (sp.posthoc_median, {}, "median"),
+    (sp.posthoc_median, {"p_adjust": "holm"}, "median"),
+    (sp.posthoc_median, {"p_adjust": "bonferroni"}, "median"),
+    (sp.posthoc_median, {"p_adjust": "fdr_bh"}, "median"),
 ]
 
 
@@ -70,11 +74,67 @@ def test_unequal_group_sizes_and_variances_match_external_reference(
     data = long_data(samples, dtype=dtype)
     original = data.copy(deep=True)
     expected = pd.DataFrame(parametric_reference(samples, method), index=LABELS, columns=LABELS)
+    if kwargs.get("p_adjust"):
+        triangle = np.triu_indices(len(samples), 1)
+        values = expected.to_numpy(copy=True)
+        values[triangle] = multipletests(values[triangle], method=kwargs["p_adjust"])[1]
+        values[(triangle[1], triangle[0])] = values[triangle]
+        expected = pd.DataFrame(values, index=LABELS, columns=LABELS)
 
     actual = function(data, val_col="value", group_col="group", sort=sort, **kwargs)
 
     assert_matrix(actual, expected, sorted(LABELS) if sort else LABELS)
     pd.testing.assert_frame_equal(data, original)
+
+
+@pytest.mark.parametrize("sort", [False, True])
+@pytest.mark.parametrize("adjustment", [None, "holm", "bonferroni", "fdr_bh"])
+def test_median_adjustments_match_known_above_median_counts(sort, adjustment):
+    # Exactly half of the pooled sample is above zero. The six pairwise tests
+    # have distinct, nontrivial adjusted values, not just saturated ones.
+    above = [1, 3, 7, 9]
+    samples = [np.r_[-np.arange(1, 11 - n), np.arange(1, n + 1)] for n in above]
+    labels = ["z", "a", "m", "b"]
+    data = long_data(samples, labels=labels)
+    triangle = np.triu_indices(4, 1)
+    raw = [
+        stats.chi2_contingency(
+            [[above[i], 10 - above[i]], [above[j], 10 - above[j]]], correction=False
+        ).pvalue
+        for i, j in zip(*triangle)
+    ]
+    expected = np.eye(4)
+    expected[triangle] = multipletests(raw, method=adjustment)[1] if adjustment else raw
+    expected[(triangle[1], triangle[0])] = expected[triangle]
+    expected = pd.DataFrame(expected, index=labels, columns=labels)
+
+    actual = sp.posthoc_median(
+        data, val_col="value", group_col="group", sort=sort, p_adjust=adjustment
+    )
+
+    assert_matrix(actual, expected, sorted(labels) if sort else labels)
+
+
+@pytest.mark.parametrize("sort", [False, True])
+def test_dscf_small_probabilities_match_pairwise_mannwhitney_reference(sort):
+    samples = [np.arange(12) + shift for shift in (0, 10, 20)]
+    data = long_data(samples)
+    expected = np.eye(3)
+    for i, j in itertools.combinations(range(3), 2):
+        first, second = samples[i], samples[j]
+        u = stats.mannwhitneyu(first, second, method="asymptotic").statistic
+        tie_factor = stats.tiecorrect(stats.rankdata(np.concatenate([first, second])))
+        variance = len(first) * len(second) * (len(first) + len(second) + 1) / 12 * tie_factor
+        q = abs(u - len(first) * len(second) / 2) * np.sqrt(2 / variance)
+        expected[i, j] = expected[j, i] = stats.studentized_range.sf(q, 3, np.inf)
+    # The fixture must exercise positive, representable probabilities below .001.
+    tails = expected[np.triu_indices(3, 1)]
+    np.testing.assert_array_less(0, tails)
+    np.testing.assert_array_less(tails, 0.001)
+
+    actual = sp.posthoc_dscf(data, val_col="value", group_col="group", sort=sort)
+
+    np.testing.assert_allclose(actual.loc[LABELS, LABELS], expected, rtol=1e-10, atol=0)
 
 
 @pytest.mark.parametrize("sort", [False, True])
