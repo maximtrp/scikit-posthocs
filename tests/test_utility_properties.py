@@ -171,14 +171,35 @@ def test_compact_letters_reports_insufficient_iterations():
     np.testing.assert_equal(len(result), 3)
 
 
-def test_compact_letters_nonconvergence_falls_back_without_empty_groups():
-    values = np.eye(5)
+@pytest.mark.parametrize("size", [5, 6])
+def test_compact_letters_nonconvergence_preserves_all_pair_relationships(size):
+    values = np.eye(size)
     for i in range(5):
         values[i, (i + 1) % 5] = values[(i + 1) % 5, i] = 0.5
+    names = [f"group-{i}" for i in range(size)]
+    data = pd.DataFrame(values, index=names, columns=names)
+    original = data.copy(deep=True)
     with pytest.warns(RuntimeWarning, match="did not converge"):
-        result = sp.compact_letter_display(values, maxiter=0)
-    np.testing.assert_equal(len(result), 5)
-    np.testing.assert_equal(all(text.strip() for text in result), True)
+        result = sp.compact_letter_display(data, maxiter=0)
+    letters = [set(text.replace(" ", "")) for text in result]
+    represented = np.array([[bool(a & b) for b in letters] for a in letters])
+    np.testing.assert_array_equal(represented, values >= 0.05)
+    np.testing.assert_array_equal(result.index, names)
+    pd.testing.assert_frame_equal(data, original)
+
+
+@pytest.mark.parametrize("maxiter", [0, 1, 100])
+@pytest.mark.filterwarnings("ignore:compact_letter_display did not converge:RuntimeWarning")
+def test_compact_letters_exact_relationships_for_every_five_group_graph(maxiter):
+    pairs = [(i, j) for i in range(5) for j in range(i + 1, 5)]
+    for mask in range(1 << len(pairs)):
+        same = np.eye(5, dtype=bool)
+        for bit, (i, j) in enumerate(pairs):
+            same[i, j] = same[j, i] = bool(mask & (1 << bit))
+        result = sp.compact_letter_display(np.where(same, 0.5, 0.001), maxiter=maxiter)
+        letters = [set(text.replace(" ", "")) for text in result]
+        represented = np.array([[bool(a & b) for b in letters] for a in letters])
+        np.testing.assert_array_equal(represented, same, err_msg=f"graph mask={mask}")
 
 
 @pytest.mark.parametrize("lower", [False, True])
