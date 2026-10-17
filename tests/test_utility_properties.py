@@ -87,6 +87,17 @@ def test_iqr_return_forms_partition_input_and_commute_with_positive_affine_trans
     keep = sp.outliers_iqr(values, ret="indices", coef=coef)
     remove = sp.outliers_iqr(values, ret="outliers_indices", coef=coef)
 
+    ordered = sorted(values)
+
+    def quartile(fraction):
+        position = (len(ordered) - 1) * fraction
+        lo = int(position)
+        return ordered[lo] + (position - lo) * (ordered[lo + 1] - ordered[lo])
+
+    q1, q3 = quartile(0.25), quartile(0.75)
+    expected_keep = (values >= q1 - coef * (q3 - q1)) & (values <= q3 + coef * (q3 - q1))
+    np.testing.assert_array_equal(keep, np.flatnonzero(expected_keep))
+    np.testing.assert_array_equal(remove, np.flatnonzero(~expected_keep))
     np.testing.assert_array_equal(np.sort(np.concatenate([keep, remove])), np.arange(len(values)))
     np.testing.assert_array_equal(sp.outliers_iqr(values, coef=coef), values[keep])
     np.testing.assert_array_equal(

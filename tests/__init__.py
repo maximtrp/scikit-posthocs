@@ -1,7 +1,9 @@
 import unittest
-import tests.test_posthocs
+
 
 def posthocs_suite():
+    from tests import test_posthocs
+
     loader = unittest.TestLoader()
-    suite = loader.loadTestsFromModule(tests.test_posthocs)
+    suite = loader.loadTestsFromModule(test_posthocs)
     return suite
