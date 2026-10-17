@@ -61,6 +61,11 @@ def compact_letter_display(
     for standard use cases. Groups are sorted by their smallest member
     index to ensure a deterministic letter assignment.
 
+    If iteration stops before convergence, valid letter groups are retained
+    and uncovered nonsignificant pairs receive additional shared letters.
+    Isolated groups receive their own letters. This fallback preserves every
+    pairwise relationship but may use more letters than a converged display.
+
     References
     ----------
     Piepho, Hans-Peter (2004). An Algorithm for a Letter-Based
@@ -129,7 +134,19 @@ def compact_letter_display(
     # Keep only sets where every member's neighborhood contains the full set.
     valid = [s for s in allsets if all(s <= neighbors[i] for i in s)]
 
-    if not valid:
+    if not converged:
+        # Dropping invalid neighborhoods can lose nonsignificant pairs or even
+        # leave groups with no letters. Complete the cover using valid edges;
+        # never fabricate significance just because the iteration budget ran out.
+        covered = np.zeros_like(same)
+        for group in valid:
+            members = list(group)
+            covered[np.ix_(members, members)] = True
+        for i, j in zip(*np.nonzero(np.triu(same & ~covered, 1))):
+            valid.append(frozenset({i, j}))
+            covered[i, i] = covered[j, j] = True
+        valid.extend(frozenset({i}) for i in np.flatnonzero(~np.diag(covered)))
+    elif not valid:
         # All groups are mutually significantly different; one letter each.
         valid = [frozenset({i}) for i in range(k)]
 
