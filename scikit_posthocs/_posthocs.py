@@ -994,8 +994,6 @@ def posthoc_npm_test(
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
     x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
-    if alternative == "less":
-        x[_val_col] *= -1
 
     groups = x[_group_col].unique()
     k = groups.size
@@ -1008,7 +1006,7 @@ def posthoc_npm_test(
         group_codes[group_values == group] = code
 
     def compare(permuted):
-        ranks = Series(permuted).rank().to_numpy()
+        ranks = Series(permuted).rank(ascending=alternative != "less").to_numpy()
         valid = ~np.isnan(ranks)
         ni = np.bincount(group_codes[valid], minlength=k)
         rank_sums = np.bincount(group_codes[valid], weights=ranks[valid], minlength=k)
