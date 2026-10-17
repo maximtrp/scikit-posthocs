@@ -2157,8 +2157,8 @@ def posthoc_tukey_hsd(
 
     results = ss.tukey_hsd(
         *[
-            x.loc[idx, _val_col].to_numpy()
-            for idx in x.groupby(_group_col, observed=True, sort=False).groups.values()
+            group[_val_col].to_numpy()
+            for _, group in x.groupby(_group_col, observed=True, sort=False)
         ]
     )
 

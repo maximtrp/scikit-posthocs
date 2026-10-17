@@ -1383,6 +1383,30 @@ class TestPosthocs(unittest.TestCase):
         )
         self.assertTrue(np.allclose(n_results, results))
 
+    def test_posthoc_tukey_hsd_repeated_index(self):
+        from scipy.stats import tukey_hsd
+
+        samples = [[1, 2, 3], [5, 7, 9, 11], [10, 12, 15, 18, 20]]
+        groups = ["third", "first", "second"]
+        frame = pd.concat(
+            [DataFrame({"value": values, "group": group}) for values, group in zip(samples, groups)]
+        )
+        expected = DataFrame(tukey_hsd(*samples).pvalue, index=groups, columns=groups)
+        indices = [frame.index, frame.index.map(str), ["observation"] * len(frame)]
+
+        for index in indices:
+            for sort in (False, True):
+                with self.subTest(index=list(index), sort=sort):
+                    data = frame.set_axis(index)
+                    original = data.copy(deep=True)
+                    result = sp.posthoc_tukey_hsd(
+                        data, val_col="value", group_col="group", sort=sort
+                    )
+                    np.testing.assert_allclose(
+                        result, expected.loc[result.index, result.columns], atol=1e-14
+                    )
+                    pd.testing.assert_frame_equal(data, original)
+
     def test_posthoc_mannwhitney(self):
         r_results = (
             np.array(
