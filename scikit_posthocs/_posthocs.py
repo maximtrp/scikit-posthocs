@@ -2155,12 +2155,10 @@ def posthoc_tukey_hsd(
     x = x.sort_values(by=[_group_col, _val_col], ascending=True) if sort else x
     groups = x[_group_col].unique()
 
-    results = ss.tukey_hsd(
-        *[
-            group[_val_col].to_numpy()
-            for _, group in x.groupby(_group_col, observed=True, sort=False)
-        ]
-    )
+    # Older pandas iterates ordered categoricals in category order even with
+    # sort=False. Extract samples in the same order as the output labels.
+    xg = x.groupby(_group_col, observed=True, sort=False)[_val_col]
+    results = ss.tukey_hsd(*[xg.get_group(group).to_numpy() for group in groups])
 
     return DataFrame(results.pvalue, index=groups, columns=groups)
 
