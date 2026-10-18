@@ -1,4 +1,5 @@
-"""Seeded p-value boundary and input-shape checks for the global tests.
+"""
+Seeded p-value boundary and input-shape checks for the global tests.
 
 The corpus separates valid probability boundaries from malformed input.
 NumPy strict floating-point checks make hidden warnings reproducible failures.

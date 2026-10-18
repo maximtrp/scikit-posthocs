@@ -1,4 +1,5 @@
-"""Small exact-null oracles and rank-order properties for ordered tests.
+"""
+Small exact-null oracles and rank-order properties for ordered tests.
 
 Seeds and input forms are pytest parameters, so every failure is reproducible
 from its node ID. Enumerating label assignments supplies Jonckheere's null

@@ -1,4 +1,5 @@
-"""Seeded scale, missing-group, and design checks for Hartley's test.
+"""
+Seeded scale, missing-group, and design checks for Hartley's test.
 
 Fixed chi-square draws separate input/statistic errors from Monte Carlo noise.
 Extreme scales, ndarray shapes, nullable values, and missing-only groups are
