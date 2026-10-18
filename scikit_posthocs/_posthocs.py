@@ -8,7 +8,17 @@ from numpy.typing import ArrayLike
 import scipy.stats as ss
 from scipy import integrate, special
 from statsmodels.stats.multitest import multipletests
-from pandas import DataFrame, Series, MultiIndex
+from pandas import DataFrame, Series, MultiIndex, concat
+
+
+def __numeric_array(values: Series) -> np.ndarray:
+    """Expose nullable numeric data without object arrays or integer rounding."""
+    dtype = getattr(values.dtype, "numpy_dtype", None)
+    if dtype is None:
+        return values.to_numpy()
+    if dtype.kind in "biu" and values.hasnans:
+        dtype = float
+    return values.to_numpy(dtype=dtype, na_value=np.nan)
 
 
 def __validate_n_permutations(value: int, name: str) -> int:
@@ -153,6 +163,14 @@ def __convert_to_block_df(
         x = x.reset_index().melt(
             id_vars=new_block_id_col, var_name=new_group_col, value_name=new_y_col
         )
+        # pandas 1.5 melt loses nullable measurement dtypes. Concatenating the
+        # original columns preserves their common dtype and missing values.
+        if x[new_y_col].dtype == object and any(
+            getattr(dtype, "numpy_dtype", None) is not None for dtype in a.dtypes
+        ):
+            x[new_y_col] = concat(
+                [a.iloc[:, column] for column in range(a.shape[1])], ignore_index=True
+            )
         x[new_block_col] = a.index.take(x[new_block_id_col]).to_numpy()
         x[new_group_col] = a.columns.take(x[new_group_col]).to_numpy()
 
@@ -1015,7 +1033,7 @@ def posthoc_npm_test(
     k = groups.size
     n = x.shape[0]
     sigma = np.sqrt(n * (n + 1) / 12.0)
-    values = x[_val_col].to_numpy()
+    values = __numeric_array(x[_val_col])
     group_values = x[_group_col].to_numpy()
     group_codes = np.empty(n, dtype=int)
     for code, group in enumerate(groups):
@@ -1558,7 +1576,7 @@ def posthoc_anderson(
     groups = x[_group_col].unique()
     k = groups.size
     x_grouped = x.groupby(_group_col, observed=True)[_val_col]
-    samples = [x_grouped.get_group(group).dropna().to_numpy() for group in groups]
+    samples = [__numeric_array(x_grouped.get_group(group).dropna()) for group in groups]
     vs = np.zeros((k, k), dtype=float)
     combs = it.combinations(range(k), 2)
 
@@ -2061,7 +2079,7 @@ def posthoc_ttest(
     0.047356
     """
     x, _val_col, _group_col = __convert_to_df(a, val_col, group_col)
-    if not np.isfinite(x[_val_col].to_numpy(dtype=float)).all():
+    if not np.isfinite(x[_val_col].to_numpy(dtype=float, na_value=np.nan)).all():
         raise ValueError(
             "All observations must be finite; remove or impute missing values before calling "
             "posthoc_ttest"
@@ -2071,7 +2089,7 @@ def posthoc_ttest(
     groups = x[_group_col].unique()
     k = groups.size
     xg = x.groupby(by=_group_col, observed=True)[_val_col]
-    samples = [xg.get_group(group).to_numpy() for group in groups]
+    samples = [__numeric_array(xg.get_group(group)) for group in groups]
 
     vs = np.zeros((k, k), dtype=float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
@@ -2158,7 +2176,7 @@ def posthoc_tukey_hsd(
     # Older pandas iterates ordered categoricals in category order even with
     # sort=False. Extract samples in the same order as the output labels.
     xg = x.groupby(_group_col, observed=True, sort=False)[_val_col]
-    results = ss.tukey_hsd(*[xg.get_group(group).to_numpy() for group in groups])
+    results = ss.tukey_hsd(*[__numeric_array(xg.get_group(group)) for group in groups])
 
     return DataFrame(results.pvalue, index=groups, columns=groups)
 
@@ -2240,7 +2258,7 @@ def posthoc_mannwhitney(
     x_len = groups.size
     vs = np.zeros((x_len, x_len))
     xg = x.groupby(_group_col, observed=True)[_val_col]
-    samples = [xg.get_group(group).to_numpy() for group in groups]
+    samples = [__numeric_array(xg.get_group(group)) for group in groups]
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
@@ -2363,7 +2381,7 @@ def posthoc_wilcoxon(
     x_len = groups.size
     vs = np.zeros((x_len, x_len))
     xg = x.groupby(_group_col, observed=True)[_val_col]
-    samples = [xg.get_group(group).to_numpy() for group in groups]
+    samples = [__numeric_array(xg.get_group(group)) for group in groups]
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
@@ -2461,8 +2479,8 @@ def posthoc_scheffe(
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
 
-    counts = ni.reindex(groups).to_numpy()
-    means = xi.reindex(groups).to_numpy()
+    counts = __numeric_array(ni.reindex(groups))
+    means = __numeric_array(xi.reindex(groups))
     dif = means[tri_upper[0]] - means[tri_upper[1]]
     A = sin * (1.0 / counts[tri_upper[0]] + 1.0 / counts[tri_upper[1]]) * (groups.size - 1.0)
     vs[tri_upper] = dif**2.0 / A
@@ -2549,9 +2567,9 @@ def posthoc_tamhane(
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
 
-    counts = ni.reindex(groups).to_numpy()
-    means = xi.reindex(groups).to_numpy()
-    variances = si.reindex(groups).to_numpy()
+    counts = __numeric_array(ni.reindex(groups))
+    means = __numeric_array(xi.reindex(groups))
+    variances = __numeric_array(si.reindex(groups))
     i, j = tri_upper
     scaled_variances = variances / counts
     A = scaled_variances[i] + scaled_variances[j]
@@ -2667,8 +2685,8 @@ def posthoc_tukey(
     vs = np.zeros((groups.size, groups.size), dtype=float)
     tri_upper = np.triu_indices(vs.shape[0], 1)
     tri_lower = np.tril_indices(vs.shape[0], -1)
-    counts = ni.reindex(groups).to_numpy()
-    means = xi.reindex(groups).to_numpy()
+    counts = __numeric_array(ni.reindex(groups))
+    means = __numeric_array(xi.reindex(groups))
     scale = sin * 0.5 * (1.0 / counts[tri_upper[0]] + 1.0 / counts[tri_upper[1]])
     q_values = (means[tri_upper[0]] - means[tri_upper[1]]) / np.sqrt(scale)
     vs[tri_upper] = ss.studentized_range.sf(np.abs(q_values), groups.size, n - groups.size)
@@ -2743,7 +2761,7 @@ def posthoc_dscf(
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
     groups = x[_group_col].unique()
     x_grouped = x.groupby(_group_col, observed=True)[_val_col]
-    samples = [x_grouped.get_group(group).dropna().to_numpy() for group in groups]
+    samples = [__numeric_array(x_grouped.get_group(group).dropna()) for group in groups]
     k = groups.size
 
     def compare(i, j):
@@ -2856,9 +2874,9 @@ def posthoc_games_howell(
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
 
-    counts = ni.reindex(groups).to_numpy()
-    means = xi.reindex(groups).to_numpy()
-    variances = si.reindex(groups).to_numpy()
+    counts = __numeric_array(ni.reindex(groups))
+    means = __numeric_array(xi.reindex(groups))
+    variances = __numeric_array(si.reindex(groups))
     i, j = tri_upper
     A = variances[i] / counts[i] + variances[j] / counts[j]
     q_values = (means[i] - means[j]) / np.sqrt(A) * np.sqrt(2.0)
@@ -2982,9 +3000,9 @@ def posthoc_dunnett_t3(
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
 
-    counts = ni.reindex(groups).to_numpy()
-    means = xi.reindex(groups).to_numpy()
-    variances = si.reindex(groups).to_numpy()
+    counts = __numeric_array(ni.reindex(groups))
+    means = __numeric_array(xi.reindex(groups))
+    variances = __numeric_array(si.reindex(groups))
     i, j = tri_upper
     A = variances[i] / counts[i] + variances[j] / counts[j]
     t_values = (means[i] - means[j]) / np.sqrt(A)
@@ -3076,8 +3094,8 @@ def posthoc_lsd(
     tri_lower = np.tril_indices(vs.shape[0], -1)
     vs[:, :] = 0
 
-    counts = ni.reindex(groups).to_numpy()
-    means = xi.reindex(groups).to_numpy()
+    counts = __numeric_array(ni.reindex(groups))
+    means = __numeric_array(xi.reindex(groups))
     i, j = tri_upper
     A = s2in * (1.0 / counts[i] + 1.0 / counts[j])
     t_values = (means[i] - means[j]) / np.sqrt(A)
@@ -3166,8 +3184,8 @@ def posthoc_snk(
     df = n - k
 
     # rank position of each group when means are sorted in decreasing order
-    counts = ni.reindex(groups).to_numpy()
-    means = xi.reindex(groups).to_numpy()
+    counts = __numeric_array(ni.reindex(groups))
+    means = __numeric_array(xi.reindex(groups))
     order = means.argsort()[::-1]
     rank_pos = np.empty(k, dtype=int)
     rank_pos[order] = np.arange(k)
@@ -3257,8 +3275,7 @@ def posthoc_duncan(
     df = n - k
     r = k / np.sum(1.0 / ni)
 
-    counts = ni.reindex(groups).to_numpy()
-    means = xi.reindex(groups).to_numpy()
+    means = __numeric_array(xi.reindex(groups))
     order = means.argsort()[::-1]
     rank_pos = np.empty(k, dtype=int)
     rank_pos[order] = np.arange(k)

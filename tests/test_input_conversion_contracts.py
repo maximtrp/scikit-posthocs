@@ -70,11 +70,12 @@ def test_optimized_block_gate_rejects_inputs_requiring_conversion(data, melted, 
     np.testing.assert_equal(result is None, True)
 
 
-def test_block_converter_uses_row_ids_without_losing_measurement_dtype():
+@pytest.mark.parametrize("dtype", ["float32", "float64", "Float32", "Float64", "Int64", "UInt64"])
+def test_block_converter_uses_row_ids_without_losing_measurement_dtype(dtype):
     data = pd.DataFrame(
         {
-            "y": pd.array([1, None, 3], dtype="Float64"),
-            "block_ids": pd.array([4, 5, 6], dtype="Float64"),
+            "y": pd.array([1, None, 3], dtype=dtype),
+            "block_ids": pd.array([4, 5, 6], dtype=dtype),
         }
     )
     data.index = ["subject", "subject", "other"]
@@ -82,7 +83,7 @@ def test_block_converter_uses_row_ids_without_losing_measurement_dtype():
 
     actual, value_col, group_col, block_col, block_id_col = sp.__convert_to_block_df(data)
 
-    np.testing.assert_equal(actual[value_col].dtype, pd.Float64Dtype())
+    np.testing.assert_equal(actual[value_col].dtype, pd.api.types.pandas_dtype(dtype))
     np.testing.assert_equal(len(actual), data.size)
     np.testing.assert_array_equal(actual[group_col], ["y"] * 3 + ["block_ids"] * 3)
     np.testing.assert_array_equal(actual[block_id_col], [0, 1, 2, 0, 1, 2])
