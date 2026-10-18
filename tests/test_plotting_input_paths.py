@@ -116,6 +116,29 @@ def test_cd_diagram_cliques_colors_and_coordinates_follow_labels(left_only, pale
         plt.close(figure)
 
 
+@pytest.mark.parametrize("crossbar_props", [{}, {"marker": "o"}, {"linestyle": ":", "alpha": 0.5}])
+def test_cd_diagram_crossbar_order_is_independent_of_set_iteration(monkeypatch, crossbar_props):
+    clique = set("abcd")
+    # Assign descending ranks in this exact set's iteration order, whatever
+    # PYTHONHASHSEED is. Return the same set so an unsorted crossbar always fails.
+    names = list(clique)
+    ranks = pd.Series([4.0, 3.0, 2.0, 1.0], index=names)
+    matrix = pd.DataFrame(1.0, index=names, columns=names)
+    monkeypatch.setattr("scikit_posthocs._plotting._find_maximal_cliques", lambda _: [clique])
+    figure, ax = plt.subplots()
+    try:
+        artists = sp.critical_difference_diagram(
+            ranks, matrix, ax=ax, crossbar_props=crossbar_props
+        )
+
+        np.testing.assert_equal(len(artists["crossbars"]), 1)
+        (line,) = artists["crossbars"][0]
+        np.testing.assert_array_equal(line.get_xdata(), [1.0, 2.0, 3.0, 4.0])
+        np.testing.assert_array_equal(line.get_ydata(), [-1, -1, -1, -1])
+    finally:
+        plt.close(figure)
+
+
 @pytest.mark.parametrize(
     ("kwargs", "message"),
     [

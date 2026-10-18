@@ -56,11 +56,12 @@ def test_temporary_score_column_does_not_overwrite_group_labels(function, group_
 @pytest.mark.parametrize("function", [sp.posthoc_dunnett, sp.posthoc_steel])
 @pytest.mark.parametrize("sort", [False, True])
 @pytest.mark.parametrize("to_matrix", [False, True])
-def test_many_to_one_integer_column_names_match_external_reference(
-    function, sort, to_matrix, monkeypatch
+@pytest.mark.parametrize("columns", [(11, 17), (0, 1), (11, 0), ("value", ""), ("value", False)])
+def test_many_to_one_column_names_match_external_reference(
+    function, sort, to_matrix, columns, monkeypatch
 ):
     samples = independent_samples()
-    data = long_data(samples).rename(columns={"value": 11, "group": 17})
+    data = long_data(samples).rename(columns={"value": columns[0], "group": columns[1]})
     original_data = data.copy(deep=True)
     kwargs = {}
     if function is sp.posthoc_dunnett:
@@ -80,7 +81,13 @@ def test_many_to_one_integer_column_names_match_external_reference(
         pvalues = multipletests(raw_pvalues, method="holm")[1]
 
     actual = function(
-        data, val_col=11, group_col=17, control="z", sort=sort, to_matrix=to_matrix, **kwargs
+        data,
+        val_col=columns[0],
+        group_col=columns[1],
+        control="z",
+        sort=sort,
+        to_matrix=to_matrix,
+        **kwargs,
     )
 
     if to_matrix:
