@@ -101,13 +101,18 @@ def test_many_to_one_integer_column_names_match_external_reference(
     pd.testing.assert_frame_equal(data, original_data)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="The shared independent converter treats explicit column label 0 as unspecified",
+@pytest.mark.parametrize(
+    "columns",
+    [
+        (0, "group"),
+        ("value", 0),
+        ("", "group"),
+        ("value", ""),
+        (False, "group"),
+        ("value", False),
+    ],
 )
-@pytest.mark.parametrize("columns", [(0, "group"), ("value", 0)])
-def test_zero_dataframe_column_label_matches_positive_integer_label(columns):
+def test_falsy_dataframe_column_label_matches_named_columns(columns):
     data = long_data(independent_samples())
     expected = sp.posthoc_ttest(data, val_col="value", group_col="group")
     renamed = data.rename(columns={"value": columns[0], "group": columns[1]})
