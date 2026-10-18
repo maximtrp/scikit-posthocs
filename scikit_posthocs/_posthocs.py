@@ -3275,7 +3275,6 @@ def posthoc_duncan(
     df = n - k
     r = k / np.sum(1.0 / ni)
 
-    counts = __numeric_array(ni.reindex(groups))
     means = __numeric_array(xi.reindex(groups))
     order = means.argsort()[::-1]
     rank_pos = np.empty(k, dtype=int)

@@ -58,9 +58,7 @@ def test_nullable_large_integers_do_not_gain_ties_from_float_conversion(dtype, s
     np.testing.assert_allclose(actual.loc["z", "a"], stats.mannwhitneyu(first, second).pvalue)
     native = posthocs.__numeric_array(data["value"])
     np.testing.assert_equal(native.dtype, np.dtype(dtype.lower()))
-    # Compare Python integers: NumPy can cast large integers to float during
-    # mixed-dtype equality checks and accidentally conceal rounding.
-    assert native.tolist() == np.concatenate([first, second]).tolist()
+    np.testing.assert_array_equal(native, np.concatenate([first, second]))
     pd.testing.assert_frame_equal(data, original)
 
 
