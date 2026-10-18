@@ -28,6 +28,27 @@ def test_tukey_duplicate_index_matches_scipy(sort):
     np.testing.assert_allclose(actual.loc[LABELS, LABELS], expected)
 
 
+@pytest.mark.parametrize("ordered", [False, True])
+@pytest.mark.parametrize("sort", [False, True])
+@pytest.mark.parametrize("repeated_index", [False, True])
+def test_tukey_categorical_group_order_matches_scipy(ordered, sort, repeated_index):
+    samples = [[1, 2, 3], [1.1, 2.1, 3.1], [11, 12, 13]]
+    data = long_data(samples)
+    category_order = ["m", "z", "a"]
+    data["group"] = pd.Categorical(
+        data["group"], categories=[*category_order, "unused"], ordered=ordered
+    )
+    if repeated_index:
+        data.index = np.tile(np.arange(3), 3)
+    original = data.copy(deep=True)
+    expected = pd.DataFrame(stats.tukey_hsd(*samples).pvalue, index=LABELS, columns=LABELS)
+
+    actual = sp.posthoc_tukey_hsd(data, val_col="value", group_col="group", sort=sort)
+
+    assert_matrix(actual, expected, category_order if sort else LABELS)
+    pd.testing.assert_frame_equal(data, original)
+
+
 @pytest.mark.xfail(
     strict=True,
     raises=(AssertionError, KeyError),
