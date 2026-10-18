@@ -191,11 +191,6 @@ def test_sign_table_classifies_exact_significance_boundaries():
     np.testing.assert_array_equal(actual, [["-", "NS", "*"], ["NS", "-", "**"], ["*", "**", "-"]])
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="The shared converter misinterprets a two-by-two wide sample array as long data",
-)
 def test_two_groups_with_two_observations_match_scipy_for_array_input():
     samples = np.array([[1.0, 4.0], [2.0, 8.0]])
     expected = stats.ttest_ind(*samples).pvalue
@@ -205,11 +200,6 @@ def test_two_groups_with_two_observations_match_scipy_for_array_input():
     np.testing.assert_allclose(actual.iloc[0, 1], expected)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="The melted block converter treats an explicit integer block_id_col of zero as absent",
-)
 def test_melted_block_id_column_zero_matches_named_column():
     wide = pd.DataFrame([[1, 3, 2], [4, 2, 5], [2, 6, 1], [7, 3, 4]])
     wide.index.name = "subject"

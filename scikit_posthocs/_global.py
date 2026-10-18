@@ -1,15 +1,19 @@
 from typing import Union, List, Tuple
-from numpy import array, ndarray, log, isfinite, sort
+from numpy import array, ndarray, log, isfinite, sort, errstate
 from scipy.stats import chi2
 
 
 def _validate_pvalues(p_vals: Union[List, ndarray]) -> ndarray:
-    arr = array(p_vals, dtype=float)
+    message = (
+        "p_vals must be a non-empty one-dimensional sequence of finite p-values between "
+        "0 and 1; remove invalid values before calling this function"
+    )
+    try:
+        arr = array(p_vals, dtype=float)
+    except (TypeError, ValueError):
+        raise ValueError(message) from None
     if arr.ndim != 1 or arr.size == 0 or not isfinite(arr).all() or ((arr < 0) | (arr > 1)).any():
-        raise ValueError(
-            "p_vals must be a non-empty one-dimensional sequence of finite p-values between "
-            "0 and 1; remove invalid values before calling this function"
-        )
+        raise ValueError(message)
     return arr
 
 
@@ -78,6 +82,8 @@ def global_f_test(
     >>> sp.global_f_test(x)
     """
     arr = _validate_pvalues(p_vals)
-    t_stat = -2 * sum(log(arr))
+    # Zero is a valid p-value: its log gives the expected infinite statistic.
+    with errstate(divide="ignore"):
+        t_stat = -2 * sum(log(arr))
     p_value = chi2.sf(t_stat, df=2 * len(arr))
     return (p_value, t_stat) if stat else p_value

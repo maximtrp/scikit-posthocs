@@ -27,6 +27,18 @@ def test_ambiguous_long_array_requires_explicit_positions():
         sp.__convert_to_df(data)
 
 
+@pytest.mark.parametrize("value_position", [0, 1])
+def test_two_by_two_explicit_array_positions_still_select_long_input(value_position):
+    data = np.array([[1, 11], [2, 12]])
+
+    actual, value_col, group_col = sp.__convert_to_df(
+        data, val_id=value_position, group_id=1 - value_position
+    )
+
+    np.testing.assert_array_equal(actual[value_col], data[:, value_position])
+    np.testing.assert_array_equal(actual[group_col], data[:, 1 - value_position])
+
+
 def test_dataframe_converter_reports_missing_requested_column():
     data = pd.DataFrame({"value": [1, 2], "group": ["a", "b"]})
 

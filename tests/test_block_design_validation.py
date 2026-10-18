@@ -56,7 +56,8 @@ def test_page_dropping_first_block_preserves_original_hypothesis_order(sort):
     order = [0, 1, 2] if sort else [2, 0, 1]
     rank_sums = stats.rankdata(values[:, order], axis=1).sum(axis=0)
     n, k = values.shape
-    statistic = rank_sums @ np.arange(1, k + 1) - n * k * (k + 1) ** 2 / 4 - 0.5
+    centered = rank_sums @ np.arange(1, k + 1) - n * k * (k + 1) ** 2 / 4
+    statistic = centered - 0.5 * np.sign(centered)
     statistic /= np.sqrt(n * k**2 * (k + 1) * (k**2 - 1) / 144)
     expected = [2 * stats.norm.sf(abs(statistic)), statistic]
 
