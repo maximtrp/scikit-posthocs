@@ -87,6 +87,8 @@ def __convert_to_df(
     -----
     Inferrence algorithm for determining `val_id` and `group_id` args is rather
     simple, so it is better to specify them explicitly to prevent errors.
+    A two-by-two array without explicit column positions is treated as two
+    samples with two observations each.
     """
     if group_col is None:
         group_col = "groups"
@@ -102,7 +104,11 @@ def __convert_to_df(
 
     elif isinstance(a, list) or (
         isinstance(a, np.ndarray)
-        and (not a.shape.count(2) or (a.shape[0] == 2 and a.shape[1] != 2))
+        and (
+            not a.shape.count(2)
+            or (a.shape[0] == 2 and a.shape[1] != 2)
+            or (a.shape == (2, 2) and val_id is None and group_id is None)
+        )
     ):
         grps_len = map(len, a)
         grps = list(it.chain(*[[i + 1] * grp_len for i, grp_len in enumerate(grps_len)]))
@@ -175,7 +181,7 @@ def __convert_to_block_df(
         x[new_group_col] = a.columns.take(x[new_group_col]).to_numpy()
 
     elif isinstance(a, DataFrame) and melted:
-        if a[block_col].duplicated().sum() > 0 and not block_id_col:
+        if a[block_col].duplicated().sum() > 0 and block_id_col is None:
             raise ValueError(
                 "`block_col` contains duplicated entries, `block_id_col` should be explicitly specified"
             )

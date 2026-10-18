@@ -460,6 +460,8 @@ def test_jonckheere(
     P values are computed from the standard normal distribution. In the
     presence of ties, the standard deviation of the Jonckheere-Terpstra
     statistic is corrected following Kloke and McKean (2015) [2]_.
+    At least two groups must contain nonmissing observations. If all
+    observations are equal, the statistic is zero and the p value is one.
 
     References
     ----------
@@ -486,6 +488,10 @@ def test_jonckheere(
 
     groups = x[_group_col].unique()
     k = groups.size
+    if k < 2:
+        raise ValueError(
+            "Jonckheere-Terpstra test requires at least two groups with nonmissing observations"
+        )
     n = len(x.index)
     nij = x.groupby(_group_col, observed=True)[_val_col].count()
     grouped_vals = [
@@ -520,6 +526,8 @@ def test_jonckheere(
             UserWarning,
             stacklevel=2,
         )
+        if ties.size == 1:
+            return 1.0, 0.0
         nt = np.unique(x[_val_col], return_counts=True)[1].astype(float)
         s = np.sqrt(
             (
@@ -548,6 +556,28 @@ def test_jonckheere(
     else:
         pval = ss.norm.cdf(stat)
 
+    return float(pval), float(stat)
+
+
+def _page_result(rank_sums, n, k, alternative):
+    """Standardize Page's L with a continuity correction for the requested tail."""
+    L = float(np.sum(rank_sums * np.arange(1, k + 1)))
+    mean = n * k * (k + 1.0) ** 2.0 / 4.0
+    variance = n * k**2.0 * (k + 1.0) * (k**2.0 - 1.0) / 144.0
+    centered = L - mean
+    if alternative == "two-sided":
+        centered -= 0.5 * np.sign(centered)
+    elif alternative == "greater":
+        centered -= 0.5
+    else:
+        centered += 0.5
+    stat = centered / np.sqrt(variance)
+    if alternative == "two-sided":
+        pval = 2.0 * ss.norm.sf(np.abs(stat))
+    elif alternative == "greater":
+        pval = ss.norm.sf(stat)
+    else:
+        pval = ss.norm.cdf(stat)
     return float(pval), float(stat)
 
 
@@ -621,7 +651,8 @@ def test_page(
     Notes
     -----
     P values are computed from the standard normal distribution, with a
-    continuity correction always applied (following Sachs 1997).
+    continuity correction following the requested tail (Sachs 1997).
+    For a two-sided test, the correction moves towards the null mean.
     Incomplete blocks are excluded in their entirety. At least one complete
     block and two treatments must remain; otherwise a ValueError is raised.
 
@@ -646,17 +677,7 @@ def test_page(
         values, _ = matrix
         n, k = values.shape
         rank_sums = ss.rankdata(values, axis=1, method="average").sum(axis=0)
-        L = float(np.sum(rank_sums * np.arange(1, k + 1)))
-        eL = n * k * (k + 1.0) ** 2.0 / 4.0
-        varL = n * k**2.0 * (k + 1.0) * (k**2.0 - 1.0) / 144.0
-        stat = (L - eL - 0.5) / np.sqrt(varL)
-        if alternative == "two-sided":
-            pval = 2.0 * min(ss.norm.sf(np.abs(stat)), 0.5)
-        elif alternative == "greater":
-            pval = ss.norm.sf(stat)
-        else:
-            pval = ss.norm.cdf(stat)
-        return float(pval), float(stat)
+        return _page_result(rank_sums, n, k, alternative)
 
     x, _y_col, _group_col, _block_col, _block_id_col = __convert_to_block_df(
         data, y_col, group_col, block_col, block_id_col, melted
@@ -676,21 +697,7 @@ def test_page(
     x["y_ranks"] = x.groupby(_block_id_col, observed=True)[_y_col].rank()
     r_sum = x.groupby(_group_col, observed=True)["y_ranks"].sum().to_numpy()
 
-    weights = np.arange(1, k + 1)
-    L = float(np.sum(r_sum * weights))
-    eL = n * k * (k + 1.0) ** 2.0 / 4.0
-    varL = n * k**2.0 * (k + 1.0) * (k**2.0 - 1.0) / 144.0
-
-    stat = (L - eL - 0.5) / np.sqrt(varL)
-
-    if alternative == "two-sided":
-        pval = 2.0 * min(ss.norm.sf(np.abs(stat)), 0.5)
-    elif alternative == "greater":
-        pval = ss.norm.sf(stat)
-    else:
-        pval = ss.norm.cdf(stat)
-
-    return float(pval), float(stat)
+    return _page_result(r_sum, n, k, alternative)
 
 
 def test_hartley(
@@ -741,6 +748,10 @@ def test_hartley(
     independent chi-squared(df) variables (df taken from the
     minimum-variance group, following PMCMRplus), rather than PMCMRplus's
     exact `pmaxFratio` distribution (which has no scipy equivalent).
+    Missing observations and groups containing only missing observations are
+    excluded. At least two groups with two finite observations each are
+    required. If all group variances are zero, a ValueError is raised; a
+    single zero-variance group gives an infinite F-ratio and a zero p value.
 
     References
     ----------
@@ -755,12 +766,28 @@ def test_hartley(
     """
     n_perm = __validate_n_permutations(n_perm, "n_perm")
     x, _val_col, _group_col = __convert_to_df(data, val_col, group_col)
+    x = x.dropna(subset=[_val_col, _group_col])
     x = x.sort_values(by=[_group_col], ascending=True) if sort else x
 
-    x_grouped = x.groupby(_group_col, observed=True)[_val_col]
-    var = x_grouped.var().to_numpy()
-    ni = x_grouped.count().to_numpy()
-    k = var.size
+    ni = x.groupby(_group_col, observed=True)[_val_col].count().to_numpy(dtype=np.int64)
+    k = ni.size
+    if k < 2:
+        raise ValueError("Hartley's test requires at least two groups with nonmissing observations")
+    if np.any(ni < 2):
+        raise ValueError("Hartley's test requires at least two observations in each group")
+    values = x[_val_col].to_numpy(dtype=float, na_value=np.nan)
+    if not np.isfinite(values).all():
+        raise ValueError("Hartley's test requires finite observations")
+    # A common scale cancels from the variance ratio and prevents squaring
+    # very large or small observations from overflowing or underflowing.
+    # A power of two does not introduce rounding into ordinary observations.
+    scale = np.max(np.abs(values))
+    if scale:
+        _, exponent = np.frexp(scale)
+        x[_val_col] = np.ldexp(values, -exponent)
+    var = x.groupby(_group_col, observed=True)[_val_col].var().to_numpy(dtype=float)
+    if not np.any(var > 0):
+        raise ValueError("Hartley's test requires at least one nonzero group variance")
 
     if np.any(ni != ni[0]):
         warnings.warn(
@@ -770,6 +797,8 @@ def test_hartley(
         )
 
     df = int(ni[np.argmin(var)] - 1)
+    if np.min(var) == 0:
+        return 0.0, np.inf, df
     stat = float(np.max(var) / np.min(var))
 
     exceedances = 0
