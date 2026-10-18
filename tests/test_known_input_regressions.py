@@ -16,11 +16,6 @@ import scikit_posthocs as sp
 from tests._input_cases import LABELS, assert_matrix, independent_samples, long_data
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="Tukey HSD uses index-label lookup instead of positional group membership",
-)
 @pytest.mark.parametrize("sort", [False, True])
 def test_tukey_duplicate_index_matches_scipy(sort):
     samples = independent_samples()
