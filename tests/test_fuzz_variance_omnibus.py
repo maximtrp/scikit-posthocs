@@ -1,10 +1,8 @@
-"""
-Seeded scale, missing-group, and design checks for Hartley's test.
+"""Seeded scale, missing-group, and design checks for Hartley's test."""
 
-Fixed chi-square draws separate input/statistic errors from Monte Carlo noise.
-Extreme scales, ndarray shapes, nullable values, and missing-only groups are
-tested separately from invalid designs that must fail before sampling.
-"""
+# Fixed chi-square draws separate input/statistic errors from Monte Carlo noise.
+# Extreme scales, ndarray shapes, nullable values, and missing-only groups are
+# separate from invalid designs that must fail before sampling.
 
 import numpy as np
 import pandas as pd

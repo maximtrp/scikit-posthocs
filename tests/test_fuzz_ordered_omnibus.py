@@ -1,11 +1,9 @@
-"""
-Small exact-null oracles and rank-order properties for ordered tests.
+"""Small exact-null oracles and rank-order properties for ordered tests."""
 
-Seeds and input forms are pytest parameters, so every failure is reproducible
-from its node ID. Enumerating label assignments supplies Jonckheere's null
-moments independently of the production variance formula. Page's reference
-uses SciPy's L statistic plus the specified normal continuity correction.
-"""
+# Seeds and input forms are pytest parameters, so failures reproduce by node ID.
+# Enumerating label assignments supplies Jonckheere's null moments independently
+# of the production variance formula. Page's reference uses SciPy's L statistic
+# plus the specified normal continuity correction.
 
 from functools import cache
 from itertools import combinations
