@@ -9,6 +9,78 @@ from matplotlib.colors import to_rgba
 import scikit_posthocs as sp
 
 
+@pytest.mark.parametrize("alpha", [0.05, 0.1])
+@pytest.mark.parametrize(
+    "input_type",
+    [
+        "list",
+        "array",
+        "float32_array",
+        "strided_array",
+        "readonly_array",
+        "dataframe",
+        "dataframe_float32",
+        "dataframe_mixed",
+        "dataframe_nullable",
+    ],
+)
+def test_sign_array_preserves_input_values(alpha, input_type):
+    values = np.array([[1.0, 0.01, 0.08], [0.01, 1.0, 0.2], [0.08, 0.2, 1.0]])
+    if input_type == "list":
+        data = values.tolist()
+    elif input_type == "float32_array":
+        data = values.astype(np.float32)
+    elif input_type == "strided_array":
+        data = np.zeros((6, 6))[::2, ::2]
+        data[:] = values
+    elif input_type.startswith("dataframe"):
+        names = ["z", "a", "m"]
+        data = pd.DataFrame(values, index=names, columns=names)
+        if input_type == "dataframe_float32":
+            data = data.astype(np.float32)
+        elif input_type == "dataframe_mixed":
+            data["a"] = data["a"].astype(np.float32)
+        elif input_type == "dataframe_nullable":
+            data = data.astype("Float64")
+    else:
+        data = values
+        if input_type == "readonly_array":
+            data.flags.writeable = False
+    original = copy.deepcopy(data)
+
+    actual = sp.sign_array(data, alpha=alpha)
+
+    weak_pair = 1 if alpha == 0.1 else 0
+    expected = [[-1, 1, weak_pair], [1, -1, 0], [weak_pair, 0, -1]]
+    np.testing.assert_array_equal(actual, expected)
+    assert actual.dtype == np.dtype(float)
+
+    # The result remains safe to modify after the call.
+    actual[0, 1] = 42
+    if isinstance(data, pd.DataFrame):
+        pd.testing.assert_frame_equal(data, original)
+    else:
+        np.testing.assert_array_equal(data, original)
+
+
+def test_sign_array_copies_shared_array_like_buffer():
+    class ArrayLike:
+        def __init__(self):
+            self.values = np.array([[1.0, 0.08], [0.08, 1.0]])
+
+        def __array__(self, dtype=None, copy=None):
+            # Simulate an array provider that ignores NumPy's copy request.
+            return np.asarray(self.values, dtype=dtype)
+
+    data = ArrayLike()
+
+    actual = sp.sign_array(data)
+
+    np.testing.assert_array_equal(actual, [[-1, 0], [0, -1]])
+    np.testing.assert_array_equal(data.values, [[1.0, 0.08], [0.08, 1.0]])
+    assert not np.shares_memory(actual, data.values)
+
+
 @pytest.mark.parametrize("flat", [False, True])
 @pytest.mark.parametrize("labels", [False, True])
 @pytest.mark.parametrize("input_type", ["array", "dataframe"])
@@ -112,6 +184,20 @@ def test_cd_diagram_cliques_colors_and_coordinates_follow_labels(left_only, pale
         pd.testing.assert_series_equal(ranks, original_ranks)
         pd.testing.assert_frame_equal(matrix, original_matrix)
         np.testing.assert_equal(kwargs, original_kwargs)
+    finally:
+        plt.close(figure)
+
+
+def test_cd_diagram_reuses_p_values_at_different_alphas():
+    ranks = {"a": 1.0, "b": 2.0}
+    matrix = pd.DataFrame([[1.0, 0.08], [0.08, 1.0]], index=ranks, columns=ranks)
+    original = matrix.copy(deep=True)
+    figure, axes = plt.subplots(ncols=3)
+    try:
+        for ax, alpha, expected_count in zip(axes, (0.05, 0.1, 0.05), (1, 0, 1)):
+            artists = sp.critical_difference_diagram(ranks, matrix, alpha=alpha, ax=ax)
+            assert len(artists["crossbars"]) == expected_count
+            pd.testing.assert_frame_equal(matrix, original)
     finally:
         plt.close(figure)
 
