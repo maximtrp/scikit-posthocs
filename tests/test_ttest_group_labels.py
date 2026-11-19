@@ -9,10 +9,18 @@ import scikit_posthocs as sp
 
 
 @pytest.mark.parametrize("sort", [False, True])
-def test_pooled_ttest_tuple_groups_match_two_sample_scipy(sort):
+@pytest.mark.parametrize(
+    "labels",
+    [
+        pytest.param([("group", 2), ("group", 0)], id="two-element-tuples"),
+        pytest.param([("treatment",), ("control",)], id="one-element-tuples"),
+        pytest.param([("treatment", 1), ()], id="empty-tuple"),
+    ],
+)
+def test_pooled_ttest_tuple_groups_match_two_sample_scipy(sort, labels):
     samples = [[5.0, 7.0, 9.0, 10.0], [1.0, 2.0, 3.0]]
-    labels = [("group", 2), ("group", 0)]
-    data = pd.DataFrame({"value": sum(samples, []), "group": [labels[0]] * 4 + [labels[1]] * 3})
+    groups = [label for label, sample in zip(labels, samples) for _ in sample]
+    data = pd.DataFrame({"value": np.concatenate(samples), "group": groups})
     original = data.copy(deep=True)
 
     actual = sp.posthoc_ttest(data, val_col="value", group_col="group", pool_sd=True, sort=sort)
@@ -25,6 +33,30 @@ def test_pooled_ttest_tuple_groups_match_two_sample_scipy(sort):
     pd.testing.assert_frame_equal(data, original)
 
 
+@pytest.mark.parametrize(
+    ("categorical", "sort"),
+    [
+        pytest.param(False, False, id="object-index"),
+        pytest.param(True, False, id="categorical-unsorted"),
+        pytest.param(True, True, id="categorical-sorted"),
+    ],
+)
+def test_pooled_ttest_one_element_tuple_and_scalar_are_distinct(categorical, sort):
+    samples = [[1.0, 2.0, 3.0], [5.0, 7.0, 9.0]]
+    labels = [("control",), "control"]
+    groups = [label for label, sample in zip(labels, samples) for _ in sample]
+    if categorical:
+        groups = pd.Categorical(groups, categories=[*reversed(labels), "unused"], ordered=True)
+    data = pd.DataFrame({"value": np.concatenate(samples), "group": groups})
+
+    actual = sp.posthoc_ttest(data, val_col="value", group_col="group", pool_sd=True, sort=sort)
+
+    expected_pvalue = stats.ttest_ind(*samples, equal_var=True).pvalue
+    np.testing.assert_allclose(actual.to_numpy(), [[1.0, expected_pvalue], [expected_pvalue, 1.0]])
+    assert actual.index.tolist() == (labels[::-1] if sort else labels)
+    assert actual.columns.tolist() == actual.index.tolist()
+
+
 @pytest.mark.parametrize("sort", [False, True])
 @pytest.mark.parametrize("p_adjust", [None, "bonferroni"])
 @pytest.mark.parametrize("labels", [[("z", 2), ("a", 0), ("m", 1)], ["z", "a", "m"], [20, 0, 10]])
@@ -34,10 +66,12 @@ def test_pooled_ttest_group_labels_match_within_group_variance(sort, p_adjust, l
         np.array([5.0, 7.0, 9.0, 10.0]),
         np.array([2.0, 4.0, 6.0, 7.0, 11.0]),
     ]
-    data = pd.DataFrame({
-        "value": np.concatenate(samples),
-        "group": [label for label, sample in zip(labels, samples) for _ in sample],
-    })
+    data = pd.DataFrame(
+        {
+            "value": np.concatenate(samples),
+            "group": [label for label, sample in zip(labels, samples) for _ in sample],
+        }
+    )
     original = data.copy(deep=True)
 
     actual = sp.posthoc_ttest(

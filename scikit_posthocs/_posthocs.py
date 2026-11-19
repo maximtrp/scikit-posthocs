@@ -2111,9 +2111,13 @@ def posthoc_ttest(
         total_deg_f = np.sum(deg_f)
         pooled_sd = np.sqrt(np.sum(sd**2.0 * deg_f) / total_deg_f)
 
+        # Align with the result axes without interpreting tuple labels as indexers.
+        means = __numeric_array(m.reindex(groups))
+        counts = __numeric_array(ni.reindex(groups))
+
         def compare_pooled(i, j):
-            diff = m.at[groups[i]] - m.at[groups[j]]
-            se_diff = pooled_sd * np.sqrt(1.0 / ni.at[groups[i]] + 1.0 / ni.at[groups[j]])
+            diff = means[i] - means[j]
+            se_diff = pooled_sd * np.sqrt(1.0 / counts[i] + 1.0 / counts[j])
             t_value = diff / se_diff
             return 2.0 * ss.t.cdf(-np.abs(t_value), total_deg_f)
 
