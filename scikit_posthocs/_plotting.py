@@ -43,7 +43,19 @@ def sign_array(p_values: Union[List, np.ndarray, DataFrame], alpha: float = 0.05
            [ 1., -1.,  0.],
            [ 1.,  0., -1.]])
     """
-    sig_array = np.asarray(p_values, dtype=float).copy()
+    if type(p_values) in (list, np.ndarray):
+        # NumPy can convert and copy these inputs in one allocation.
+        sig_array = np.array(p_values, dtype=float)
+    elif type(p_values) is DataFrame and all(
+        isinstance(dtype, np.dtype) and dtype.kind in "biuf" for dtype in p_values.dtypes
+    ):
+        # Use pandas' explicit copy for NumPy-backed numeric columns.
+        # Leave nullable and other dtypes on the original conversion path.
+        sig_array = p_values.to_numpy(dtype=float, copy=True)
+    else:
+        # Some array providers (including older pandas) can return a view
+        # despite a copy request. Copy after converting to an ndarray.
+        sig_array = np.asarray(p_values, dtype=float).copy(order="K")
     sig_array[sig_array == 0] = 1e-10
     sig_array[sig_array > alpha] = 0
     sig_array[(sig_array < alpha) & (sig_array > 0)] = 1
