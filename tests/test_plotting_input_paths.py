@@ -9,6 +9,32 @@ from matplotlib.colors import to_rgba
 import scikit_posthocs as sp
 
 
+@pytest.mark.parametrize("alpha", [0.05, 0.1])
+@pytest.mark.parametrize("input_type", ["list", "array", "readonly_array", "dataframe"])
+def test_sign_array_preserves_input_values(alpha, input_type):
+    values = np.array([[1.0, 0.01, 0.08], [0.01, 1.0, 0.2], [0.08, 0.2, 1.0]])
+    if input_type == "list":
+        data = values.tolist()
+    elif input_type == "dataframe":
+        names = ["z", "a", "m"]
+        data = pd.DataFrame(values, index=names, columns=names)
+    else:
+        data = values
+        if input_type == "readonly_array":
+            data.flags.writeable = False
+    original = copy.deepcopy(data)
+
+    actual = sp.sign_array(data, alpha=alpha)
+
+    weak_pair = 1 if alpha == 0.1 else 0
+    expected = [[-1, 1, weak_pair], [1, -1, 0], [weak_pair, 0, -1]]
+    np.testing.assert_array_equal(actual, expected)
+    if isinstance(data, pd.DataFrame):
+        pd.testing.assert_frame_equal(data, original)
+    else:
+        np.testing.assert_array_equal(data, original)
+
+
 @pytest.mark.parametrize("flat", [False, True])
 @pytest.mark.parametrize("labels", [False, True])
 @pytest.mark.parametrize("input_type", ["array", "dataframe"])

@@ -43,7 +43,7 @@ def sign_array(p_values: Union[List, np.ndarray, DataFrame], alpha: float = 0.05
            [ 1., -1.,  0.],
            [ 1.,  0., -1.]])
     """
-    sig_array = np.array(p_values, dtype=float)
+    sig_array = np.asarray(p_values, dtype=float).copy()
     sig_array[sig_array == 0] = 1e-10
     sig_array[sig_array > alpha] = 0
     sig_array[(sig_array < alpha) & (sig_array > 0)] = 1
