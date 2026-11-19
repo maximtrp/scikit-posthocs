@@ -2112,8 +2112,8 @@ def posthoc_ttest(
         pooled_sd = np.sqrt(np.sum(sd**2.0 * deg_f) / total_deg_f)
 
         def compare_pooled(i, j):
-            diff = m.loc[groups[i]] - m.loc[groups[j]]
-            se_diff = pooled_sd * np.sqrt(1.0 / ni.loc[groups[i]] + 1.0 / ni.loc[groups[j]])
+            diff = m.at[groups[i]] - m.at[groups[j]]
+            se_diff = pooled_sd * np.sqrt(1.0 / ni.at[groups[i]] + 1.0 / ni.at[groups[j]])
             t_value = diff / se_diff
             return 2.0 * ss.t.cdf(-np.abs(t_value), total_deg_f)
 
